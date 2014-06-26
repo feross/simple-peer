@@ -1,0 +1,38 @@
+{
+  "name": "simple-peer",
+  "description": "Simple one-to-one WebRTC video/audio chat with data channels",
+  "version": "1.0.0",
+  "author": {
+    "name": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "http://feross.org/"
+  },
+  "bugs": {
+    "url": "https://github.com/feross/simple-peer/issues"
+  },
+  "dependencies": {
+    "inherits": "^2.0.1",
+    "once": "^1.3.0"
+  },
+  "homepage": "http://webtorrent.io",
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "data channel",
+    "data channels",
+    "data",
+    "video",
+    "audio",
+    "peer",
+    "stream",
+    "peer-to-peer"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/feross/simple-peer.git"
+  },
+  "scripts": {
+  }
+}
