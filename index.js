@@ -55,7 +55,9 @@ function Peer (opts) {
     }
   }
 
-  this._setupVideo(opts.stream)
+  if (opts.stream) {
+    this._setupVideo(opts.stream)
+  }
 
   if (opts.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
