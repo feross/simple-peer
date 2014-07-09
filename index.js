@@ -29,6 +29,7 @@ inherits(Peer, EventEmitter)
 function Peer (opts) {
   opts = opts || {}
 
+  this.initiator = false
   this.ready = false
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
@@ -141,6 +142,7 @@ Peer.prototype.signal = function (data) {
     this._pc.setRemoteDescription(new RTCSessionDescription(data), function () {
       var needsAnswer = self._pc.remoteDescription.type === 'offer'
       if (needsAnswer) {
+        self.initiator = true
         self._pc.createAnswer(function (answer) {
           self._pc.setLocalDescription(answer)
           self.emit('signal', answer)
