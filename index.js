@@ -29,6 +29,9 @@ inherits(Peer, EventEmitter)
 function Peer (opts) {
   opts = opts || {}
 
+  this.initiator = opts.initiator
+  this.stream = opts.stream
+
   this.ready = false
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
@@ -55,11 +58,11 @@ function Peer (opts) {
     }
   }
 
-  if (opts.stream) {
-    this._setupVideo(opts.stream)
+  if (this.stream) {
+    this._setupVideo(this.stream)
   }
 
-  if (opts.initiator) {
+  if (this.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
 
     this._pc.onnegotiationneeded = once(function (event) {
