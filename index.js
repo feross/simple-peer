@@ -2,6 +2,7 @@ module.exports = Peer
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
+var hat = require('hat')
 var once = require('once')
 
 var RTCPeerConnection = window.mozRTCPeerConnection
@@ -16,61 +17,38 @@ var RTCIceCandidate = window.mozRTCIceCandidate
   || window.RTCIceCandidate
   || window.webkitRTCIceCandidate
 
-var CONFIG = {
-  iceServers: [ { url: 'stun:23.21.150.121' } ]
-}
-
-var CONSTRAINTS = {}
-
-var CHANNEL_NAME = 'instant.io'
-
 inherits(Peer, EventEmitter)
 
 function Peer (opts) {
   EventEmitter.call(this)
-  opts = opts || {}
+  if (!opts) opts = {}
 
   this.initiator = opts.initiator
   this.stream = opts.stream
-
   this.ready = false
-  this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
-  var self = this
-  this._pc.oniceconnectionstatechange = function () {
-    self.emit('iceconnectionstatechange', self._pc.iceGatheringState, self._pc.iceConnectionState)
-    if (self._pc.iceConnectionState === 'connected' || self._pc.iceConnectionState === 'completed') {
-      if (!self.ready) {
-        self.ready = true
-        self.emit('ready')
-      }
-    }
-    if (self._pc.iceConnectionState === 'disconnected') {
-      self.emit('close')
-    }
-  }
-  this._pc.onsignalingstatechange = function () {
-    self.emit('signalingstatechange', self._pc.signalingState, self._pc.readyState)
-  }
+  this._channelName = opts.channelName || 'simple-peer-' + hat(160)
+  this._config = opts.config || Peer.config
+  this._constraints = opts.constraints || Peer.constraints
 
-  this._pc.onicecandidate = function (event) {
-    if (event.candidate) {
-      self.emit('signal', { candidate: event.candidate })
-    }
-  }
+  this._pc = new RTCPeerConnection(this._config, this._constraints)
+  this._pc.oniceconnectionstatechange = this._onIceConnectionStateChange.bind(this)
+  this._pc.onsignalingstatechange = this._onSignalingStateChange.bind(this)
+  this._pc.onicecandidate = this._onIceCandidate.bind(this)
 
   if (this.stream) {
     this._setupVideo(this.stream)
   }
 
+  var self = this
   if (this.initiator) {
-    this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
+    this._setupData({ channel: this._pc.createDataChannel(this._channelName) })
 
     this._pc.onnegotiationneeded = once(function () {
       self._pc.createOffer(function (offer) {
         self._pc.setLocalDescription(offer)
         self.emit('signal', offer)
-      }, self._onerror.bind(self))
+      }, self._onError.bind(self))
     })
 
     if (window.mozRTCPeerConnection) {
@@ -81,6 +59,14 @@ function Peer (opts) {
     this._pc.ondatachannel = this._setupData.bind(this)
   }
 }
+
+/**
+ * Expose config and constraints for overriding all Peer instances. Otherwise, just
+ * set opts.config and opts.constraints when constructing a Peer.
+ * time you
+ */
+Peer.config = { iceServers: [ { url: 'stun:23.21.150.121' } ] }
+Peer.constraints = {}
 
 Peer.prototype.close = function () {
   if (this._pc) {
@@ -107,27 +93,12 @@ Peer.prototype.close = function () {
 
 Peer.prototype._setupData = function (event) {
   this._channel = event.channel
-
-  var self = this
-  this._channel.onmessage = function (event) {
-    console.log('[datachannel] ' + event.data)
-    try {
-      var message = JSON.parse(event.data)
-      self.emit('message', message)
-    } catch (err) {
-      self.emit('message', event.data)
-    }
-  }
+  this._channel.onmessage = this._onChannelMessage.bind(this)
 }
 
 Peer.prototype._setupVideo = function (stream) {
   this._pc.addStream(stream)
-
-  var self = this
-  this._pc.onaddstream = function (event) {
-    var stream = event.stream
-    self.emit('stream', stream)
-  }
+  this._pc.onaddstream = this._onAddStream.bind(this)
 }
 
 Peer.prototype.signal = function (data) {
@@ -147,20 +118,19 @@ Peer.prototype.signal = function (data) {
         self._pc.createAnswer(function (answer) {
           self._pc.setLocalDescription(answer)
           self.emit('signal', answer)
-        }, self._onerror.bind(self))
+        }, self._onError.bind(self))
       }
-    }, self._onerror.bind(self))
-
-  } else if (data.candidate) {
+    }, self._onError.bind(self))
+  }
+  if (data.candidate) {
     try {
       this._pc.addIceCandidate(new RTCIceCandidate(data.candidate))
     } catch (err) {
       self.emit('error', new Error('error adding candidate, ' + err.message))
     }
-
-  } else {
-    self.emit('error', new Error('signal() called with invalid signal data'))
   }
+  if (!data.sdp && !data.candidate)
+    self.emit('error', new Error('signal() called with invalid signal data'))
 }
 
 Peer.prototype.send = function (data) {
@@ -172,6 +142,44 @@ Peer.prototype.send = function (data) {
   }
 }
 
-Peer.prototype._onerror = function (err) {
+Peer.prototype._onIceConnectionStateChange = function () {
+  var iceGatheringState = this._pc.iceGatheringState
+  var iceConnectionState = this._pc.iceConnectionState
+  this.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
+  if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+    if (!this.ready) {
+      this.ready = true
+      this.emit('ready')
+    }
+  }
+  if (iceConnectionState === 'disconnected')
+    this.emit('close')
+}
+
+Peer.prototype._onSignalingStateChange = function () {
+  this.emit('signalingStateChange', this._pc.signalingState, this._pc.readyState)
+}
+
+Peer.prototype._onIceCandidate = function (event) {
+  if (event.candidate) {
+    this.emit('signal', { candidate: event.candidate })
+  }
+}
+
+Peer.prototype._onChannelMessage = function (event) {
+  console.log('[datachannel] ' + event.data)
+  try {
+    var message = JSON.parse(event.data)
+    this.emit('message', message)
+  } catch (err) {
+    this.emit('message', event.data)
+  }
+}
+
+Peer.prototype._onAddStream = function (event) {
+  this.emit('stream', event.stream)
+}
+
+Peer.prototype._onError = function (err) {
   this.emit('error', err)
 }
