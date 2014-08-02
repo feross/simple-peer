@@ -23,22 +23,22 @@ function Peer (opts) {
   EventEmitter.call(this)
   if (!opts) opts = {}
 
-  this.initiator = opts.initiator
-  this.stream = opts.stream
-  this.ready = false
-
-  this._channelName = opts.channelName || 'simple-peer-' + hat(160)
+  this.initiator = opts.initiator || false
+  this.stream = opts.stream || false
   this._config = opts.config || Peer.config
   this._constraints = opts.constraints || Peer.constraints
+  this._channelName = opts.channelName || 'simple-peer-' + hat(160)
+
+  this.ready = false
+  this._closed = false
 
   this._pc = new RTCPeerConnection(this._config, this._constraints)
   this._pc.oniceconnectionstatechange = this._onIceConnectionStateChange.bind(this)
   this._pc.onsignalingstatechange = this._onSignalingStateChange.bind(this)
   this._pc.onicecandidate = this._onIceCandidate.bind(this)
 
-  if (this.stream) {
+  if (this.stream)
     this._setupVideo(this.stream)
-  }
 
   var self = this
   if (this.initiator) {
@@ -63,42 +63,17 @@ function Peer (opts) {
 /**
  * Expose config and constraints for overriding all Peer instances. Otherwise, just
  * set opts.config and opts.constraints when constructing a Peer.
- * time you
  */
 Peer.config = { iceServers: [ { url: 'stun:23.21.150.121' } ] }
 Peer.constraints = {}
 
-Peer.prototype.close = function () {
-  if (this._pc) {
-    try {
-      this._pc.close()
-    } catch (err) {}
-
-    this._pc.oniceconnectionstatechange = null
-    this._pc.onsignalingstatechange = null
-    this._pc.onicecandidate = null
+Peer.prototype.send = function (data) {
+  if (!this._pc || !this._channel || this._channel.readyState !== 'open') return
+  if (typeof data === 'object') {
+    this._channel.send(JSON.stringify(data))
+  } else {
+    this._channel.send(data)
   }
-
-  if (this._channel) {
-    try {
-      this._channel.close()
-    } catch (err) {}
-
-    this._channel.onmessage = null
-  }
-
-  this._pc = null
-  this._channel = null
-}
-
-Peer.prototype._setupData = function (event) {
-  this._channel = event.channel
-  this._channel.onmessage = this._onChannelMessage.bind(this)
-}
-
-Peer.prototype._setupVideo = function (stream) {
-  this._pc.addStream(stream)
-  this._pc.onaddstream = this._onAddStream.bind(this)
 }
 
 Peer.prototype.signal = function (data) {
@@ -133,13 +108,43 @@ Peer.prototype.signal = function (data) {
     self.emit('error', new Error('signal() called with invalid signal data'))
 }
 
-Peer.prototype.send = function (data) {
-  if (!this._pc || !this._channel || this._channel.readyState !== 'open') return
-  if (typeof data === 'object') {
-    this._channel.send(JSON.stringify(data))
-  } else {
-    this._channel.send(data)
+Peer.prototype.close = function (cb) {
+  if (this._closed) return
+  if (cb) this.once('close', cb)
+  if (this._pc) {
+    try {
+      this._pc.close()
+    } catch (err) {}
+
+    this._pc.oniceconnectionstatechange = null
+    this._pc.onsignalingstatechange = null
+    this._pc.onicecandidate = null
   }
+
+  if (this._channel) {
+    try {
+      this._channel.close()
+    } catch (err) {}
+
+    this._channel.onmessage = null
+  }
+
+  this._pc = null
+  this._channel = null
+
+  this._closed = true
+  this.ready = false
+  this.emit('close')
+}
+
+Peer.prototype._setupData = function (event) {
+  this._channel = event.channel
+  this._channel.onmessage = this._onChannelMessage.bind(this)
+}
+
+Peer.prototype._setupVideo = function (stream) {
+  this._pc.addStream(stream)
+  this._pc.onaddstream = this._onAddStream.bind(this)
 }
 
 Peer.prototype._onIceConnectionStateChange = function () {
