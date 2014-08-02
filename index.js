@@ -110,13 +110,12 @@ Peer.prototype._setupData = function (event) {
   var self = this
   this._channel.onmessage = function (event) {
     console.log('[datachannel] ' + event.data)
-    self.emit('message', event.data)
     try {
       var message = JSON.parse(event.data)
+      self.emit('message', message)
     } catch (err) {
-      return
+      self.emit('message', event.data)
     }
-    self.emit('message:' + message.type, message.data)
   }
 }
 
