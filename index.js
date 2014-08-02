@@ -27,6 +27,7 @@ var CHANNEL_NAME = 'instant.io'
 inherits(Peer, EventEmitter)
 
 function Peer (opts) {
+  EventEmitter.call(this)
   opts = opts || {}
 
   this.initiator = opts.initiator
@@ -36,7 +37,7 @@ function Peer (opts) {
   this._pc = new RTCPeerConnection(CONFIG, CONSTRAINTS)
 
   var self = this
-  this._pc.oniceconnectionstatechange = function (event) {
+  this._pc.oniceconnectionstatechange = function () {
     self.emit('iceconnectionstatechange', self._pc.iceGatheringState, self._pc.iceConnectionState)
     if (self._pc.iceConnectionState === 'connected' || self._pc.iceConnectionState === 'completed') {
       if (!self.ready) {
@@ -48,7 +49,7 @@ function Peer (opts) {
       self.emit('close')
     }
   }
-  this._pc.onsignalingstatechange = function (event) {
+  this._pc.onsignalingstatechange = function () {
     self.emit('signalingstatechange', self._pc.signalingState, self._pc.readyState)
   }
 
@@ -65,7 +66,7 @@ function Peer (opts) {
   if (this.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(CHANNEL_NAME) })
 
-    this._pc.onnegotiationneeded = once(function (event) {
+    this._pc.onnegotiationneeded = once(function () {
       self._pc.createOffer(function (offer) {
         self._pc.setLocalDescription(offer)
         self.emit('signal', offer)
