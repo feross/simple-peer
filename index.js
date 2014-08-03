@@ -128,17 +128,17 @@ Peer.prototype.signal = function (data) {
     self.destroy(new Error('signal() called with invalid signal data'))
 }
 
-Peer.prototype.destroy = function (err, cb) {
+Peer.prototype.destroy = function (err, onclose) {
   if (this.destroyed) return
   this.destroyed = true
   this.ready = false
 
   if (typeof err === 'function') {
-    cb = err
+    onclose = err
     err = null
   }
 
-  if (cb) this.once('close', cb)
+  if (onclose) this.once('close', onclose)
 
   if (this._pc) {
     try {
