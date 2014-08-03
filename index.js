@@ -130,11 +130,16 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype.destroy = function (err, cb) {
   if (this.destroyed) return
+  this.destroyed = true
+  this.ready = false
+
   if (typeof err === 'function') {
     cb = err
     err = null
   }
+
   if (cb) this.once('close', cb)
+
   if (this._pc) {
     try {
       this._pc.close()
@@ -151,7 +156,11 @@ Peer.prototype.destroy = function (err, cb) {
     } catch (err) {}
 
     this._channel.onmessage = null
+    this._channel.onopen = null
+    this._channel.onclose = null
   }
+  this._pc = null
+  this._channel = null
 
   this._dataStreams.forEach(function (stream) {
     if (!stream._readableState.ended) stream.push(null)
@@ -159,11 +168,6 @@ Peer.prototype.destroy = function (err, cb) {
   })
   this._dataStreams = []
 
-  this._pc = null
-  this._channel = null
-
-  this.destroyed = true
-  this.ready = false
   if (err) this.emit('error', err)
   this.emit('close')
 }
@@ -180,6 +184,7 @@ Peer.prototype._setupData = function (event) {
   this._channel.binaryType = 'arraybuffer'
   this._channel.onmessage = this._onChannelMessage.bind(this)
   this._channel.onopen = this._onChannelOpen.bind(this)
+  this._channel.onclose = this._onChannelClose.bind(this)
 }
 
 Peer.prototype._setupVideo = function (stream) {
@@ -195,7 +200,7 @@ Peer.prototype._onIceConnectionStateChange = function () {
     this._pcReady = true
     this._maybeReady()
   }
-  if (iceConnectionState === 'disconnected')
+  if (iceConnectionState === 'disconnected' || iceConnectionState === 'closed')
     this.destroy()
 }
 
@@ -241,6 +246,11 @@ Peer.prototype._onChannelMessage = function (event) {
 Peer.prototype._onChannelOpen = function () {
   this._channelReady = true
   this._maybeReady()
+}
+
+Peer.prototype._onChannelClose = function () {
+  this._channelReady = false
+  this.destroy()
 }
 
 Peer.prototype._onAddStream = function (event) {
