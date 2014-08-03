@@ -32,7 +32,7 @@ npm install simple-peer
 
 ### usage
 
-TODO
+TODO. For now, take a look at `test/basic.js` or [lxjs-chat](https://github.com/feross/lxjs-chat) for usage examples.
 
 ### license
 
