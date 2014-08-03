@@ -36,8 +36,8 @@ test('data send/receive as stream', function (t) {
 
   function tryTest () {
     if (peer1.ready && peer2.ready) {
-      var stream1 = peer1.getDataStream({ id: '1' })
-      var stream2 = peer2.getDataStream({ id: '2' })
+      var stream1 = peer1.getDataStream()
+      var stream2 = peer2.getDataStream()
 
       new StringStream('abc').pipe(stream1)
         .on('finish', function () {
