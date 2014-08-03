@@ -1,6 +1,8 @@
 # simple-peer [![npm](https://img.shields.io/npm/v/simple-peer.svg)](https://npmjs.org/package/simple-peer) [![gittip](https://img.shields.io/gittip/feross.svg)](https://www.gittip.com/feross/)
 
-#### Simple one-to-one WebRTC video/audio chat with data channels
+#### Simple one-to-one WebRTC video/audio and data channels
+
+[![browser support](https://ci.testling.com/feross/simple-peer.png)](https://ci.testling.com/feross/simple-peer)
 
 ![p2p visualized!!!1](https://raw.githubusercontent.com/feross/simple-peer/master/img.png)
 
