@@ -2,8 +2,6 @@
 
 #### Simple one-to-one WebRTC video/audio and data channels
 
-[![browser support](https://ci.testling.com/feross/simple-peer.png)](https://ci.testling.com/feross/simple-peer)
-
 ![p2p visualized!!!1](https://raw.githubusercontent.com/feross/simple-peer/master/img.png)
 
 Simple "peer" abstraction to get started with [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
