@@ -2,7 +2,9 @@ module.exports = Peer
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
+var isTypedArray = require('is-typedarray')
 var hat = require('hat')
+var toBuffer = require('typedarray-to-buffer')
 var once = require('once')
 
 var RTCPeerConnection = window.mozRTCPeerConnection
@@ -69,10 +71,11 @@ Peer.constraints = {}
 
 Peer.prototype.send = function (data) {
   if (!this._pc || !this._channel || this._channel.readyState !== 'open') return
-  if (typeof data === 'object') {
-    this._channel.send(JSON.stringify(data))
-  } else {
+  if (isTypedArray.strict(data) || data instanceof ArrayBuffer ||
+      data instanceof Blob || typeof data === 'string') {
     this._channel.send(data)
+  } else {
+    this._channel.send(JSON.stringify(data))
   }
 }
 
@@ -139,6 +142,7 @@ Peer.prototype.close = function (cb) {
 
 Peer.prototype._setupData = function (event) {
   this._channel = event.channel
+  this._channel.binaryType = 'arraybuffer'
   this._channel.onmessage = this._onChannelMessage.bind(this)
 }
 
@@ -172,12 +176,16 @@ Peer.prototype._onIceCandidate = function (event) {
 }
 
 Peer.prototype._onChannelMessage = function (event) {
-  console.log('[datachannel] ' + event.data)
-  try {
-    var message = JSON.parse(event.data)
-    this.emit('message', message)
-  } catch (err) {
-    this.emit('message', event.data)
+  var data = event.data
+  console.log('[datachannel] ' + data)
+  if (data instanceof ArrayBuffer)
+    return this.emit('message', toBuffer(new Uint8Array(data)))
+  else {
+    try {
+      this.emit('message', JSON.parse(data))
+    } catch (err) {
+      this.emit('message', data)
+    }
   }
 }
 
