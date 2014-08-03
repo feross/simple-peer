@@ -52,20 +52,16 @@ test('data send/receive text', function (t) {
 
 test('disable trickle', function (t) {
   var peer1 = new Peer({ initiator: true, trickle: false })
-  peer1.id = 1
   var peer2 = new Peer({ trickle: false })
-  peer2.id = 2
 
   var numSignal1 = 0
   peer1.on('signal', function (data) {
-    console.log('1 signal %s', JSON.stringify(data))
     numSignal1 += 1
     peer2.signal(data)
   })
 
   var numSignal2 = 0
   peer2.on('signal', function (data) {
-    console.log('2 signal %s', JSON.stringify(data))
     numSignal2 += 1
     peer1.signal(data)
   })
