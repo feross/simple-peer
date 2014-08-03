@@ -32,6 +32,8 @@ function Peer (opts) {
   this._config = opts.config || Peer.config
   this._constraints = opts.constraints || Peer.constraints
   this._channelName = opts.channelName || 'simple-peer-' + hat(160)
+  this._trickle = opts.trickle === undefined ? true : opts.trickle
+  this._iceComplete = false // done with ice candidate trickle (got null candidate)
 
   this.destroyed = false
   this.ready = false
@@ -47,14 +49,18 @@ function Peer (opts) {
   if (this.stream)
     this._setupVideo(this.stream)
 
-  var self = this
   if (this.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(this._channelName) })
 
+    var self = this
     this._pc.onnegotiationneeded = once(function () {
       self._pc.createOffer(function (offer) {
         self._pc.setLocalDescription(offer)
-        self.emit('signal', offer)
+        var sendOffer = function () {
+          self.emit('signal', self._pc.localDescription || offer)
+        }
+        if (self._trickle || self._iceComplete) sendOffer()
+        else self.once('_iceComplete', sendOffer) // wait for candidates
       }, self._onError.bind(self))
     })
 
@@ -102,7 +108,11 @@ Peer.prototype.signal = function (data) {
       if (needsAnswer) {
         self._pc.createAnswer(function (answer) {
           self._pc.setLocalDescription(answer)
-          self.emit('signal', answer)
+          var sendAnswer = function () {
+            self.emit('signal', self._pc.localDescription || answer)
+          }
+          if (self._trickle || self._iceComplete) sendAnswer()
+          else self.once('_iceComplete', sendAnswer)
         }, self._onError.bind(self))
       }
     }, self._onError.bind(self))
@@ -201,8 +211,11 @@ Peer.prototype._onSignalingStateChange = function () {
 }
 
 Peer.prototype._onIceCandidate = function (event) {
-  if (event.candidate) {
+  if (event.candidate && this._trickle) {
     this.emit('signal', { candidate: event.candidate })
+  } else if (!event.candidate) {
+    this._iceComplete = true
+    this.emit('_iceComplete')
   }
 }
 
