@@ -11,6 +11,7 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
+    "extend.js": "0.0.1",
     "hat": "0.0.3",
     "inherits": "^2.0.1",
     "is-typedarray": "0.0.0",
@@ -25,10 +26,13 @@
     "data channels",
     "data",
     "video",
-    "audio",
+    "voice",
     "peer",
     "stream",
-    "peer-to-peer"
+    "peer-to-peer",
+    "data channel stream",
+    "webrtc stream",
+    "peer"
   ],
   "license": "MIT",
   "main": "index.js",
@@ -38,6 +42,7 @@
   },
   "scripts": {},
   "devDependencies": {
+    "concat-stream": "^1.4.6",
     "tape": "^2.13.4"
   },
   "testling": {

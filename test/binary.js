@@ -25,8 +25,8 @@ test('data send/receive Uint8Array', function (t) {
           t.ok(Buffer.isBuffer(data), 'data is Buffer')
           t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-          peer1.close(tryDone)
-          peer2.close(tryDone)
+          peer1.destroy(tryDone)
+          peer2.destroy(tryDone)
 
           function tryDone () {
             if (!peer1.ready && !peer2.ready) {
@@ -64,8 +64,8 @@ test('data send/receive Buffer', function (t) {
           t.ok(Buffer.isBuffer(data), 'data is Buffer')
           t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-          peer1.close(tryDone)
-          peer2.close(tryDone)
+          peer1.destroy(tryDone)
+          peer2.destroy(tryDone)
 
           function tryDone () {
             if (!peer1.ready && !peer2.ready) {
@@ -104,8 +104,8 @@ test('data send/receive Buffer', function (t) {
 //           t.ok(Buffer.isBuffer(data), 'data is Buffer')
 //           t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-//           peer1.close(tryDone)
-//           peer2.close(tryDone)
+//           peer1.destroy(tryDone)
+//           peer2.destroy(tryDone)
 
 //           function tryDone () {
 //             if (!peer1.ready && !peer2.ready) {
@@ -143,8 +143,8 @@ test('data send/receive ArrayBuffer', function (t) {
           t.ok(Buffer.isBuffer(data), 'data is Buffer')
           t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-          peer1.close(tryDone)
-          peer2.close(tryDone)
+          peer1.destroy(tryDone)
+          peer2.destroy(tryDone)
 
           function tryDone () {
             if (!peer1.ready && !peer2.ready) {

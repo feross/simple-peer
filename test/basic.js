@@ -22,7 +22,6 @@ test('data send/receive text', function (t) {
 
   function tryTest () {
     if (peer1.ready && peer2.ready) {
-      console.log(numSignal1)
       t.ok(numSignal1 >= 1)
       t.ok(numSignal2 >= 1)
       t.equal(peer1.initiator, true, 'peer1 is initiator')
@@ -36,15 +35,15 @@ test('data send/receive text', function (t) {
         peer1.on('message', function (data) {
           t.equal(data, 'sup peer1', 'got correct message')
 
-          peer1.close(tryDone)
-          peer2.close(tryDone)
-
           function tryDone () {
             if (!peer1.ready && !peer2.ready) {
               t.pass('both peers closed')
               t.end()
             }
           }
+
+          peer1.destroy(tryDone)
+          peer2.destroy(tryDone)
         })
       })
     }
