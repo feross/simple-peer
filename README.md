@@ -23,9 +23,11 @@ npm install simple-peer
 
 ## example
 
-This example creates two peers in the same page.
+These examples create two peers in the same page.
 
 In a real-world application, the sender and receiver `Peer` instances would exist in separate browsers. A "signaling server" (usually implemented with websockets) would be used to exchange signaling data between the two browsers until a peer-to-peer connection is established.
+
+### data channels
 
 ```js
 var peer1 = new Peer({ initiator: true })
@@ -40,8 +42,8 @@ peer2.on('signal', function (data) {
 })
 
 peer1.on('ready', function () {
-  peer1.send('hey peer2, how is it going?')
   // wait for 'ready' event before using the data channel
+  peer1.send('hey peer2, how is it going?')
 })
 
 peer2.on('message', function (data) {
@@ -49,9 +51,9 @@ peer2.on('message', function (data) {
 })
 ```
 
-Video/voice is also super simple!
+### video/voice
 
-In this example, peer1 sends video to peer2.
+Video/voice is also super simple! In this example, peer1 sends video to peer2.
 
 ```js
 // get video/voice stream
