@@ -40,10 +40,13 @@
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
   },
-  "scripts": {},
+  "scripts": {
+    "test": "zuul -- test/*.js"
+  },
   "devDependencies": {
     "concat-stream": "^1.4.6",
-    "tape": "^2.13.4"
+    "tape": "^2.13.4",
+    "zuul": "^1.10.0"
   },
   "testling": {
     "files": "test/*.js",
