@@ -4,15 +4,11 @@
 
 ## features
 
-- simple API for working with [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
-  - vastly simpler signaling process!
-    1. handle the `peer.on('signal')` event
-    2. send data to remote peer
-    3. call `peer.signal(data)`
-  - you're done!
-- supports video/voice streams
-- supports data channel
-  - can treat data channel as a [node.js stream](http://nodejs.org/api/stream.html)
+- **super simple** API for working with [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
+- supports **video/voice streams**
+- supports **data channel**
+  - text and binary data
+  - optionally, treat data channel as a node.js [duplex stream](http://nodejs.org/api/stream.html)
 - supports advanced options like:
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config and constraints options
@@ -27,7 +23,7 @@ npm install simple-peer
 
 This example creates two peers in the same page.
 
-In a real-world application, the sender and receiver Peer objects would exist in separate browsers. A "signaling server" that can exchange messages between a WebRTC client running in one browser and a client in another browser would be used to help the peers get connected.
+In a real-world application, the sender and receiver `Peer` instances would exist in separate browsers. A "signaling server" (usually implemented with websockets) would be used to exchange signaling data between the two browsers until a peer-to-peer connection is established.
 
 ```js
 var peer1 = new Peer({ initiator: true })
@@ -78,10 +74,9 @@ function gotMedia (stream) {
     video.play()
   })
 }
+```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
-
-```
 
 ## usage
 
@@ -89,7 +84,7 @@ For two-way video, simply pass a `stream` option into both `Peer` constructors. 
 
 Create a new WebRTC peer connection.
 
-A data channel for text/binary data communication will always be established. To establish video/voice communication, pass the `stream` option.
+A "data channel" for text/binary communication is always established, because it's cheap and often useful. For video/voice communication, pass the `stream` option.
 
 If `opts` is specified, then the default options (shown below) will be overridden.
 
@@ -156,21 +151,21 @@ Received a message from the remote peer (via the data channel).
 
 `data` will be either a `String` or a `Buffer` (see [buffer](https://github.com/feross/buffer)).
 
-### `peer.on('close', function () {})
+### `peer.on('close', function () {})`
 
 Called when the peer connection has closed.
 
-### `peer.on('error', function (err) {})
+### `peer.on('error', function (err) {})`
 
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
 
 `err` is an `Error` object.
 
-## real-world usage
+## real-world applications that use simple-peer
 
 - [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle chat clone
 - [instant.io](https://github.com/feross/instant.io) - Secure, anonymous, streaming file transfer
-- add your application here! send a PR!
+- \[ your application here - send a PR \]
 
 ## license
 
