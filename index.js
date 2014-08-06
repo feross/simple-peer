@@ -23,6 +23,10 @@ var RTCIceCandidate = window.mozRTCIceCandidate
 
 inherits(Peer, EventEmitter)
 
+/**
+ * A WebRTC peer connection.
+ * @param {Object} opts
+ */
 function Peer (opts) {
   EventEmitter.call(this)
   if (!opts) opts = {}

@@ -46,7 +46,7 @@
   "devDependencies": {
     "concat-stream": "^1.4.6",
     "tape": "^2.13.4",
-    "zuul": "^1.10.0"
+    "zuul": "feross/zuul"
   },
   "testling": {
     "files": "test/*.js",
