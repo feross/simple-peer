@@ -1,6 +1,6 @@
 # simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer.svg)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg)](https://npmjs.org/package/simple-peer) [![gittip](https://img.shields.io/gittip/feross.svg)](https://www.gittip.com/feross/) [![Sauce Test Status](https://saucelabs.com/browser-matrix/feross-simple-peer.svg)](https://saucelabs.com/u/feross-simple-peer)
 
-#### Simple one-to-one WebRTC video/audio and data channels
+#### Simple WebRTC video/voice and data channels.
 
 ## features
 
@@ -12,6 +12,8 @@
 - supports advanced options like:
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config and constraints options
+
+This module works great in the browser with [browserify](http://browserify.org/), and it's used by [WebTorrent](http://webtorrent.io)!
 
 ## install
 
