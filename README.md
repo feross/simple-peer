@@ -4,9 +4,6 @@
 
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/feross-simple-peer.svg)](https://saucelabs.com/u/feross-simple-peer)
 
-![p2p visualized!!!1](https://raw.githubusercontent.com/feross/simple-peer/master/img.png)
-
-
 ## features
 
 - simple API for working with [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
