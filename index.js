@@ -28,6 +28,7 @@ inherits(Peer, EventEmitter)
  * @param {Object} opts
  */
 function Peer (opts) {
+  if (!(this instanceof Peer)) return new Peer(opts)
   EventEmitter.call(this)
   if (!opts) opts = {}
 
