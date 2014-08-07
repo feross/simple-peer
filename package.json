@@ -42,7 +42,7 @@
   },
   "scripts": {
     "test": "zuul -- test/*.js",
-    "install": "npm run build",
+    "prepublish": "npm run build",
     "build": "browserify -s SimplePeer -r ./ | uglifyjs -c -m > simplepeer.bundle.js"
   },
   "devDependencies": {
