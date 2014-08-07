@@ -33,23 +33,26 @@ inherits(Peer, EventEmitter)
 function Peer (opts) {
   if (!(this instanceof Peer)) return new Peer(opts)
   EventEmitter.call(this)
-  if (!opts) opts = {}
 
-  this.initiator = opts.initiator || false
-  this.stream = opts.stream || false
-  this._config = opts.config || Peer.config
-  this._constraints = opts.constraints || Peer.constraints
-  this._channelName = opts.channelName || 'simple-peer-' + hat(160)
-  this._trickle = opts.trickle === undefined ? true : opts.trickle
-  this._iceComplete = false // done with ice candidate trickle (got null candidate)
+  opts = extend({
+    initiator: false,
+    stream: false,
+    config: Peer.config,
+    constraints: Peer.constraints,
+    channelName: 'simple-peer-' + hat(160),
+    trickle: true
+  }, opts)
+
+  extend(this, opts)
 
   this.destroyed = false
   this.ready = false
   this._pcReady = false
   this._channelReady = false
   this._dataStreams = []
+  this._iceComplete = false // done with ice candidate trickle (got null candidate)
 
-  this._pc = new RTCPeerConnection(this._config, this._constraints)
+  this._pc = new RTCPeerConnection(this.config, this.constraints)
   this._pc.oniceconnectionstatechange = this._onIceConnectionStateChange.bind(this)
   this._pc.onsignalingstatechange = this._onSignalingStateChange.bind(this)
   this._pc.onicecandidate = this._onIceCandidate.bind(this)
@@ -58,7 +61,7 @@ function Peer (opts) {
     this._setupVideo(this.stream)
 
   if (this.initiator) {
-    this._setupData({ channel: this._pc.createDataChannel(this._channelName) })
+    this._setupData({ channel: this._pc.createDataChannel(this.channelName) })
 
     var self = this
     this._pc.onnegotiationneeded = once(function () {
@@ -67,7 +70,7 @@ function Peer (opts) {
         var sendOffer = function () {
           self.emit('signal', self._pc.localDescription || offer)
         }
-        if (self._trickle || self._iceComplete) sendOffer()
+        if (self.trickle || self._iceComplete) sendOffer()
         else self.once('_iceComplete', sendOffer) // wait for candidates
       }, self._onError.bind(self))
     })
@@ -119,7 +122,7 @@ Peer.prototype.signal = function (data) {
           var sendAnswer = function () {
             self.emit('signal', self._pc.localDescription || answer)
           }
-          if (self._trickle || self._iceComplete) sendAnswer()
+          if (self.trickle || self._iceComplete) sendAnswer()
           else self.once('_iceComplete', sendAnswer)
         }, self._onError.bind(self))
       }
@@ -224,7 +227,7 @@ Peer.prototype._onSignalingStateChange = function () {
 }
 
 Peer.prototype._onIceCandidate = function (event) {
-  if (event.candidate && this._trickle) {
+  if (event.candidate && this.trickle) {
     this.emit('signal', { candidate: event.candidate })
   } else if (!event.candidate) {
     this._iceComplete = true
