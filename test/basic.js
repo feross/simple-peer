@@ -1,6 +1,14 @@
 var Peer = require('../')
 var test = require('tape')
 
+test('signal event gets emitted', function (t) {
+  var peer = new Peer({ initiator: true })
+  peer.once('signal', function () {
+    t.pass('got signal event')
+    t.end()
+  })
+})
+
 test('data send/receive text', function (t) {
   var peer1 = new Peer({ initiator: true })
   var peer2 = new Peer()
