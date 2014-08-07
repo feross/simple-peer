@@ -94,7 +94,7 @@ For two-way video, simply pass a `stream` option into both `Peer` constructors. 
 
 ## api
 
-### `peer = new SimplePeer(opts)`
+### `peer = new SimplePeer([opts])`
 
 Create a new WebRTC peer connection.
 
