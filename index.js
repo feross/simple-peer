@@ -9,17 +9,20 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-var RTCPeerConnection = window.mozRTCPeerConnection
+var RTCPeerConnection = typeof window !== 'undefined' &&
+    (window.mozRTCPeerConnection
   || window.RTCPeerConnection
-  || window.webkitRTCPeerConnection
+  || window.webkitRTCPeerConnection)
 
-var RTCSessionDescription = window.mozRTCSessionDescription
+var RTCSessionDescription = typeof window !== 'undefined' &&
+    (window.mozRTCSessionDescription
   || window.RTCSessionDescription
-  || window.webkitRTCSessionDescription
+  || window.webkitRTCSessionDescription)
 
-var RTCIceCandidate = window.mozRTCIceCandidate
+var RTCIceCandidate = typeof window !== 'undefined' &&
+    (window.mozRTCIceCandidate
   || window.RTCIceCandidate
-  || window.webkitRTCIceCandidate
+  || window.webkitRTCIceCandidate)
 
 inherits(Peer, EventEmitter)
 
