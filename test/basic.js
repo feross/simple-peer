@@ -5,6 +5,7 @@ test('signal event gets emitted', function (t) {
   var peer = new Peer({ initiator: true })
   peer.once('signal', function () {
     t.pass('got signal event')
+    peer.destroy()
     t.end()
   })
 })
