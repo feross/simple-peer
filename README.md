@@ -21,7 +21,7 @@ This module works great in the browser with [browserify](http://browserify.org/)
 npm install simple-peer
 ```
 
-## example
+## usage
 
 These examples create two peers in the same page.
 
@@ -30,14 +30,18 @@ In a real-world application, the sender and receiver `Peer` instances would exis
 ### data channels
 
 ```js
-var peer1 = new Peer({ initiator: true })
-var peer2 = new Peer()
+var SimplePeer = require('simple-peer')
+
+var peer1 = new SimplePeer({ initiator: true })
+var peer2 = new SimplePeer()
 
 peer1.on('signal', function (data) {
+  // when peer1 has signaling data, give it to peer2
   peer2.signal(data)
 })
 
 peer2.on('signal', function (data) {
+  // same as above, but in reverse
   peer1.signal(data)
 })
 
@@ -47,21 +51,27 @@ peer1.on('ready', function () {
 })
 
 peer2.on('message', function (data) {
+  // got a data channel message
   console.log('got a message from peer1: ' + data)
 })
 ```
+
+Note: If you're **NOT** using browserify, then use the standalone `simplepeer.bundle.js`
+file included in this repo. This exports a `SimplePeer` function on the `window`.
 
 ### video/voice
 
 Video/voice is also super simple! In this example, peer1 sends video to peer2.
 
 ```js
+var SimplePeer = require('simple-peer')
+
 // get video/voice stream
 navigator.getUserMedia({ video: true, audio: true }, gotMedia, function () {})
 
 function gotMedia (stream) {
-  var peer1 = new Peer({ initiator: true, stream: stream })
-  var peer2 = new Peer()
+  var peer1 = new SimplePeer({ initiator: true, stream: stream })
+  var peer2 = new SimplePeer()
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -72,7 +82,7 @@ function gotMedia (stream) {
   })
 
   peer2.on('stream', function (stream) {
-    // got remote video stream, show it in the page
+    // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
     video.src = window.URL.createObjectURL(stream)
     video.play()
@@ -82,9 +92,9 @@ function gotMedia (stream) {
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
 
-## usage
+## api
 
-### `peer = new Peer(opts)`
+### `peer = new SimplePeer(opts)`
 
 Create a new WebRTC peer connection.
 
@@ -153,7 +163,7 @@ Fired when the peer wants to send signaling data to the remote peer.
 
 Received a message from the remote peer (via the data channel).
 
-`data` will be either a `String` or a `Buffer` (see [buffer](https://github.com/feross/buffer)).
+`data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
 ### `peer.on('close', function () {})`
 

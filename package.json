@@ -41,11 +41,15 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "test": "zuul -- test/*.js"
+    "test": "zuul -- test/*.js",
+    "install": "npm run build",
+    "build": "browserify -s SimplePeer -r ./ | uglifyjs -c -m > simplepeer.bundle.js"
   },
   "devDependencies": {
+    "browserify": "^5.9.1",
     "concat-stream": "^1.4.6",
     "tape": "^2.13.4",
+    "uglify-js": "^2.4.15",
     "zuul": "feross/zuul"
   },
   "testling": {
