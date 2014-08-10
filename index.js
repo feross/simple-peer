@@ -57,23 +57,24 @@ function Peer (opts) {
   this._pc.onsignalingstatechange = this._onSignalingStateChange.bind(this)
   this._pc.onicecandidate = this._onIceCandidate.bind(this)
 
+  this._channel = null
+
   if (this.stream)
     this._setupVideo(this.stream)
 
   if (this.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(this.channelName) })
 
-    var self = this
     this._pc.onnegotiationneeded = once(function () {
-      self._pc.createOffer(function (offer) {
-        self._pc.setLocalDescription(offer)
+      this._pc.createOffer(function (offer) {
+        this._pc.setLocalDescription(offer)
         var sendOffer = function () {
-          self.emit('signal', self._pc.localDescription || offer)
-        }
-        if (self.trickle || self._iceComplete) sendOffer()
-        else self.once('_iceComplete', sendOffer) // wait for candidates
-      }, self._onError.bind(self))
-    })
+          this.emit('signal', this._pc.localDescription || offer)
+        }.bind(this)
+        if (this.trickle || this._iceComplete) sendOffer()
+        else this.once('_iceComplete', sendOffer) // wait for candidates
+      }.bind(this), this._onError.bind(this))
+    }.bind(this))
 
     if (window.mozRTCPeerConnection) {
       // Firefox does not trigger this event automatically
@@ -91,21 +92,20 @@ function Peer (opts) {
 Peer.config = { iceServers: [ { url: 'stun:23.21.150.121' } ] }
 Peer.constraints = {}
 
-Peer.prototype.send = function (data) {
-  if (!this._pc || !this._channel || this._channel.readyState !== 'open')
-    return false
+Peer.prototype.send = function (data, cb) {
+  if (!this._channelReady) return this.once('ready', this.send.bind(this, data, cb))
+
   if (isTypedArray.strict(data) || data instanceof ArrayBuffer ||
       data instanceof Blob || typeof data === 'string') {
     this._channel.send(data)
   } else {
     this._channel.send(JSON.stringify(data))
   }
-  return true
+  if (cb) cb(null)
 }
 
 Peer.prototype.signal = function (data) {
-  var self = this
-  if (!this._pc) return
+  if (this.destroyed) return
   if (typeof data === 'string') {
     try {
       data = JSON.parse(data)
@@ -115,28 +115,28 @@ Peer.prototype.signal = function (data) {
   }
   if (data.sdp) {
     this._pc.setRemoteDescription(new RTCSessionDescription(data), function () {
-      var needsAnswer = self._pc.remoteDescription.type === 'offer'
+      var needsAnswer = this._pc.remoteDescription.type === 'offer'
       if (needsAnswer) {
-        self._pc.createAnswer(function (answer) {
-          self._pc.setLocalDescription(answer)
+        this._pc.createAnswer(function (answer) {
+          this._pc.setLocalDescription(answer)
           var sendAnswer = function () {
-            self.emit('signal', self._pc.localDescription || answer)
-          }
-          if (self.trickle || self._iceComplete) sendAnswer()
-          else self.once('_iceComplete', sendAnswer)
-        }, self._onError.bind(self))
+            this.emit('signal', this._pc.localDescription || answer)
+          }.bind(this)
+          if (this.trickle || this._iceComplete) sendAnswer()
+          else this.once('_iceComplete', sendAnswer)
+        }.bind(this), this._onError.bind(this))
       }
-    }, self._onError.bind(self))
+    }.bind(this), this._onError.bind(this))
   }
   if (data.candidate) {
     try {
       this._pc.addIceCandidate(new RTCIceCandidate(data.candidate))
     } catch (err) {
-      self.destroy(new Error('error adding candidate, ' + err.message))
+      this.destroy(new Error('error adding candidate, ' + err.message))
     }
   }
   if (!data.sdp && !data.candidate)
-    self.destroy(new Error('signal() called with invalid signal data'))
+    this.destroy(new Error('signal() called with invalid signal data'))
 }
 
 Peer.prototype.destroy = function (err, onclose) {
@@ -288,6 +288,5 @@ DataStream.prototype.destroy = function () {
 DataStream.prototype._read = function () {}
 
 DataStream.prototype._write = function (chunk, encoding, cb) {
-  if (this._peer.send(chunk)) cb()
-  else cb(new Error('peer is closed'))
+  this._peer.send(chunk, cb)
 }
