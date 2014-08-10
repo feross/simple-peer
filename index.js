@@ -239,7 +239,6 @@ Peer.prototype._onIceCandidate = function (event) {
 Peer.prototype._onChannelMessage = function (event) {
   var data = event.data
   if (this.destroyed) return
-  console.log('[datachannel] ' + data)
   if (data instanceof ArrayBuffer) {
     data = toBuffer(new Uint8Array(data))
     this.emit('message', data)
