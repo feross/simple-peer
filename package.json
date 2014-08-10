@@ -43,7 +43,7 @@
   "scripts": {
     "test": "zuul -- test/*.js",
     "prepublish": "npm run build",
-    "build": "browserify -s SimplePeer -r ./ | uglifyjs -c -m > simplepeer.bundle.js"
+    "build": "browserify -s SimplePeer -r ./ | uglifyjs -c warnings=false -m > simplepeer.bundle.js"
   },
   "devDependencies": {
     "browserify": "^5.9.1",
@@ -53,14 +53,6 @@
     "zuul": "feross/zuul"
   },
   "testling": {
-    "files": "test/*.js",
-    "browsers": [
-      "chrome/25..latest",
-      "chrome/canary",
-      "firefox/20..latest",
-      "firefox/nightly",
-      "opera/15.0..latest",
-      "opera/next"
-    ]
+    "files": "test/*.js"
   }
 }
