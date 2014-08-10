@@ -174,6 +174,7 @@ Peer.prototype.destroy = function (err, onclose) {
   this._channel = null
 
   this._dataStreams.forEach(function (stream) {
+    if (err) stream.emit('error', err)
     if (!stream._readableState.ended) stream.push(null)
     if (!stream._writableState.finished) stream.end()
   })
