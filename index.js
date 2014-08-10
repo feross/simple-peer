@@ -288,9 +288,6 @@ DataStream.prototype.destroy = function () {
 DataStream.prototype._read = function () {}
 
 DataStream.prototype._write = function (chunk, encoding, cb) {
-  window.chunk = chunk
-  if (this._peer.send(chunk))
-    cb()
-  else
-    cb(new Error('peer is closed'))
+  if (this._peer.send(chunk)) cb()
+  else cb(new Error('peer is closed'))
 }
