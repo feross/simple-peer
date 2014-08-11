@@ -40,7 +40,7 @@ function Peer (opts) {
     stream: false,
     config: Peer.config,
     constraints: Peer.constraints,
-    channelName: 'simple-peer-' + hat(160),
+    channelName: opts.initiator ? 'simple-peer-' + hat(160) : null,
     trickle: true
   }, opts)
 
@@ -199,6 +199,8 @@ Peer.prototype.getDataStream = function (opts) {
 
 Peer.prototype._setupData = function (event) {
   this._channel = event.channel
+  this.channelName = this._channel.label
+
   this._channel.binaryType = 'arraybuffer'
   this._channel.onmessage = this._onChannelMessage.bind(this)
   this._channel.onopen = this._onChannelOpen.bind(this)
