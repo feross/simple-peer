@@ -235,7 +235,7 @@ Peer.prototype._maybeReady = function () {
 }
 
 Peer.prototype._onSignalingStateChange = function () {
-  this.emit('signalingStateChange', this._pc.signalingState, this._pc.readyState)
+  this.emit('signalingStateChange', this._pc.signalingState)
   debug('signalingStateChange %s', this._pc.signalingState)
 }
 
