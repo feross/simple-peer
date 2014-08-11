@@ -1,5 +1,6 @@
 module.exports = Peer
 
+var debug = require('debug')('simple-peer')
 var EventEmitter = require('events').EventEmitter
 var extend = require('extend.js')
 var hat = require('hat')
@@ -44,6 +45,8 @@ function Peer (opts) {
   }, opts)
 
   extend(this, opts)
+
+  debug('new peer initiator: %s channelName: %s', this.initiator, this.channelName)
 
   this.destroyed = false
   this.ready = false
@@ -94,6 +97,7 @@ Peer.constraints = {}
 
 Peer.prototype.send = function (data, cb) {
   if (!this._channelReady) return this.once('ready', this.send.bind(this, data, cb))
+  debug('send %s', data)
 
   if (isTypedArray.strict(data) || data instanceof ArrayBuffer ||
       data instanceof Blob || typeof data === 'string') {
@@ -113,6 +117,7 @@ Peer.prototype.signal = function (data) {
       data = {}
     }
   }
+  debug('signal %s', JSON.stringify(data))
   if (data.sdp) {
     this._pc.setRemoteDescription(new RTCSessionDescription(data), function () {
       var needsAnswer = this._pc.remoteDescription.type === 'offer'
@@ -141,6 +146,7 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype.destroy = function (err, onclose) {
   if (this.destroyed) return
+  debug('destroy (error: %s)', err && err.message)
   this.destroyed = true
   this.ready = false
 
@@ -208,6 +214,7 @@ Peer.prototype._onIceConnectionStateChange = function () {
   var iceGatheringState = this._pc.iceGatheringState
   var iceConnectionState = this._pc.iceConnectionState
   this.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
+  debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
     this._pcReady = true
     this._maybeReady()
@@ -217,7 +224,9 @@ Peer.prototype._onIceConnectionStateChange = function () {
 }
 
 Peer.prototype._maybeReady = function () {
+  debug('maybeReady pc %s channel %s', this._pcReady, this._channelReady)
   if (!this.ready && this._pcReady && this._channelReady) {
+    debug('ready')
     this.ready = true
     this.emit('ready')
   }
@@ -225,6 +234,7 @@ Peer.prototype._maybeReady = function () {
 
 Peer.prototype._onSignalingStateChange = function () {
   this.emit('signalingStateChange', this._pc.signalingState, this._pc.readyState)
+  debug('signalingStateChange %s', this._pc.signalingState)
 }
 
 Peer.prototype._onIceCandidate = function (event) {
@@ -237,8 +247,10 @@ Peer.prototype._onIceCandidate = function (event) {
 }
 
 Peer.prototype._onChannelMessage = function (event) {
-  var data = event.data
   if (this.destroyed) return
+  var data = event.data
+  debug('receive %s', data)
+
   if (data instanceof ArrayBuffer) {
     data = toBuffer(new Uint8Array(data))
     this.emit('message', data)
@@ -269,6 +281,7 @@ Peer.prototype._onAddStream = function (event) {
 }
 
 Peer.prototype._onError = function (err) {
+  debug('error %s', err.message)
   this.destroy(err)
 }
 
@@ -279,6 +292,7 @@ inherits(DataStream, stream.Duplex)
 function DataStream (opts) {
   stream.Duplex.call(this, opts)
   this._peer = opts._peer
+  debug('new stream')
 }
 
 DataStream.prototype.destroy = function () {

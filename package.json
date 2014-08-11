@@ -11,6 +11,7 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
+    "debug": "^1.0.4",
     "extend.js": "0.0.1",
     "hat": "0.0.3",
     "inherits": "^2.0.1",
