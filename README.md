@@ -140,7 +140,7 @@ Note: this method should not be called until the `peer.on('ready')` event has fi
 
 Destroy and cleanup this peer connection.
 
-If the optional `onclose` paramter is passed, then it will be registered as a listener on the 'close' event.
+If the optional `onclose` parameter is passed, then it will be registered as a listener on the 'close' event.
 
 ### `stream = peer.getDataStream()`
 
