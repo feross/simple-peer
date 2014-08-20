@@ -17,6 +17,9 @@
 
 This module works great in the browser with [browserify](http://browserify.org/), and it's used by [WebTorrent](http://webtorrent.io)!
 
+**Note:** If you're **NOT** using browserify, then use the included standalone file
+`simplepeer.bundle.js`. This exports a `SimplePeer` function on `window`.
+
 ## install
 
 ```
@@ -57,9 +60,6 @@ peer2.on('message', function (data) {
   console.log('got a message from peer1: ' + data)
 })
 ```
-
-Note: If you're **NOT** using browserify, then use the standalone `simplepeer.bundle.js`
-file included in this repo. This exports a `SimplePeer` function on the `window`.
 
 ### video/voice
 
