@@ -51,7 +51,7 @@
     "concat-stream": "^1.4.6",
     "tape": "^2.13.4",
     "uglify-js": "^2.4.15",
-    "zuul": "^1.10.1"
+    "zuul": "^1.11.0"
   },
   "testling": {
     "files": "test/*.js"
