@@ -151,9 +151,6 @@ Very handy for treating the data channel just like any other node.js stream!
 
 ## events
 
-### `peer.on('ready', function () {})`
-
-Fired when the peer connection and data channel are ready to use.
 
 ### `peer.on('signal', function (data) {})`
 
@@ -161,11 +158,27 @@ Fired when the peer wants to send signaling data to the remote peer.
 
 **It is the responsibility of the application developer (that's you!) to get this data to the other peer.** This usually entails using a websocket signaling server. Then, simply call `peer.signal(data)` on the remote peer.
 
+### `peer.on('ready', function () {})`
+
+Fired when the peer connection and data channel are ready to use.
+
 ### `peer.on('message', function (data) {})`
 
 Received a message from the remote peer (via the data channel).
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
+
+### `peer.on('stream', function (stream) {})`
+
+Received a remote video stream, which can be displayed in a video tag:
+
+```js
+peer.on('stream', function (stream) {
+  var video = document.createElement('video')
+  video.src = window.URL.createObjectURL(stream)
+  document.body.appendChild(video)
+  video.play()
+})
 
 ### `peer.on('close', function () {})`
 
