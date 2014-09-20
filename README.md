@@ -110,7 +110,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   stream: false,
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
-  channelName: 'simple-peer-<random string>',
+  channelName: '<random string>',
   trickle: true
 }
 ```

@@ -40,7 +40,7 @@ function Peer (opts) {
     stream: false,
     config: Peer.config,
     constraints: Peer.constraints,
-    channelName: opts && opts.initiator ? 'simple-peer-' + hat(160) : null,
+    channelName: (opts && opts.initiator) ? hat(160) : null,
     trickle: true
   }, opts)
 
