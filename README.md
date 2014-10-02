@@ -179,6 +179,7 @@ peer.on('stream', function (stream) {
   document.body.appendChild(video)
   video.play()
 })
+```
 
 ### `peer.on('close', function () {})`
 
