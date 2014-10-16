@@ -195,6 +195,7 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 - [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle chat clone
 - [instant.io](https://github.com/feross/instant.io) - Secure, anonymous, streaming file transfer
+- [simple-peer example video chat](http://pushertc.herokuapp.com) - [Guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/) to using simple-peer and Pusher.
 - \[ your application here - send a PR \]
 
 ## license
