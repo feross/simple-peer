@@ -98,7 +98,7 @@ For two-way video, simply pass a `stream` option into both `Peer` constructors. 
 
 - [Instant](https://instant.io) - Secure, anonymous, streaming file transfer
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
-- [PusheRTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
+- [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
 - [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
 - *Your app here! - send a PR!*
 
