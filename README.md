@@ -1,4 +1,4 @@
-# simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer.svg)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg)](https://npmjs.org/package/simple-peer) [![gittip](https://img.shields.io/gittip/feross.svg)](https://www.gittip.com/feross/)
+# simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer.svg?style=flat)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer) [![npm downloads](https://img.shields.io/npm/dm/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer) [![gittip](https://img.shields.io/gittip/feross.svg?style=flat)](https://www.gittip.com/feross/)
 
 #### Simple WebRTC video/voice and data channels.
 
@@ -15,7 +15,7 @@
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config and constraints options
 
-This module works great in the browser with [browserify](http://browserify.org/), and it's used by [WebTorrent](http://webtorrent.io)!
+This module works great in the browser with [browserify](http://browserify.org/).
 
 **Note:** If you're **NOT** using browserify, then use the included standalone file
 `simplepeer.bundle.js`. This exports a `SimplePeer` function on `window`.
@@ -93,6 +93,14 @@ function gotMedia (stream) {
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+## real-world apps that use `simple-peer`
+
+- [Instant](https://instant.io) - Secure, anonymous, streaming file transfer
+- [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
+- [PusheRTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
+- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
+- *Your app here! - send a PR!*
 
 ## api
 
@@ -190,13 +198,6 @@ Called when the peer connection has closed.
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
 
 `err` is an `Error` object.
-
-## real-world applications that use simple-peer
-
-- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle chat clone
-- [instant.io](https://github.com/feross/instant.io) - Secure, anonymous, streaming file transfer
-- [simple-peer example video chat](http://pushertc.herokuapp.com) - [Guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/) to using simple-peer and Pusher.
-- \[ your application here - send a PR \]
 
 ## license
 
