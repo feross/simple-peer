@@ -64,6 +64,7 @@ function Peer (opts) {
 
   if (this.stream)
     this._setupVideo(this.stream)
+  this._pc.onaddstream = this._onAddStream.bind(this)
 
   if (this.initiator) {
     this._setupData({ channel: this._pc.createDataChannel(this.channelName) })
@@ -209,7 +210,6 @@ Peer.prototype._setupData = function (event) {
 
 Peer.prototype._setupVideo = function (stream) {
   this._pc.addStream(stream)
-  this._pc.onaddstream = this._onAddStream.bind(this)
 }
 
 Peer.prototype._onIceConnectionStateChange = function () {
