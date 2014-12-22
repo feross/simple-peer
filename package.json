@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "debug": "^2.1.0",
-    "extend.js": "0.0.1",
+    "extend.js": "0.0.2",
     "hat": "0.0.3",
     "inherits": "^2.0.1",
     "is-typedarray": "0.0.0",
