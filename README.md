@@ -199,6 +199,121 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 `err` is an `Error` object.
 
+## connecting more than 2 peers?
+
+The simplest way to do that is to create a full-mesh topology. That means that every peer
+opens a connection to every other peer. To illustrate:
+
+![full mesh topology](img/full-mesh.png)
+
+To broadcast a message, just iterate over all the peers and call `peer.send`.
+
+So, say you have 3 peers. Then, when a peer wants to send some data it must send it 2
+times, once to each of the other peers. So you're going to want to be a bit careful about
+the size of the data you send.
+
+Full mesh topologies don't scale well when the number of peers is very large. The total
+number of edges in the network will be ![full mesh formula](img/full-mesh-formula.png)
+where `n` is the number of peers.
+
+For clarity, here is the code to connect 3 peers together:
+
+#### Peer 1
+
+```js
+// These are peer1's connections to peer2 and peer3
+var peer2 = new SimplePeer({ initiator: true })
+var peer3 = new SimplePeer({ initiator: true })
+
+peer2.on('signal', function (data) {
+  // send this signaling data to peer2 somehow
+})
+
+peer2.on('ready', function () {
+  peer2.send('hi peer2, this is peer1')
+})
+
+peer2.on('message', function (data) {
+  console.log('got a message from peer2: ' + data)
+})
+
+peer3.on('signal', function (data) {
+  // send this signaling data to peer3 somehow
+})
+
+peer3.on('ready', function () {
+  peer3.send('hi peer3, this is peer1')
+})
+
+peer3.on('message', function (data) {
+  console.log('got a message from peer3: ' + data)
+})
+```
+
+#### Peer 2
+
+```js
+// These are peer2's connections to peer1 and peer3
+var peer1 = new SimplePeer()
+var peer3 = new SimplePeer({ initiator: true })
+
+peer1.on('signal', function (data) {
+  // send this signaling data to peer1 somehow
+})
+
+peer1.on('ready', function () {
+  peer1.send('hi peer1, this is peer2')
+})
+
+peer1.on('message', function (data) {
+  console.log('got a message from peer1: ' + data)
+})
+
+peer3.on('signal', function (data) {
+  // send this signaling data to peer3 somehow
+})
+
+peer3.on('ready', function () {
+  peer3.send('hi peer3, this is peer2')
+})
+
+peer3.on('message', function (data) {
+  console.log('got a message from peer3: ' + data)
+})
+```
+
+#### Peer 3
+
+```js
+// These are peer3's connections to peer1 and peer2
+var peer1 = new SimplePeer()
+var peer2 = new SimplePeer()
+
+peer1.on('signal', function (data) {
+  // send this signaling data to peer1 somehow
+})
+
+peer1.on('ready', function () {
+  peer1.send('hi peer1, this is peer3')
+})
+
+peer1.on('message', function (data) {
+  console.log('got a message from peer1: ' + data)
+})
+
+peer2.on('signal', function (data) {
+  // send this signaling data to peer2 somehow
+})
+
+peer2.on('ready', function () {
+  peer2.send('hi peer2, this is peer3')
+})
+
+peer2.on('message', function (data) {
+  console.log('got a message from peer2: ' + data)
+})
+```
+
 ## license
 
 MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org).
