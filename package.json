@@ -20,7 +20,7 @@
     "typedarray-to-buffer": "^3.0.0"
   },
   "devDependencies": {
-    "browserify": "^7.0.3",
+    "browserify": "^8.0.3",
     "concat-stream": "^1.4.6",
     "tape": "^3.0.3",
     "uglify-js": "^2.4.15",
