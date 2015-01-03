@@ -1,6 +1,6 @@
 ui: tape
 browsers:
   - name: chrome
-    version: 35..latest
+    version: 37..latest
   - name: firefox
-    version: 30..latest
+    version: 32..latest
