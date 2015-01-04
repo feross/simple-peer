@@ -72,6 +72,7 @@ function Peer (opts) {
 
     self._pc.onnegotiationneeded = once(function () {
       self._pc.createOffer(function (offer) {
+        speedHack(offer)
         self._pc.setLocalDescription(offer)
         var sendOffer = function () {
           self.emit('signal', self._pc.localDescription || offer)
@@ -129,6 +130,7 @@ Peer.prototype.signal = function (data) {
       var needsAnswer = self._pc.remoteDescription.type === 'offer'
       if (needsAnswer) {
         self._pc.createAnswer(function (answer) {
+          speedHack(answer)
           self._pc.setLocalDescription(answer)
           var sendAnswer = function () {
             self.emit('signal', self._pc.localDescription || answer)
@@ -333,4 +335,10 @@ DataStream.prototype._read = function () {}
 DataStream.prototype._write = function (chunk, encoding, cb) {
   var self = this
   self._peer.send(chunk, cb)
+}
+
+function speedHack (obj) {
+  var s = obj.sdp.split('b=AS:30')
+  if (s.length > 1)
+    obj.sdp = s[0] + 'b=AS:1638400' + s[1]
 }
