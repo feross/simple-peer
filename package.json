@@ -50,6 +50,7 @@
   },
   "scripts": {
     "test": "zuul -- test/*.js",
+    "test-local": "zuul --local -- test/*.js",
     "build": "browserify -s SimplePeer -r ./ | uglifyjs -c warnings=false -m > simplepeer.bundle.js"
   },
   "testling": {
