@@ -223,6 +223,7 @@ Peer.prototype._setupVideo = function (stream) {
 
 Peer.prototype._onIceConnectionStateChange = function () {
   var self = this
+  if (self.destroyed) return
   var iceGatheringState = self._pc.iceGatheringState
   var iceConnectionState = self._pc.iceConnectionState
   self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
@@ -247,12 +248,14 @@ Peer.prototype._maybeReady = function () {
 
 Peer.prototype._onSignalingStateChange = function () {
   var self = this
+  if (self.destroyed) return
   self.emit('signalingStateChange', self._pc.signalingState)
   debug('signalingStateChange %s', self._pc.signalingState)
 }
 
 Peer.prototype._onIceCandidate = function (event) {
   var self = this
+  if (self.destroyed) return
   if (event.candidate && self.trickle) {
     self.emit('signal', { candidate: event.candidate })
   } else if (!event.candidate) {
@@ -284,23 +287,27 @@ Peer.prototype._onChannelMessage = function (event) {
 
 Peer.prototype._onChannelOpen = function () {
   var self = this
+  if (self.destroyed) return
   self._channelReady = true
   self._maybeReady()
 }
 
 Peer.prototype._onChannelClose = function () {
   var self = this
+  if (self.destroyed) return
   self._channelReady = false
   self.destroy()
 }
 
 Peer.prototype._onAddStream = function (event) {
   var self = this
+  if (self.destroyed) return
   self.emit('stream', event.stream)
 }
 
 Peer.prototype._onError = function (err) {
   var self = this
+  if (self.destroyed) return
   debug('error %s', err.message)
   self.destroy(err)
 }
