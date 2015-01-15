@@ -6,11 +6,11 @@
 
 ## features
 
-- **super simple** API for working with [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
+- concise, node.js-style API for **[WebRTC](https://en.wikipedia.org/wiki/WebRTC)**
 - supports **video/voice streams**
 - supports **data channel**
   - text and binary data
-  - optionally, treat data channel as a node.js [duplex stream](http://nodejs.org/api/stream.html)
+  - node.js [duplex stream](http://nodejs.org/api/stream.html) interface
 - supports advanced options like:
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config and constraints options
@@ -50,12 +50,12 @@ peer2.on('signal', function (data) {
   peer1.signal(data)
 })
 
-peer1.on('ready', function () {
-  // wait for 'ready' event before using the data channel
+peer1.on('connect', function () {
+  // wait for 'connect' event before using the data channel
   peer1.send('hey peer2, how is it going?')
 })
 
-peer2.on('message', function (data) {
+peer2.on('data', function (data) {
   // got a data channel message
   console.log('got a message from peer1: ' + data)
 })
@@ -140,9 +140,14 @@ The `data` will be a `String` that encapsulates a webrtc offer, answer, or ice c
 
 ### `peer.send(data)`
 
-Send text/binary data to the remote peer. `data` can be any of several types: `String`, `Buffer` (see [buffer](https://github.com/feross/buffer)), TypedArrayView (Uint8Array, etc.), or ArrayBuffer.
+Send text/binary data to the remote peer. `data` can be any of several types: `String`, `Buffer` (see [buffer](https://github.com/feross/buffer)), `TypedArrayView` (`Uint8Array`, etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
-Note: this method should not be called until the `peer.on('ready')` event has fired.
+Other data types will be transformed with `JSON.stringify` before sending. This is handy
+for sending object literals across like this:
+`peer.send({ type: 'data', data: 'hi' })`.
+
+Note: If this method is called before the `peer.on('connect')` event has fired, then data
+will be buffered.
 
 ### `peer.destroy([onclose])`
 
@@ -150,12 +155,20 @@ Destroy and cleanup this peer connection.
 
 If the optional `onclose` parameter is passed, then it will be registered as a listener on the 'close' event.
 
-### `stream = peer.getDataStream()`
+### duplex stream
 
-Returns a duplex stream which reads/writes to the data channel.
+`Peer` objects are instances of `stream.Duplex`. The behave very similarly to a
+`net.Socket` from the node core `net` module. The duplex stream reads/writes to the data
+channel.
 
-Very handy for treating the data channel just like any other node.js stream!
-
+```js
+var peer = new Peer(opts)
+// ... signaling ...
+peer.write(new Buffer('hey'))
+peer.on('data', function (chunk) {
+  console.log('got a chunk', chunk)
+})
+```
 
 ## events
 
@@ -166,11 +179,11 @@ Fired when the peer wants to send signaling data to the remote peer.
 
 **It is the responsibility of the application developer (that's you!) to get this data to the other peer.** This usually entails using a websocket signaling server. Then, simply call `peer.signal(data)` on the remote peer.
 
-### `peer.on('ready', function () {})`
+### `peer.on('connect', function () {})`
 
 Fired when the peer connection and data channel are ready to use.
 
-### `peer.on('message', function (data) {})`
+### `peer.on('data', function (data) {})`
 
 Received a message from the remote peer (via the data channel).
 
@@ -229,11 +242,11 @@ peer2.on('signal', function (data) {
   // send this signaling data to peer2 somehow
 })
 
-peer2.on('ready', function () {
+peer2.on('connect', function () {
   peer2.send('hi peer2, this is peer1')
 })
 
-peer2.on('message', function (data) {
+peer2.on('data', function (data) {
   console.log('got a message from peer2: ' + data)
 })
 
@@ -241,11 +254,11 @@ peer3.on('signal', function (data) {
   // send this signaling data to peer3 somehow
 })
 
-peer3.on('ready', function () {
+peer3.on('connect', function () {
   peer3.send('hi peer3, this is peer1')
 })
 
-peer3.on('message', function (data) {
+peer3.on('data', function (data) {
   console.log('got a message from peer3: ' + data)
 })
 ```
@@ -261,11 +274,11 @@ peer1.on('signal', function (data) {
   // send this signaling data to peer1 somehow
 })
 
-peer1.on('ready', function () {
+peer1.on('connect', function () {
   peer1.send('hi peer1, this is peer2')
 })
 
-peer1.on('message', function (data) {
+peer1.on('data', function (data) {
   console.log('got a message from peer1: ' + data)
 })
 
@@ -273,11 +286,11 @@ peer3.on('signal', function (data) {
   // send this signaling data to peer3 somehow
 })
 
-peer3.on('ready', function () {
+peer3.on('connect', function () {
   peer3.send('hi peer3, this is peer2')
 })
 
-peer3.on('message', function (data) {
+peer3.on('data', function (data) {
   console.log('got a message from peer3: ' + data)
 })
 ```
@@ -293,11 +306,11 @@ peer1.on('signal', function (data) {
   // send this signaling data to peer1 somehow
 })
 
-peer1.on('ready', function () {
+peer1.on('connect', function () {
   peer1.send('hi peer1, this is peer3')
 })
 
-peer1.on('message', function (data) {
+peer1.on('data', function (data) {
   console.log('got a message from peer1: ' + data)
 })
 
@@ -305,11 +318,11 @@ peer2.on('signal', function (data) {
   // send this signaling data to peer2 somehow
 })
 
-peer2.on('ready', function () {
+peer2.on('connect', function () {
   peer2.send('hi peer2, this is peer3')
 })
 
-peer2.on('message', function (data) {
+peer2.on('data', function (data) {
   console.log('got a message from peer2: ' + data)
 })
 ```

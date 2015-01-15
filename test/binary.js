@@ -10,33 +10,33 @@ test('data send/receive Uint8Array', function (t) {
   peer2.on('signal', function (data) {
     peer1.signal(data)
   })
-  peer1.on('ready', tryTest)
-  peer2.on('ready', tryTest)
+  peer1.on('connect', tryTest)
+  peer2.on('connect', tryTest)
 
   function tryTest () {
-    if (peer1.ready && peer2.ready) {
-      peer1.send(new Uint8Array([1, 2, 3]))
-      peer2.on('message', function (data) {
+    if (!peer1.connected || !peer2.connected) return
+
+    peer1.send(new Uint8Array([1, 2, 3]))
+    peer2.on('data', function (data) {
+      t.ok(Buffer.isBuffer(data), 'data is Buffer')
+      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+
+      peer2.send(new Uint8Array([2, 3, 4]))
+      peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-        peer2.send(new Uint8Array([2, 3, 4]))
-        peer1.on('message', function (data) {
-          t.ok(Buffer.isBuffer(data), 'data is Buffer')
-          t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        peer1.destroy(tryDone)
+        peer2.destroy(tryDone)
 
-          peer1.destroy(tryDone)
-          peer2.destroy(tryDone)
-
-          function tryDone () {
-            if (!peer1.ready && !peer2.ready) {
-              t.pass('both peers closed')
-              t.end()
-            }
+        function tryDone () {
+          if (!peer1.connected && !peer2.connected) {
+            t.pass('both peers closed')
+            t.end()
           }
-        })
+        }
       })
-    }
+    })
   }
 })
 
@@ -49,33 +49,33 @@ test('data send/receive Buffer', function (t) {
   peer2.on('signal', function (data) {
     peer1.signal(data)
   })
-  peer1.on('ready', tryTest)
-  peer2.on('ready', tryTest)
+  peer1.on('connect', tryTest)
+  peer2.on('connect', tryTest)
 
   function tryTest () {
-    if (peer1.ready && peer2.ready) {
-      peer1.send(new Buffer([1, 2, 3]))
-      peer2.on('message', function (data) {
+    if (!peer1.connected || peer2.connected) return
+
+    peer1.send(new Buffer([1, 2, 3]))
+    peer2.on('data', function (data) {
+      t.ok(Buffer.isBuffer(data), 'data is Buffer')
+      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+
+      peer2.send(new Buffer([2, 3, 4]))
+      peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-        peer2.send(new Buffer([2, 3, 4]))
-        peer1.on('message', function (data) {
-          t.ok(Buffer.isBuffer(data), 'data is Buffer')
-          t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        peer1.destroy(tryDone)
+        peer2.destroy(tryDone)
 
-          peer1.destroy(tryDone)
-          peer2.destroy(tryDone)
-
-          function tryDone () {
-            if (!peer1.ready && !peer2.ready) {
-              t.pass('both peers closed')
-              t.end()
-            }
+        function tryDone () {
+          if (!peer1.connected && !peer2.connected) {
+            t.pass('both peers closed')
+            t.end()
           }
-        })
+        }
       })
-    }
+    })
   }
 })
 
@@ -89,33 +89,33 @@ test('data send/receive Buffer', function (t) {
 //   peer2.on('signal', function (data) {
 //     peer1.signal(data)
 //   })
-//   peer1.on('ready', tryTest)
-//   peer2.on('ready', tryTest)
+//   peer1.on('connect', tryTest)
+//   peer2.on('connect', tryTest)
 
 //   function tryTest () {
-//     if (peer1.ready && peer2.ready) {
-//       peer1.send(new Blob([ new Buffer([1, 2, 3]) ]))
-//       peer2.on('message', function (data) {
+//     if (!peer1.connected || !peer2.connected) return
+
+//     peer1.send(new Blob([ new Buffer([1, 2, 3]) ]))
+//     peer2.on('data', function (data) {
+//       t.ok(Buffer.isBuffer(data), 'data is Buffer')
+//       t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+
+//       peer2.send(new Blob([ new Buffer([2, 3, 4]) ]))
+//       peer1.on('data', function (data) {
 //         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-//         t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+//         t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-//         peer2.send(new Blob([ new Buffer([2, 3, 4]) ]))
-//         peer1.on('message', function (data) {
-//           t.ok(Buffer.isBuffer(data), 'data is Buffer')
-//           t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+//         peer1.destroy(tryDone)
+//         peer2.destroy(tryDone)
 
-//           peer1.destroy(tryDone)
-//           peer2.destroy(tryDone)
-
-//           function tryDone () {
-//             if (!peer1.ready && !peer2.ready) {
-//               t.pass('both peers closed')
-//               t.end()
-//             }
+//         function tryDone () {
+//           if (!peer1.connected && !peer2.connected) {
+//             t.pass('both peers closed')
+//             t.end()
 //           }
-//         })
+//         }
 //       })
-//     }
+//     })
 //   }
 // })
 
@@ -128,32 +128,32 @@ test('data send/receive ArrayBuffer', function (t) {
   peer2.on('signal', function (data) {
     peer1.signal(data)
   })
-  peer1.on('ready', tryTest)
-  peer2.on('ready', tryTest)
+  peer1.on('connect', tryTest)
+  peer2.on('connect', tryTest)
 
   function tryTest () {
-    if (peer1.ready && peer2.ready) {
-      peer1.send(new Buffer([1, 2, 3]).toArrayBuffer())
-      peer2.on('message', function (data) {
+    if (!peer1.connected || !peer2.connected) return
+
+    peer1.send(new Buffer([1, 2, 3]).toArrayBuffer())
+    peer2.on('data', function (data) {
+      t.ok(Buffer.isBuffer(data), 'data is Buffer')
+      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+
+      peer2.send(new Buffer([2, 3, 4]).toArrayBuffer())
+      peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
 
-        peer2.send(new Buffer([2, 3, 4]).toArrayBuffer())
-        peer1.on('message', function (data) {
-          t.ok(Buffer.isBuffer(data), 'data is Buffer')
-          t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        peer1.destroy(tryDone)
+        peer2.destroy(tryDone)
 
-          peer1.destroy(tryDone)
-          peer2.destroy(tryDone)
-
-          function tryDone () {
-            if (!peer1.ready && !peer2.ready) {
-              t.pass('both peers closed')
-              t.end()
-            }
+        function tryDone () {
+          if (!peer1.connected && !peer2.connected) {
+            t.pass('both peers closed')
+            t.end()
           }
-        })
+        }
       })
-    }
+    })
   }
 })
