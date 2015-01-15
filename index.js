@@ -83,10 +83,11 @@ function Peer (opts) {
     } else {
       // If data channel is not connected when local peer is finished writing, wait until
       // data is flushed to network at "connect" event.
+      // TODO: is there a more reliable way to accomplish this?
       self.once('connect', function () {
         setTimeout(function () {
           self.destroy()
-        }, 0)
+        }, 100)
       })
     }
   })
