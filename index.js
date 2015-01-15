@@ -84,7 +84,9 @@ function Peer (opts) {
       // If data channel is not connected when local peer is finished writing, wait until
       // data is flushed to network at "connect" event.
       self.once('connect', function () {
-        self.destroy()
+        setTimeout(function () {
+          self.destroy()
+        }, 0)
       })
     }
   })
