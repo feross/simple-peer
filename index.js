@@ -102,7 +102,7 @@ Peer.constraints = {}
 Peer.prototype.send = function (chunk, cb) {
   var self = this
   if (cb) cb = dezalgo(cb)
-  else cb = function () {}
+  else cb = noop
   self._write(chunk, undefined, cb)
 }
 
@@ -124,7 +124,9 @@ Peer.prototype.signal = function (data) {
   }
   if (data.candidate) {
     try {
-      self._pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+      self._pc.addIceCandidate(
+        new RTCIceCandidate(data.candidate), noop, self._onError.bind(self)
+      )
     } catch (err) {
       self.destroy(new Error('error adding candidate: ' + err.message))
     }
@@ -147,6 +149,7 @@ Peer.prototype.destroy = function (err, onclose) {
   self.destroyed = true
   self.connected = false
   self._pcReady = false
+  self._channelReady = false
 
   if (self._pc) {
     try {
@@ -232,7 +235,7 @@ Peer.prototype._createOffer = function () {
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
     speedHack(offer)
-    self._pc.setLocalDescription(offer)
+    self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
       self.emit('signal', self._pc.localDescription || offer)
     }
@@ -247,7 +250,7 @@ Peer.prototype._createAnswer = function () {
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     speedHack(answer)
-    self._pc.setLocalDescription(answer)
+    self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
       self.emit('signal', self._pc.localDescription || answer)
     }
@@ -333,7 +336,6 @@ Peer.prototype._onChannelClose = function () {
   var self = this
   if (self.destroyed) return
   self._debug('on channel close')
-  self._channelReady = false
   self.destroy()
 }
 
@@ -364,3 +366,5 @@ function speedHack (obj) {
   if (s.length > 1)
     obj.sdp = s[0] + 'b=AS:1638400' + s[1]
 }
+
+function noop () {}
