@@ -2,7 +2,7 @@ module.exports = Peer
 
 var debug = require('debug')('simple-peer')
 var dezalgo = require('dezalgo')
-var extend = require('extend.js')
+var extend = require('xtend/mutable')
 var hat = require('hat')
 var inherits = require('inherits')
 var isTypedArray = require('is-typedarray')
@@ -34,7 +34,10 @@ inherits(Peer, stream.Duplex)
 function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
-  stream.Duplex.call(self, extend({ allowHalfOpen: false }, opts))
+  if (!opts) opts = {}
+
+  opts.allowHalfOpen = false
+  stream.Duplex.call(self, opts)
 
   extend(self, {
     initiator: false,
