@@ -23,6 +23,7 @@
   "devDependencies": {
     "browserify": "^8.0.3",
     "concat-stream": "^1.4.6",
+    "standard": "^2.3.1",
     "string-to-stream": "^1.0.0",
     "tape": "^3.0.3",
     "uglify-js": "^2.4.15",
@@ -51,9 +52,9 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "test": "zuul -- test/*.js",
+    "test": "standard && zuul -- test/*.js",
     "test-local": "zuul --local -- test/*.js",
-    "build": "browserify -s SimplePeer -r ./ | uglifyjs -c warnings=false -m > simplepeer.bundle.js"
+    "build": "browserify -s SimplePeer -r ./ | uglifyjs -c warnings=false -m > simplepeer.min.js"
   },
   "testling": {
     "files": "test/*.js"

@@ -18,7 +18,7 @@
 This module works great in the browser with [browserify](http://browserify.org/).
 
 **Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.bundle.js`. This exports a `SimplePeer` function on `window`.
+`simplepeer.min.js`. This exports a `SimplePeer` function on `window`.
 
 ## install
 
