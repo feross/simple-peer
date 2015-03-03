@@ -327,6 +327,8 @@ peer2.on('data', function (data) {
 })
 ```
 
+[![js-standard-style](https://raw.githubusercontent.com/feross/standard/master/badge.png)](https://github.com/feross/standard)
+
 ## license
 
 MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org).
