@@ -315,7 +315,7 @@ Peer.prototype._onChannelMessage = function (event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
-  self._debug('on channel message: length %d', data.byteLength || length)
+  self._debug('on channel message: length %d', data.byteLength || data.length)
 
   if (data instanceof ArrayBuffer) {
     data = toBuffer(new Uint8Array(data))
