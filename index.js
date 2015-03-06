@@ -224,7 +224,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   self._debug('_write: length %d', len)
 
   if (isTypedArray.strict(chunk) || chunk instanceof ArrayBuffer ||
-      chunk instanceof Blob || typeof chunk === 'string')
+      typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob))
     self._channel.send(chunk)
   else
     self._channel.send(JSON.stringify(chunk))
