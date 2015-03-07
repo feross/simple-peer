@@ -71,9 +71,11 @@ function Peer (opts) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
     // Firefox does not trigger "negotiationneeded"; this is a workaround
-    if (window.mozRTCPeerConnection) setTimeout(function () {
-      self._pc.onnegotiationneeded()
-    }, 0)
+    if (window.mozRTCPeerConnection) {
+      setTimeout(function () {
+        self._pc.onnegotiationneeded()
+      }, 0)
+    }
   } else {
     self._pc.ondatachannel = self._setupData.bind(self)
   }
@@ -135,8 +137,9 @@ Peer.prototype.signal = function (data) {
       self.destroy(new Error('error adding candidate: ' + err.message))
     }
   }
-  if (!data.sdp && !data.candidate)
+  if (!data.sdp && !data.candidate) {
     self.destroy(new Error('signal() called with invalid signal data'))
+  }
 }
 
 Peer.prototype.destroy = function (err, onclose) {
@@ -224,18 +227,19 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   self._debug('_write: length %d', len)
 
   if (isTypedArray.strict(chunk) || chunk instanceof ArrayBuffer ||
-      typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob))
+      typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob)) {
     self._channel.send(chunk)
-  else
+  } else {
     self._channel.send(JSON.stringify(chunk))
+  }
 
   cb(null)
 }
 
 Peer.prototype._createOffer = function () {
   var self = this
-  if (self.destroyed)
-    return
+  if (self.destroyed) return
+
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
     speedHack(offer)
@@ -274,8 +278,9 @@ Peer.prototype._onIceConnectionStateChange = function () {
     self._pcReady = true
     self._maybeReady()
   }
-  if (iceConnectionState === 'disconnected' || iceConnectionState === 'closed')
+  if (iceConnectionState === 'disconnected' || iceConnectionState === 'closed') {
     self.destroy()
+  }
 }
 
 Peer.prototype._maybeReady = function () {
@@ -367,8 +372,7 @@ Peer.prototype._debug = function () {
 
 function speedHack (obj) {
   var s = obj.sdp.split('b=AS:30')
-  if (s.length > 1)
-    obj.sdp = s[0] + 'b=AS:1638400' + s[1]
+  if (s.length > 1) obj.sdp = s[0] + 'b=AS:1638400' + s[1]
 }
 
 function noop () {}
