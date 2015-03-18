@@ -102,7 +102,14 @@ function Peer (opts) {
  * Expose config and constraints for overriding all Peer instances. Otherwise, just
  * set opts.config and opts.constraints when constructing a Peer.
  */
-Peer.config = { iceServers: [ { url: 'stun:23.21.150.121' } ] }
+Peer.config = {
+  iceServers: [
+    {
+      url: 'stun:23.21.150.121', // deprecated, replaced by `urls`
+      urls: 'stun:23.21.150.121'
+    }
+  ]
+}
 Peer.constraints = {}
 
 Peer.prototype.send = function (chunk, cb) {
