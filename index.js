@@ -48,7 +48,7 @@ function Peer (opts) {
     trickle: true
   }, opts)
 
-  self._debug('new peer initiator: %s channelName: %s', self.initiator, self.channelName)
+  self._debug('new peer (initiator: %s)', self.initiator)
 
   self.destroyed = false
   self.connected = false
@@ -158,7 +158,7 @@ Peer.prototype.destroy = function (err, onclose) {
   }
   if (onclose) self.once('close', onclose)
 
-  self._debug('destroy (with error? %s)', err && err.message)
+  self._debug('destroy (error: %s)', err && err.message)
 
   self.destroyed = true
   self.connected = false
@@ -365,7 +365,7 @@ Peer.prototype._onAddStream = function (event) {
 Peer.prototype._onError = function (err) {
   var self = this
   if (self.destroyed) return
-  self._debug('error %s', err.message)
+  self._debug('error %s', err.message || err)
   self.destroy(err)
 }
 
