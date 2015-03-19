@@ -23,7 +23,7 @@
   "devDependencies": {
     "browserify": "^9.0.3",
     "concat-stream": "^1.4.6",
-    "standard": "^2.3.1",
+    "standard": "^3.1.2",
     "string-to-stream": "^1.0.0",
     "tape": "^3.0.3",
     "uglify-js": "^2.4.15",
