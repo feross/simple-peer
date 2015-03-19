@@ -84,14 +84,14 @@ function Peer (opts) {
     if (self.connected) {
       // When local peer is finished writing, close connection to remote peer.
       // Half open connections are currently not supported.
-      self.destroy()
+      self._destroy()
     } else {
       // If data channel is not connected when local peer is finished writing, wait until
       // data is flushed to network at "connect" event.
       // TODO: is there a more reliable way to accomplish this?
       self.once('connect', function () {
         setTimeout(function () {
-          self.destroy()
+          self._destroy()
         }, 100)
       })
     }
@@ -141,21 +141,22 @@ Peer.prototype.signal = function (data) {
         new RTCIceCandidate(data.candidate), noop, self._onError.bind(self)
       )
     } catch (err) {
-      self.destroy(new Error('error adding candidate: ' + err.message))
+      self._destroy(new Error('error adding candidate: ' + err.message))
     }
   }
   if (!data.sdp && !data.candidate) {
-    self.destroy(new Error('signal() called with invalid signal data'))
+    self._destroy(new Error('signal() called with invalid signal data'))
   }
 }
 
-Peer.prototype.destroy = function (err, onclose) {
+Peer.prototype.destroy = function (onclose) {
+  var self = this
+  self._destroy(null, onclose)
+}
+
+Peer.prototype._destroy = function (err, onclose) {
   var self = this
   if (self.destroyed) return
-  if (typeof err === 'function') {
-    onclose = err
-    err = null
-  }
   if (onclose) self.once('close', onclose)
 
   self._debug('destroy (error: %s)', err && err.message)
@@ -286,7 +287,7 @@ Peer.prototype._onIceConnectionStateChange = function () {
     self._maybeReady()
   }
   if (iceConnectionState === 'disconnected' || iceConnectionState === 'closed') {
-    self.destroy()
+    self._destroy()
   }
 }
 
@@ -352,7 +353,7 @@ Peer.prototype._onChannelClose = function () {
   var self = this
   if (self.destroyed) return
   self._debug('on channel close')
-  self.destroy()
+  self._destroy()
 }
 
 Peer.prototype._onAddStream = function (event) {
@@ -366,7 +367,7 @@ Peer.prototype._onError = function (err) {
   var self = this
   if (self.destroyed) return
   self._debug('error %s', err.message || err)
-  self.destroy(err)
+  self._destroy(err)
 }
 
 Peer.prototype._debug = function () {
