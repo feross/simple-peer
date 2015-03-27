@@ -1,4 +1,5 @@
 module.exports = Peer
+module.exports.hybrid = false
 
 var debug = require('debug')('simple-peer')
 var dezalgo = require('dezalgo')
@@ -10,20 +11,27 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-var RTCPeerConnection = typeof window !== 'undefined' &&
+if (module.exports.hybrid === true) {
+    var wrtc = require('wrtc')
+    var RTCPeerConnection = wrtc.RTCPeerConnection
+    var RTCSessionDescription = wrtc.RTCSessionDescription
+    var RTCIceCandidate = wrtc.RTCIceCandidate
+} else {
+    var RTCPeerConnection = typeof window !== 'undefined' &&
     (window.mozRTCPeerConnection
-  || window.RTCPeerConnection
-  || window.webkitRTCPeerConnection)
+    || window.RTCPeerConnection
+    || window.webkitRTCPeerConnection)
 
-var RTCSessionDescription = typeof window !== 'undefined' &&
+    var RTCSessionDescription = typeof window !== 'undefined' &&
     (window.mozRTCSessionDescription
-  || window.RTCSessionDescription
-  || window.webkitRTCSessionDescription)
+    || window.RTCSessionDescription
+    || window.webkitRTCSessionDescription)
 
-var RTCIceCandidate = typeof window !== 'undefined' &&
+    var RTCIceCandidate = typeof window !== 'undefined' &&
     (window.mozRTCIceCandidate
-  || window.RTCIceCandidate
-  || window.webkitRTCIceCandidate)
+    || window.RTCIceCandidate
+    || window.webkitRTCIceCandidate)   
+}
 
 inherits(Peer, stream.Duplex)
 
@@ -71,7 +79,11 @@ function Peer (opts) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
     // Firefox does not trigger "negotiationneeded"; this is a workaround
-    if (window.mozRTCPeerConnection) {
+    if (module.exports.hybrid === true) {
+        setTimeout(function () {
+            self._pc.onnegotiationneeded()
+        }, 0)
+    } else if (window.mozRTCPeerConnection) {
       setTimeout(function () {
         self._pc.onnegotiationneeded()
       }, 0)
