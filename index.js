@@ -12,7 +12,6 @@ var isTypedArray = require('is-typedarray')
 var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
-var wrtc = require('wrtc')
 
 inherits(Peer, stream.Duplex)
 
@@ -28,6 +27,7 @@ function Peer (opts) {
   //Check to see if hybrid. There were issues with placing outside peer
   //object so this seemed like an appropriate solution
   if (module.exports.hybrid === true) {
+    var wrtc = require('wrtc')
     var RTCPeerConnection =  wrtc.RTCPeerConnection
     var RTCSessionDescription = wrtc.RTCSessionDescription
     var RTCIceCandidate = wrtc.RTCIceCandidate
