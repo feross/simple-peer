@@ -1,6 +1,8 @@
 module.exports = Peer
 module.exports.hybrid = false
 
+//Allow hybrid overide
+
 var debug = require('debug')('simple-peer')
 var dezalgo = require('dezalgo')
 var extend = require('xtend/mutable')
@@ -10,28 +12,7 @@ var isTypedArray = require('is-typedarray')
 var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
-
-if (module.exports.hybrid === true) {
-    var wrtc = require('wrtc')
-    var RTCPeerConnection = wrtc.RTCPeerConnection
-    var RTCSessionDescription = wrtc.RTCSessionDescription
-    var RTCIceCandidate = wrtc.RTCIceCandidate
-} else {
-    var RTCPeerConnection = typeof window !== 'undefined' &&
-    (window.mozRTCPeerConnection
-    || window.RTCPeerConnection
-    || window.webkitRTCPeerConnection)
-
-    var RTCSessionDescription = typeof window !== 'undefined' &&
-    (window.mozRTCSessionDescription
-    || window.RTCSessionDescription
-    || window.webkitRTCSessionDescription)
-
-    var RTCIceCandidate = typeof window !== 'undefined' &&
-    (window.mozRTCIceCandidate
-    || window.RTCIceCandidate
-    || window.webkitRTCIceCandidate)   
-}
+var wrtc = require('wrtc')
 
 inherits(Peer, stream.Duplex)
 
@@ -43,6 +24,29 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
   if (!opts) opts = {}
+
+  //Check to see if hybrid. There were issues with placing outside peer
+  //object so this seemed like an appropriate solution
+  if (module.exports.hybrid === true) {
+    var RTCPeerConnection =  wrtc.RTCPeerConnection
+    var RTCSessionDescription = wrtc.RTCSessionDescription
+    var RTCIceCandidate = wrtc.RTCIceCandidate
+  } else {
+      var RTCPeerConnection = typeof window !== 'undefined' &&
+      (window.mozRTCPeerConnection
+      || window.RTCPeerConnection
+      || window.webkitRTCPeerConnection)
+
+      var RTCSessionDescription = typeof window !== 'undefined' &&
+      (window.mozRTCSessionDescription
+      || window.RTCSessionDescription
+      || window.webkitRTCSessionDescription)
+
+      var RTCIceCandidate = typeof window !== 'undefined' &&
+      (window.mozRTCIceCandidate
+      || window.RTCIceCandidate
+      || window.webkitRTCIceCandidate)   
+  }
 
   opts.allowHalfOpen = false
   stream.Duplex.call(self, opts)
@@ -78,16 +82,15 @@ function Peer (opts) {
   if (self.initiator) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
-    // Firefox does not trigger "negotiationneeded"; this is a workaround
-    if (module.exports.hybrid === true) {
-        setTimeout(function () {
-            self._pc.onnegotiationneeded()
-        }, 0)
-    } else if (window.mozRTCPeerConnection) {
-      setTimeout(function () {
-        self._pc.onnegotiationneeded()
-      }, 0)
-    }
+	if (module.exports.hybrid === true) {
+		self._pc.onnegotiationneeded()
+	} else {
+		if (window.mozRTCPeerConnection) {
+			setTimeout(function () {
+		        self._pc.onnegotiationneeded()
+		 	}, 0)
+		}
+	}
   } else {
     self._pc.ondatachannel = self._setupData.bind(self)
   }
