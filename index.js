@@ -11,17 +11,17 @@ var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
 var RTCPeerConnection = typeof window !== 'undefined' &&
-    (window.mozRTCPeerConnection
+  (window.mozRTCPeerConnection
   || window.RTCPeerConnection
   || window.webkitRTCPeerConnection)
 
 var RTCSessionDescription = typeof window !== 'undefined' &&
-    (window.mozRTCSessionDescription
+  (window.mozRTCSessionDescription
   || window.RTCSessionDescription
   || window.webkitRTCSessionDescription)
 
 var RTCIceCandidate = typeof window !== 'undefined' &&
-    (window.mozRTCIceCandidate
+  (window.mozRTCIceCandidate
   || window.RTCIceCandidate
   || window.webkitRTCIceCandidate)
 
@@ -235,7 +235,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   self._debug('_write: length %d', len)
 
   if (isTypedArray.strict(chunk) || chunk instanceof ArrayBuffer ||
-      typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob)) {
+    typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob)) {
     self._channel.send(chunk)
   } else {
     self._channel.send(JSON.stringify(chunk))
@@ -263,7 +263,7 @@ Peer.prototype._createOffer = function () {
 Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
-    
+
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     speedHack(answer)
