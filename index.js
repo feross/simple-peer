@@ -257,12 +257,13 @@ Peer.prototype._createOffer = function () {
     }
     if (self.trickle || self._iceComplete) sendOffer()
     else self.once('_iceComplete', sendOffer) // wait for candidates
-  }, self._onError.bind(self))
+  }, self._onError.bind(self), self.offerConstraints)
 }
 
 Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
+    
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     speedHack(answer)
@@ -272,7 +273,7 @@ Peer.prototype._createAnswer = function () {
     }
     if (self.trickle || self._iceComplete) sendAnswer()
     else self.once('_iceComplete', sendAnswer)
-  }, self._onError.bind(self))
+  }, self._onError.bind(self), self.answerConstraints)
 }
 
 Peer.prototype._onIceConnectionStateChange = function () {
