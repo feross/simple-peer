@@ -1,4 +1,4 @@
-# simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer.svg?style=flat)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer) [![npm downloads](https://img.shields.io/npm/dm/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer) [![gittip](https://img.shields.io/gittip/feross.svg?style=flat)](https://www.gittip.com/feross/)
+# simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer.svg?style=flat)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer) [![npm downloads](https://img.shields.io/npm/dm/simple-peer.svg?style=flat)](https://npmjs.org/package/simple-peer)
 
 #### Simple WebRTC video/voice and data channels.
 
