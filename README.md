@@ -6,7 +6,8 @@
 
 ## features
 
-- concise, node.js-style API for **[WebRTC](https://en.wikipedia.org/wiki/WebRTC)**
+- concise, **node.js style** API for [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
+- **works in node and the browser!**
 - supports **video/voice streams**
 - supports **data channel**
   - text and binary data
@@ -15,10 +16,10 @@
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config and constraints options
 
-This module works great in the browser with [browserify](http://browserify.org/).
+This module works in the browser with [browserify](http://browserify.org/).
 
 **Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.min.js`. This exports a `SimplePeer` function on `window`.
+`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`.
 
 ## install
 
@@ -30,7 +31,10 @@ npm install simple-peer
 
 These examples create two peers in the same page.
 
-In a real-world application, the sender and receiver `Peer` instances would exist in separate browsers. A "signaling server" (usually implemented with websockets) would be used to exchange signaling data between the two browsers until a peer-to-peer connection is established.
+In a real-world application, the sender and receiver `Peer` instances would exist in
+separate browsers. A "signaling server" (usually implemented with websockets) would be
+used to exchange signaling data between the two browsers until a peer-to-peer connection
+is established.
 
 ### data channels
 

@@ -7,6 +7,9 @@
     "email": "feross@feross.org",
     "url": "http://feross.org/"
   },
+  "browser": {
+    "wrtc": false
+  },
   "bugs": {
     "url": "https://github.com/feross/simple-peer/issues"
   },
@@ -47,13 +50,18 @@
   ],
   "license": "MIT",
   "main": "index.js",
+  "optionalDependencies": {
+    "wrtc": "^0.0.51"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "test": "standard && zuul -- test/*.js",
-    "test-local": "zuul --local -- test/*.js",
+    "test": "standard && npm run test-node && npm run test-browser",
+    "test-browser": "zuul -- test/*.js",
+    "test-browser-local": "zuul --local -- test/*.js",
+    "test-node": "tape test/*.js",
     "build": "browserify -s SimplePeer -r ./ | uglifyjs -m > simplepeer.min.js"
   },
   "testling": {

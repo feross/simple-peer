@@ -1,3 +1,5 @@
+/* global Blob */
+
 module.exports = Peer
 
 var debug = require('debug')('simple-peer')
@@ -10,20 +12,26 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-var RTCPeerConnection = typeof window !== 'undefined' &&
-  (window.mozRTCPeerConnection
-  || window.RTCPeerConnection
-  || window.webkitRTCPeerConnection)
+var wrtc
+try {
+  wrtc = require('wrtc') // webrtc in node - will be empty object in browser
+} catch (err) {
+  wrtc = {} // optional dependency failed to install
+}
 
-var RTCSessionDescription = typeof window !== 'undefined' &&
-  (window.mozRTCSessionDescription
-  || window.RTCSessionDescription
-  || window.webkitRTCSessionDescription)
+var RTCPeerConnection = typeof window !== 'undefined'
+  ? window.mozRTCPeerConnection || window.RTCPeerConnection ||
+    window.webkitRTCPeerConnection
+  : wrtc.RTCPeerConnection
 
-var RTCIceCandidate = typeof window !== 'undefined' &&
-  (window.mozRTCIceCandidate
-  || window.RTCIceCandidate
-  || window.webkitRTCIceCandidate)
+var RTCSessionDescription = typeof window !== 'undefined'
+  ? window.mozRTCSessionDescription || window.RTCSessionDescription ||
+    window.webkitRTCSessionDescription
+  : wrtc.RTCSessionDescription
+
+var RTCIceCandidate = typeof window !== 'undefined'
+  ? window.mozRTCIceCandidate || window.RTCIceCandidate || window.webkitRTCIceCandidate
+  : wrtc.RTCIceCandidate
 
 inherits(Peer, stream.Duplex)
 
@@ -48,6 +56,14 @@ function Peer (opts) {
     trickle: true
   }, opts)
 
+  if (typeof RTCPeerConnection !== 'function') {
+    if (typeof window === 'undefined') {
+      throw new Error('Missing WebRTC support - was `wrtc` dependency installed?')
+    } else {
+      throw new Error('Missing WebRTC support - is this a supported browser?')
+    }
+  }
+
   self._debug('new peer (initiator: %s)', self.initiator)
 
   self.destroyed = false
@@ -70,11 +86,10 @@ function Peer (opts) {
   if (self.initiator) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
-    // Firefox does not trigger "negotiationneeded"; this is a workaround
-    if (window.mozRTCPeerConnection) {
-      setTimeout(function () {
-        self._pc.onnegotiationneeded()
-      }, 0)
+    // Only Chrome triggers "negotiationneeded"; this is a workaround for other
+    // implementations
+    if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
+      self._pc.onnegotiationneeded()
     }
   } else {
     self._pc.ondatachannel = self._setupData.bind(self)
@@ -235,8 +250,11 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   self._debug('_write: length %d', len)
 
   if (isTypedArray.strict(chunk) || chunk instanceof ArrayBuffer ||
-    typeof chunk === 'string' || (global.Blob && chunk instanceof global.Blob)) {
+    typeof chunk === 'string' || (typeof Blob !== 'undefined' && chunk instanceof Blob)) {
     self._channel.send(chunk)
+  } else if (Buffer.isBuffer(chunk)) {
+    // node.js buffer
+    self._channel.send(new Uint8Array(chunk))
   } else {
     self._channel.send(JSON.stringify(chunk))
   }
