@@ -26,7 +26,6 @@ test('duplex stream: send data before "connect" event', function (t) {
 
   peer2.on('data', function (chunk) {
     t.equal(chunk.toString(), 'abc', 'got correct message')
-    // peer1.destroy() // we're done
   })
   peer2.on('finish', function () {
     t.pass('got peer2 "finish"')
@@ -57,8 +56,6 @@ test('duplex stream: send data one-way', function (t) {
     peer1.on('finish', function () {
       t.pass('got peer1 "finish"')
       t.ok(peer1._writableState.finished)
-
-      peer1.destroy() // we're done
     })
     peer1.on('end', function () {
       t.pass('got peer1 "end"')
