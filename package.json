@@ -51,7 +51,7 @@
   "license": "MIT",
   "main": "index.js",
   "optionalDependencies": {
-    "wrtc": "^0.0.51"
+    "wrtc": "0.0.x"
   },
   "repository": {
     "type": "git",
