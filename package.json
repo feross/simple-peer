@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "debug": "^2.1.0",
-    "dezalgo": "^1.0.1",
     "hat": "0.0.3",
     "inherits": "^2.0.1",
     "is-typedarray": "0.0.0",

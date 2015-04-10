@@ -3,7 +3,6 @@
 module.exports = Peer
 
 var debug = require('debug')('simple-peer')
-var dezalgo = require('dezalgo')
 var extend = require('xtend/mutable')
 var hat = require('hat')
 var inherits = require('inherits')
@@ -36,7 +35,7 @@ var RTCIceCandidate = typeof window !== 'undefined'
 inherits(Peer, stream.Duplex)
 
 /**
- * A WebRTC peer connection.
+ * WebRTC peer connection. Same API as node core `net.Socket`. Duplex stream.
  * @param {Object} opts
  */
 function Peer (opts) {
@@ -129,8 +128,7 @@ Peer.constraints = {}
 
 Peer.prototype.send = function (chunk, cb) {
   var self = this
-  if (cb) cb = dezalgo(cb)
-  else cb = noop
+  if (!cb) cb = noop
   self._write(chunk, undefined, cb)
 }
 
@@ -241,7 +239,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
 
   var len = chunk.length || chunk.byteLength || chunk.size
-  if (!self._channelReady) {
+  if (!self.connected) {
     self._debug('_write before ready: length %d', len)
     self._buffer.push(chunk)
     cb(null)
@@ -362,7 +360,7 @@ Peer.prototype._onChannelMessage = function (event) {
 
 Peer.prototype._onChannelOpen = function () {
   var self = this
-  if (self.destroyed) return
+  if (self.connected || self.destroyed) return
   self._debug('on channel open')
   self._channelReady = true
   self._maybeReady()
