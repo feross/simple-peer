@@ -98,12 +98,14 @@ function gotMedia (stream) {
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
 
-## real-world apps that use `simple-peer`
+## production apps that use `simple-peer`
 
-- [Instant](https://instant.io) - Secure, anonymous, streaming file transfer
+- [ScreenCat](https://maxogden.github.io/screencat/) - screen sharing + remote collaboration app
+- [WebCat](https://github.com/mafintosh/webcat) - p2p pipe across the web using Github private/public key for auth
+- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
 - [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
-- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
+- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site [demo]
 - *Your app here! - send a PR!*
 
 ## api
