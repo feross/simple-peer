@@ -29,6 +29,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "uglify-js": "^2.4.15",
+    "wrtc": "0.0.x",
     "zuul": "^2.1.1"
   },
   "homepage": "http://webtorrent.io",
@@ -49,9 +50,6 @@
   ],
   "license": "MIT",
   "main": "index.js",
-  "optionalDependencies": {
-    "wrtc": "0.0.x"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"

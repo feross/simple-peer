@@ -11,26 +11,23 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-var wrtc
-try {
-  wrtc = require('wrtc') // webrtc in node - will be empty object in browser
-} catch (err) {
-  wrtc = {} // optional dependency failed to install
+function browserRTC () {
+  if (typeof window === 'undefined') return null
+  var res = {}
+  res.RTCPeerConnection = window.mozRTCPeerConnection ||
+    window.RTCPeerConnection || window.webkitRTCPeerConnection
+  if (!res.RTCPeerConnection) return null
+
+  res.RTCSessionDescription = window.mozRTCSessionDescription ||
+    window.RTCSessionDescription || window.webkitRTCSessionDescription
+  if (!res.RTCSessionDescription) return null
+
+  res.RTCIceCandidate = window.mozRTCIceCandidate ||
+    window.RTCIceCandidate || window.webkitRTCIceCandidate
+  if (!res.RTCIceCandidate) return null
+
+  return res
 }
-
-var RTCPeerConnection = typeof window !== 'undefined'
-  ? window.mozRTCPeerConnection || window.RTCPeerConnection ||
-    window.webkitRTCPeerConnection
-  : wrtc.RTCPeerConnection
-
-var RTCSessionDescription = typeof window !== 'undefined'
-  ? window.mozRTCSessionDescription || window.RTCSessionDescription ||
-    window.webkitRTCSessionDescription
-  : wrtc.RTCSessionDescription
-
-var RTCIceCandidate = typeof window !== 'undefined'
-  ? window.mozRTCIceCandidate || window.RTCIceCandidate || window.webkitRTCIceCandidate
-  : wrtc.RTCIceCandidate
 
 inherits(Peer, stream.Duplex)
 
@@ -55,14 +52,14 @@ function Peer (opts) {
     trickle: true
   }, opts)
 
-  if (typeof RTCPeerConnection !== 'function') {
-    if (typeof window === 'undefined') {
-      throw new Error('Missing WebRTC support - was `wrtc` dependency installed?')
-    } else {
-      throw new Error('Missing WebRTC support - is this a supported browser?')
-    }
+  var wrtc = opts.wrtc ? opts.wrtc : browserRTC()
+  if (!wrtc && typeof window === 'undefined') {
+    throw new Error('Missing WebRTC support - You must supply ' +
+      '`opts.wrtc` in this environment')
+  } else if (!wrtc) {
+    throw new Error('Missing WebRTC support - is this a supported browser?')
   }
-
+  self._wrtc = wrtc
   self._debug('new peer (initiator: %s)', self.initiator)
 
   self.destroyed = false
@@ -74,7 +71,7 @@ function Peer (opts) {
   self._channel = null
   self._buffer = []
 
-  self._pc = new RTCPeerConnection(self.config, self.constraints)
+  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
   self._pc.oniceconnectionstatechange = self._onIceConnectionStateChange.bind(self)
   self._pc.onsignalingstatechange = self._onSignalingStateChange.bind(self)
   self._pc.onicecandidate = self._onIceCandidate.bind(self)
@@ -148,14 +145,14 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal')
   if (data.sdp) {
-    self._pc.setRemoteDescription(new RTCSessionDescription(data), function () {
+    self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, self._onError.bind(self))
   }
   if (data.candidate) {
     try {
       self._pc.addIceCandidate(
-        new RTCIceCandidate(data.candidate), noop, self._onError.bind(self)
+        new (self._wrtc.RTCIceCandidate)(data.candidate), noop, self._onError.bind(self)
       )
     } catch (err) {
       self._destroy(new Error('error adding candidate: ' + err.message))
