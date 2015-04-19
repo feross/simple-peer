@@ -96,7 +96,17 @@ function gotMedia (stream) {
 }
 ```
 
-For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+### in node
+
+To use this library in node, pass in `opts.wrtc` as a parameter:
+
+```js
+var SimplePeer = require('simple-peer')
+var wrtc = require('wrtc')
+
+var peer1 = new SimplePeer({ initiator: true, wrtc: wrtc })
+var peer2 = new SimplePeer({ wrtc: wrtc })
+```
 
 ## production apps that use `simple-peer`
 
@@ -137,6 +147,7 @@ The options do the following:
 - `constraints` - custom webrtc video/voice constaints
 - `channelName` - custom webrtc data channel name
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
+- `wrtc` - webrtc implementation, should have the same interface as the [wrtc](https://npmjs.com/package/wrtc) package
 
 ### `peer.signal(data)`
 
