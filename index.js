@@ -11,22 +11,18 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-function browserRTC () {
+function getBrowserRTC () {
   if (typeof window === 'undefined') return null
-  var res = {}
-  res.RTCPeerConnection = window.mozRTCPeerConnection ||
-    window.RTCPeerConnection || window.webkitRTCPeerConnection
-  if (!res.RTCPeerConnection) return null
-
-  res.RTCSessionDescription = window.mozRTCSessionDescription ||
-    window.RTCSessionDescription || window.webkitRTCSessionDescription
-  if (!res.RTCSessionDescription) return null
-
-  res.RTCIceCandidate = window.mozRTCIceCandidate ||
-    window.RTCIceCandidate || window.webkitRTCIceCandidate
-  if (!res.RTCIceCandidate) return null
-
-  return res
+  var wrtc = {
+    RTCPeerConnection: window.mozRTCPeerConnection || window.RTCPeerConnection ||
+      window.webkitRTCPeerConnection,
+    RTCSessionDescription: window.mozRTCSessionDescription ||
+      window.RTCSessionDescription || window.webkitRTCSessionDescription,
+    RTCIceCandidate: window.mozRTCIceCandidate || window.RTCIceCandidate ||
+      window.webkitRTCIceCandidate
+  }
+  if (!wrtc.RTCPeerConnection) return null
+  return wrtc
 }
 
 inherits(Peer, stream.Duplex)
@@ -52,7 +48,7 @@ function Peer (opts) {
     trickle: true
   }, opts)
 
-  var wrtc = opts.wrtc ? opts.wrtc : browserRTC()
+  var wrtc = opts.wrtc || getBrowserRTC()
   if (!wrtc && typeof window === 'undefined') {
     throw new Error('Missing WebRTC support - You must supply ' +
       '`opts.wrtc` in this environment')
