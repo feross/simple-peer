@@ -1,12 +1,13 @@
 var str = require('string-to-stream')
 var Peer = require('../')
 var test = require('tape')
+var wrtc = typeof window === 'undefined' && require('wrtc')
 
 test('duplex stream: send data before "connect" event', function (t) {
   t.plan(9)
 
-  var peer1 = new Peer({ initiator: true })
-  var peer2 = new Peer()
+  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ wrtc: wrtc })
   peer1.on('signal', function (data) { peer2.signal(data) })
   peer2.on('signal', function (data) { peer1.signal(data) })
 
@@ -40,8 +41,8 @@ test('duplex stream: send data before "connect" event', function (t) {
 test('duplex stream: send data one-way', function (t) {
   t.plan(9)
 
-  var peer1 = new Peer({ initiator: true })
-  var peer2 = new Peer()
+  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ wrtc: wrtc })
   peer1.on('signal', function (data) { peer2.signal(data) })
   peer2.on('signal', function (data) { peer1.signal(data) })
   peer1.on('connect', tryTest)

@@ -1,9 +1,10 @@
 var Peer = require('../')
 var test = require('tape')
+var wrtc = typeof window === 'undefined' && require('wrtc')
 
 test('data send/receive Uint8Array', function (t) {
-  var peer1 = new Peer({ initiator: true })
-  var peer2 = new Peer()
+  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ wrtc: wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -41,8 +42,8 @@ test('data send/receive Uint8Array', function (t) {
 })
 
 test('data send/receive Buffer', function (t) {
-  var peer1 = new Peer({ initiator: true })
-  var peer2 = new Peer()
+  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ wrtc: wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -81,8 +82,8 @@ test('data send/receive Buffer', function (t) {
 
 // TODO: re-enable when Chrome supports channel.send(Blob)
 // test('data send/receive Blob', function (t) {
-//   var peer1 = new Peer({ initiator: true })
-//   var peer2 = new Peer()
+//   var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+//   var peer2 = new Peer({ wrtc: wrtc })
 //   peer1.on('signal', function (data) {
 //     peer2.signal(data)
 //   })
@@ -120,8 +121,8 @@ test('data send/receive Buffer', function (t) {
 // })
 
 test('data send/receive ArrayBuffer', function (t) {
-  var peer1 = new Peer({ initiator: true })
-  var peer2 = new Peer()
+  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ wrtc: wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
