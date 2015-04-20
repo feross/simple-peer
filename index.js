@@ -28,7 +28,8 @@ function getBrowserRTC () {
 inherits(Peer, stream.Duplex)
 
 /**
- * WebRTC peer connection. Same API as node core `net.Socket`. Duplex stream.
+ * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
+ * Duplex stream.
  * @param {Object} opts
  */
 function Peer (opts) {
@@ -56,6 +57,7 @@ function Peer (opts) {
     throw new Error('Missing WebRTC support - is this a supported browser?')
   }
   self._wrtc = wrtc
+
   self._debug('new peer (initiator: %s)', self.initiator)
 
   self.destroyed = false
@@ -72,7 +74,7 @@ function Peer (opts) {
   self._pc.onsignalingstatechange = self._onSignalingStateChange.bind(self)
   self._pc.onicecandidate = self._onIceCandidate.bind(self)
 
-  if (self.stream) self._setupVideo(self.stream)
+  if (self.stream) self._pc.addStream(self.stream)
   self._pc.onaddstream = self._onAddStream.bind(self)
 
   if (self.initiator) {
@@ -216,11 +218,6 @@ Peer.prototype._setupData = function (event) {
   self._channel.onmessage = self._onChannelMessage.bind(self)
   self._channel.onopen = self._onChannelOpen.bind(self)
   self._channel.onclose = self._onChannelClose.bind(self)
-}
-
-Peer.prototype._setupVideo = function (stream) {
-  var self = this
-  self._pc.addStream(stream)
 }
 
 Peer.prototype._read = function () {}
