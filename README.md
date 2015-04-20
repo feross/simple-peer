@@ -96,6 +96,8 @@ function gotMedia (stream) {
 }
 ```
 
+For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
 ### in node
 
 To use this library in node, pass in `opts.wrtc` as a parameter:
