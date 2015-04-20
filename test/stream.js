@@ -8,8 +8,8 @@ test('duplex stream: send data before "connect" event', function (t) {
 
   var peer1 = new Peer({ initiator: true, wrtc: wrtc })
   var peer2 = new Peer({ wrtc: wrtc })
-  peer1.on('signal', function (data) { peer2.signal(data) })
-  peer2.on('signal', function (data) { peer1.signal(data) })
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
   str('abc').pipe(peer1)
 
