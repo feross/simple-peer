@@ -265,7 +265,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   }
 
   if (self._channel.bufferedAmount) {
-    self._debug('applying backpressure (bufferedAmount $s)', self._channel.bufferedAmount)
+    self._debug('applying backpressure (bufferedAmount %s)', self._channel.bufferedAmount)
     self._cb = cb
   } else {
     cb(null)
