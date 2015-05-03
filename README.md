@@ -137,7 +137,8 @@ If `opts` is specified, then the default options (shown below) will be overridde
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
   channelName: '<random string>',
-  trickle: true
+  trickle: true,
+  wrtc: {} // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
 }
 ```
 
@@ -149,7 +150,7 @@ The options do the following:
 - `constraints` - custom webrtc video/voice constaints
 - `channelName` - custom webrtc data channel name
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
-- `wrtc` - webrtc implementation, should have the same interface as the [wrtc](https://npmjs.com/package/wrtc) package
+- `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 
 ### `peer.signal(data)`
 
