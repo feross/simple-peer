@@ -50,6 +50,12 @@ function Peer (opts) {
   self.destroyed = false
   self.connected = false
 
+  self.remoteAddress = undefined
+  self.remoteFamily = undefined
+  self.remotePort = undefined
+  self.localAddress = undefined
+  self.localPort = undefined
+
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // done with ice candidate trickle (got null candidate)
@@ -120,6 +126,18 @@ Peer.config = {
   ]
 }
 Peer.constraints = {}
+
+Object.defineProperty(Peer.prototype, 'bufferSize', {
+  get: function () {
+    var self = this
+    return (self._channel && self._channel.bufferedAmount) || 0
+  }
+})
+
+Peer.prototype.address = function () {
+  var self = this
+  return { port: self.localPort, family: 'IPv4', address: self.localAddress }
+}
 
 Peer.prototype.send = function (chunk, cb) {
   var self = this
@@ -316,8 +334,33 @@ Peer.prototype._maybeReady = function () {
     })
     self._buffer = []
 
-    self._debug('connect')
-    self.emit('connect')
+    self._pc.getStats(function (res) {
+      res.result().forEach(function (result) {
+        var item = {}
+        result.names().forEach(function (name) {
+          item[name] = result.stat(name)
+        })
+        item.id = result.id
+        item.type = result.type
+        item.timestamp = result.timestamp
+
+        if (item.type === 'remotecandidate') {
+          self.remoteAddress = item.ipAddress
+          self.remoteFamily = 'IPv4'
+          self.remotePort = item.portNumber
+          self._debug(
+            'connect remote: %s:%s (%s)',
+            self.remoteAddress, self.remotePort, self.remoteFamily
+          )
+        } else if (item.type === 'localcandidate') {
+          self.localAddress = item.ipAddress
+          self.localPort = item.portNumber
+          self._debug('connect local: %s:%s', self.localAddress, self.localPort)
+        }
+      })
+      self._debug('connect')
+      self.emit('connect')
+    })
   }
 }
 
