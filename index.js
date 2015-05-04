@@ -155,7 +155,7 @@ Peer.prototype.signal = function (data) {
       data = {}
     }
   }
-  self._debug('signal')
+  self._debug('signal()')
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
@@ -285,6 +285,7 @@ Peer.prototype._createOffer = function () {
     speedHack(offer)
     self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
+      self._debug('signal')
       self.emit('signal', self._pc.localDescription || offer)
     }
     if (self.trickle || self._iceComplete) sendOffer()
@@ -301,6 +302,7 @@ Peer.prototype._createAnswer = function () {
     speedHack(answer)
     self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
+      self._debug('signal')
       self.emit('signal', self._pc.localDescription || answer)
     }
     if (self.trickle || self._iceComplete) sendAnswer()
@@ -313,8 +315,8 @@ Peer.prototype._onIceConnectionStateChange = function () {
   if (self.destroyed) return
   var iceGatheringState = self._pc.iceGatheringState
   var iceConnectionState = self._pc.iceConnectionState
-  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
   self._debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
+  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
     self._pcReady = true
     self._maybeReady()
@@ -367,8 +369,8 @@ Peer.prototype._maybeReady = function () {
 Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
-  self.emit('signalingStateChange', self._pc.signalingState)
   self._debug('signalingStateChange %s', self._pc.signalingState)
+  self.emit('signalingStateChange', self._pc.signalingState)
 }
 
 Peer.prototype._onIceCandidate = function (event) {
