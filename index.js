@@ -332,16 +332,33 @@ Peer.prototype._maybeReady = function () {
   if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
   self._connecting = true
 
-  self._pc.getStats(function (res) {
-    res.result().forEach(function (result) {
-      var item = {}
-      result.names().forEach(function (name) {
-        item[name] = result.stat(name)
+  if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
+    self._pc.getStats(null, function (res) {
+      var items = []
+      res.forEach(function (item) {
+        items.push(item)
       })
-      item.id = result.id
-      item.type = result.type
-      item.timestamp = result.timestamp
+      onStats(items)
+    }, self._onError.bind(self))
+  } else {
+    self._pc.getStats(function (res) {
+      var items = []
+      res.result().forEach(function (result) {
+        var item = {}
+        result.names().forEach(function (name) {
+          item[name] = result.stat(name)
+        })
+        item.id = result.id
+        item.type = result.type
+        item.timestamp = result.timestamp
+        items.push(item)
+      })
+      onStats(items)
+    })
+  }
 
+  function onStats (items) {
+    items.forEach(function (item) {
       if (item.type === 'remotecandidate') {
         self.remoteAddress = item.ipAddress
         self.remoteFamily = 'IPv4'
@@ -350,7 +367,7 @@ Peer.prototype._maybeReady = function () {
           'connect remote: %s:%s (%s)',
           self.remoteAddress, self.remotePort, self.remoteFamily
         )
-      } else if (item.type === 'localcandidate') {
+      } else if (item.type === 'localcandidate' && item.candidateType === 'host') {
         self.localAddress = item.ipAddress
         self.localPort = Number(item.portNumber)
         self._debug('connect local: %s:%s', self.localAddress, self.localPort)
@@ -366,7 +383,7 @@ Peer.prototype._maybeReady = function () {
 
     self._debug('connect')
     self.emit('connect')
-  })
+  }
 }
 
 Peer.prototype._onSignalingStateChange = function () {
