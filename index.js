@@ -329,41 +329,44 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype._maybeReady = function () {
   var self = this
   self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
-  if (!self.connected && self._pcReady && self._channelReady) {
+  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
+  self._connecting = true
+
+  self._pc.getStats(function (res) {
+    res.result().forEach(function (result) {
+      var item = {}
+      result.names().forEach(function (name) {
+        item[name] = result.stat(name)
+      })
+      item.id = result.id
+      item.type = result.type
+      item.timestamp = result.timestamp
+
+      if (item.type === 'remotecandidate') {
+        self.remoteAddress = item.ipAddress
+        self.remoteFamily = 'IPv4'
+        self.remotePort = Number(item.portNumber)
+        self._debug(
+          'connect remote: %s:%s (%s)',
+          self.remoteAddress, self.remotePort, self.remoteFamily
+        )
+      } else if (item.type === 'localcandidate') {
+        self.localAddress = item.ipAddress
+        self.localPort = Number(item.portNumber)
+        self._debug('connect local: %s:%s', self.localAddress, self.localPort)
+      }
+    })
+
+    self._connecting = false
     self.connected = true
     self._buffer.forEach(function (chunk) {
       self.send(chunk)
     })
     self._buffer = []
 
-    self._pc.getStats(function (res) {
-      res.result().forEach(function (result) {
-        var item = {}
-        result.names().forEach(function (name) {
-          item[name] = result.stat(name)
-        })
-        item.id = result.id
-        item.type = result.type
-        item.timestamp = result.timestamp
-
-        if (item.type === 'remotecandidate') {
-          self.remoteAddress = item.ipAddress
-          self.remoteFamily = 'IPv4'
-          self.remotePort = Number(item.portNumber)
-          self._debug(
-            'connect remote: %s:%s (%s)',
-            self.remoteAddress, self.remotePort, self.remoteFamily
-          )
-        } else if (item.type === 'localcandidate') {
-          self.localAddress = item.ipAddress
-          self.localPort = Number(item.portNumber)
-          self._debug('connect local: %s:%s', self.localAddress, self.localPort)
-        }
-      })
-      self._debug('connect')
-      self.emit('connect')
-    })
-  }
+    self._debug('connect')
+    self.emit('connect')
+  })
 }
 
 Peer.prototype._onSignalingStateChange = function () {
