@@ -347,14 +347,14 @@ Peer.prototype._maybeReady = function () {
         if (item.type === 'remotecandidate') {
           self.remoteAddress = item.ipAddress
           self.remoteFamily = 'IPv4'
-          self.remotePort = item.portNumber
+          self.remotePort = Number(item.portNumber)
           self._debug(
             'connect remote: %s:%s (%s)',
             self.remoteAddress, self.remotePort, self.remoteFamily
           )
         } else if (item.type === 'localcandidate') {
           self.localAddress = item.ipAddress
-          self.localPort = item.portNumber
+          self.localPort = Number(item.portNumber)
           self._debug('connect local: %s:%s', self.localAddress, self.localPort)
         }
       })
