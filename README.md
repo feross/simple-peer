@@ -112,8 +112,9 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 
 ## production apps that use `simple-peer`
 
+- [Friends](https://github.com/moose-team/friends) - P2P chat powered by the web
 - [ScreenCat](https://maxogden.github.io/screencat/) - screen sharing + remote collaboration app
-- [WebCat](https://github.com/mafintosh/webcat) - p2p pipe across the web using Github private/public key for auth
+- [WebCat](https://github.com/mafintosh/webcat) - P2P pipe across the web using Github private/public key for auth
 - [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
 - [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
