@@ -38,6 +38,17 @@ test('data send/receive text', function (t) {
     t.equal(peer1.initiator, true, 'peer1 is initiator')
     t.equal(peer2.initiator, false, 'peer2 is not initiator')
 
+    t.equal(peer1.localAddress, peer2.remoteAddress)
+    t.equal(peer1.localPort, peer2.remotePort)
+
+    t.equal(peer2.localAddress, peer1.remoteAddress)
+    t.equal(peer2.localPort, peer1.remotePort)
+
+    t.ok(typeof peer1.remoteFamily === 'string')
+    t.ok(peer1.remoteFamily.indexOf('IPv') === 0)
+    t.ok(typeof peer2.remoteFamily === 'string')
+    t.ok(peer2.remoteFamily.indexOf('IPv') === 0)
+
     peer1.send('sup peer2')
     peer2.on('data', function (data) {
       t.equal(data, 'sup peer2', 'got correct message')
