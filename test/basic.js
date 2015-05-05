@@ -2,6 +2,11 @@ var Peer = require('../')
 var test = require('tape')
 var wrtc = typeof window === 'undefined' && require('wrtc')
 
+test('detect WebRTC support', function (t) {
+  t.equal(Peer.WEBRTC_SUPPORT, typeof window !== 'undefined', 'builtin webrtc support')
+  t.end()
+})
+
 test('signal event gets emitted', function (t) {
   var peer = new Peer({ initiator: true, wrtc: wrtc })
   peer.once('signal', function () {
