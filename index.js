@@ -113,6 +113,8 @@ function Peer (opts) {
   if (self._interval.unref) self._interval.unref()
 }
 
+Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
+
 /**
  * Expose config and constraints for overriding all Peer instances. Otherwise, just
  * set opts.config and opts.constraints when constructing a Peer.

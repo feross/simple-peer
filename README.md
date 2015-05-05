@@ -176,6 +176,20 @@ Destroy and cleanup this peer connection.
 
 If the optional `onclose` parameter is passed, then it will be registered as a listener on the 'close' event.
 
+### `Peer.WEBRTC_SUPPORT`
+
+Detect WebRTC support by checking this static property.
+
+```js
+var Peer = require('simple-peer')
+
+if (Peer.WEBRTC_SUPPORT) {
+  // webrtc support!
+} else {
+  // fallback
+}
+```
+
 ### duplex stream
 
 `Peer` objects are instances of `stream.Duplex`. The behave very similarly to a
