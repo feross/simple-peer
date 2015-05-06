@@ -30,7 +30,7 @@
     "tape": "^4.0.0",
     "uglify-js": "^2.4.15",
     "wrtc": "0.0.x",
-    "zuul": "^2.1.1"
+    "zuul": "^3.0.0"
   },
   "homepage": "http://webtorrent.io",
   "keywords": [
