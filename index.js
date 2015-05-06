@@ -58,9 +58,12 @@ function Peer (opts) {
 
   self._pcReady = false
   self._channelReady = false
-  self._iceComplete = false // done with ice candidate trickle (got null candidate)
+  self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
-  self._buffer = []
+
+  self._chunk = null
+  self._cb = null
+  self._interval
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
   self._pc.oniceconnectionstatechange = self._onIceConnectionStateChange.bind(self)
@@ -102,15 +105,6 @@ function Peer (opts) {
       })
     }
   })
-
-  self._interval = setInterval(function () {
-    if (!self._cb || !self._channel || self._channel.bufferedAmount) return
-    self._debug('removing backpressure')
-    var cb = self._cb
-    self._cb = null
-    cb()
-  }, 150)
-  if (self._interval.unref) self._interval.unref()
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
@@ -139,12 +133,6 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
 Peer.prototype.address = function () {
   var self = this
   return { port: self.localPort, family: 'IPv4', address: self.localAddress }
-}
-
-Peer.prototype.send = function (chunk, cb) {
-  var self = this
-  if (!cb) cb = noop
-  self._write(chunk, undefined, cb)
 }
 
 Peer.prototype.signal = function (data) {
@@ -177,6 +165,19 @@ Peer.prototype.signal = function (data) {
   }
 }
 
+Peer.prototype.send = function (chunk) {
+  var self = this
+  var len = chunk.length || chunk.byteLength || chunk.size
+
+  // `wrtc` module doesn't accept node.js buffer
+  if (Buffer.isBuffer(chunk) && !isTypedArray.strict(chunk)) {
+    chunk = new Uint8Array(chunk)
+  }
+
+  self._channel.send(chunk)
+  self._debug('write: %d bytes', len)
+}
+
 Peer.prototype.destroy = function (onclose) {
   var self = this
   self._destroy(null, onclose)
@@ -196,6 +197,8 @@ Peer.prototype._destroy = function (err, onclose) {
 
   clearInterval(self._interval)
   self._interval = null
+  self._chunk = null
+  self._cb = null
 
   if (self._pc) {
     try {
@@ -251,30 +254,24 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   var self = this
   if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
 
-  var len = chunk.length || chunk.byteLength || chunk.size
-  if (!self.connected) {
-    self._debug('_write before ready: length %d', len)
-    self._buffer.push(chunk)
-    cb(null)
-    return
+  if (!isTypedArray.strict(chunk) && !(chunk instanceof ArrayBuffer) &&
+    !Buffer.isBuffer(chunk) && typeof chunk !== 'string' &&
+    (typeof Blob === 'undefined' || !(chunk instanceof Blob))) {
+    chunk = JSON.stringify(chunk)
   }
-  self._debug('_write: length %d', len)
 
-  if (isTypedArray.strict(chunk) || chunk instanceof ArrayBuffer ||
-    typeof chunk === 'string' || (typeof Blob !== 'undefined' && chunk instanceof Blob)) {
-    self._channel.send(chunk)
-  } else if (Buffer.isBuffer(chunk)) {
-    // node.js buffer
-    self._channel.send(new Uint8Array(chunk))
+  if (self.connected) {
+    self.send(chunk)
+    if (self._channel.bufferedAmount) {
+      self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+      self._cb = cb
+    } else {
+      cb(null)
+    }
   } else {
-    self._channel.send(JSON.stringify(chunk))
-  }
-
-  if (self._channel.bufferedAmount) {
-    self._debug('applying backpressure (bufferedAmount %s)', self._channel.bufferedAmount)
+    self._debug('write before connect')
+    self._chunk = chunk
     self._cb = cb
-  } else {
-    cb(null)
   }
 }
 
@@ -378,10 +375,25 @@ Peer.prototype._maybeReady = function () {
 
     self._connecting = false
     self.connected = true
-    self._buffer.forEach(function (chunk) {
-      self.send(chunk)
-    })
-    self._buffer = []
+
+    if (self._chunk) {
+      self.send(self._chunk)
+      self._chunk = null
+      self._debug('sent chunk from "write before connect"')
+
+      var cb = self._cb
+      self._cb = null
+      cb(null)
+    }
+
+    self._interval = setInterval(function () {
+      if (!self._cb || !self._channel || self._channel.bufferedAmount) return
+      self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+      var cb = self._cb
+      self._cb = null
+      cb(null)
+    }, 150)
+    if (self._interval.unref) self._interval.unref()
 
     self._debug('connect')
     self.emit('connect')
