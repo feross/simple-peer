@@ -215,7 +215,11 @@ The options do the following:
 
 Call this method whenever the remote peer emits a `peer.on('signal')` event.
 
-The `data` will be a `String` that encapsulates a webrtc offer, answer, or ice candidate. These messages help the peers to eventually establish a direct connection to each other. The contents of these strings are an implementation detail that can be ignored by the user of this module; simply pass the data from 'signal' events to the remote peer, call `peer.signal(data)`, and everything will just work.
+The `data` will encapsulate a webrtc offer, answer, or ice candidate. These messages help
+the peers to eventually establish a direct connection to each other. The contents of these
+strings are an implementation detail that can be ignored by the user of this module;
+simply pass the data from 'signal' events to the remote peer and call `peer.signal(data)`
+to get connected.
 
 ### `peer.send(data)`
 
@@ -236,7 +240,7 @@ If the optional `onclose` parameter is passed, then it will be registered as a l
 
 ### `Peer.WEBRTC_SUPPORT`
 
-Detect WebRTC support by checking this static property.
+Detect native WebRTC support in the javascript environment.
 
 ```js
 var Peer = require('simple-peer')
@@ -270,7 +274,10 @@ peer.on('data', function (chunk) {
 
 Fired when the peer wants to send signaling data to the remote peer.
 
-**It is the responsibility of the application developer (that's you!) to get this data to the other peer.** This usually entails using a websocket signaling server. Then, simply call `peer.signal(data)` on the remote peer.
+**It is the responsibility of the application developer (that's you!) to get this data to
+the other peer.** This usually entails using a websocket signaling server. This data is an
+`Object`, so  remember to call `JSON.stringify(data)` to serialize it first. Then, simply
+call `peer.signal(data)` on the remote peer.
 
 ### `peer.on('connect', function () {})`
 
