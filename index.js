@@ -29,6 +29,7 @@ function Peer (opts) {
     config: Peer.config,
     constraints: Peer.constraints,
     channelName: (opts && opts.initiator) ? hat(160) : null,
+    dataChannelOpts: {},
     trickle: true,
     allowHalfOpen: false, // duplex stream option
     highWaterMark: 1024 * 1024 // duplex stream option
@@ -74,7 +75,7 @@ function Peer (opts) {
   self._pc.onaddstream = self._onAddStream.bind(self)
 
   if (self.initiator) {
-    self._setupData({ channel: self._pc.createDataChannel(self.channelName) })
+    self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.dataChannelOpts) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
