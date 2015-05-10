@@ -225,7 +225,7 @@ to get connected.
 
 Send text/binary data to the remote peer. `data` can be any of several types: `String`, `Buffer` (see [buffer](https://github.com/feross/buffer)), `TypedArrayView` (`Uint8Array`, etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
-Other data types will be transformed with `JSON.stringify` before sending. This is handy
+Other data types have to be transformed with `JSON.stringify` before sending. It is required
 for sending object literals across like this:
 `peer.send({ type: 'data', data: 'hi' })`.
 
