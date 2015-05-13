@@ -29,7 +29,7 @@ function Peer (opts) {
     config: Peer.config,
     constraints: Peer.constraints,
     channelName: (opts && opts.initiator) ? hat(160) : null,
-    dataChannelOpts: {},
+    channelConfig: Peer.channelConfig,
     trickle: true,
     allowHalfOpen: false, // duplex stream option
     highWaterMark: 1024 * 1024 // duplex stream option
@@ -75,7 +75,7 @@ function Peer (opts) {
   self._pc.onaddstream = self._onAddStream.bind(self)
 
   if (self.initiator) {
-    self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.dataChannelOpts) })
+    self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.channelConfig) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
@@ -111,8 +111,9 @@ function Peer (opts) {
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 
 /**
- * Expose config and constraints for overriding all Peer instances. Otherwise, just
- * set opts.config and opts.constraints when constructing a Peer.
+ * Expose config, constraints, and data channel config for overriding all Peer
+ * instances. Otherwise, just set opts.config, opts.constraints, or opts.channelConfig
+ * when constructing a Peer.
  */
 Peer.config = {
   iceServers: [
@@ -123,6 +124,7 @@ Peer.config = {
   ]
 }
 Peer.constraints = {}
+Peer.channelConfig = {}
 
 Object.defineProperty(Peer.prototype, 'bufferSize', {
   get: function () {

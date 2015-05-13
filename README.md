@@ -196,6 +196,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
   channelName: '<random string>',
+  channelConfig: {},
   trickle: true,
   wrtc: {} // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
 }
@@ -205,9 +206,10 @@ The options do the following:
 
 - `initiator` - set to true if this is the initiating peer
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
-- `config` - custom webrtc configuration
-- `constraints` - custom webrtc video/voice constaints
+- `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
+- `constraints` - custom webrtc video/voice constaints (used by `RTCPeerConnection` constructor)
 - `channelName` - custom webrtc data channel name
+- `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 
