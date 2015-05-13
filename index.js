@@ -168,15 +168,25 @@ Peer.prototype.signal = function (data) {
   }
 }
 
+/**
+ * Send text/binary data to the remote peer.
+ * @param {TypedArrayView|ArrayBuffer|Buffer|string|Blob|Object} chunk
+ */
 Peer.prototype.send = function (chunk) {
   var self = this
-  var len = chunk.length || chunk.byteLength || chunk.size
+
+  if (!isTypedArray.strict(chunk) && !(chunk instanceof ArrayBuffer) &&
+    !Buffer.isBuffer(chunk) && typeof chunk !== 'string' &&
+    (typeof Blob === 'undefined' || !(chunk instanceof Blob))) {
+    chunk = JSON.stringify(chunk)
+  }
 
   // `wrtc` module doesn't accept node.js buffer
   if (Buffer.isBuffer(chunk) && !isTypedArray.strict(chunk)) {
     chunk = new Uint8Array(chunk)
   }
 
+  var len = chunk.length || chunk.byteLength || chunk.size
   self._channel.send(chunk)
   self._debug('write: %d bytes', len)
 }
@@ -247,21 +257,9 @@ Peer.prototype._setupData = function (event) {
 
 Peer.prototype._read = function () {}
 
-/**
- * Send text/binary data to the remote peer.
- * @param {string|Buffer|TypedArrayView|ArrayBuffer|Blob} chunk
- * @param {string} encoding
- * @param {function} cb
- */
 Peer.prototype._write = function (chunk, encoding, cb) {
   var self = this
   if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
-
-  if (!isTypedArray.strict(chunk) && !(chunk instanceof ArrayBuffer) &&
-    !Buffer.isBuffer(chunk) && typeof chunk !== 'string' &&
-    (typeof Blob === 'undefined' || !(chunk instanceof Blob))) {
-    chunk = JSON.stringify(chunk)
-  }
 
   if (self.connected) {
     self.send(chunk)
