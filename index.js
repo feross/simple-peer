@@ -321,7 +321,7 @@ Peer.prototype._onIceConnectionStateChange = function () {
     self._pcReady = true
     self._maybeReady()
   }
-  if (iceConnectionState === 'disconnected' || iceConnectionState === 'closed') {
+  if (iceConnectionState === 'closed') {
     self._destroy()
   }
 }
