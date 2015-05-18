@@ -32,6 +32,7 @@ function Peer (opts) {
     constraints: Peer.constraints,
     channelName: (opts && opts.initiator) ? hat(160) : null,
     channelConfig: Peer.channelConfig,
+    sdpTransform: function (input) {return input},
     trickle: true,
     allowHalfOpen: false, // duplex stream option
     highWaterMark: 1024 * 1024 // duplex stream option
@@ -285,6 +286,7 @@ Peer.prototype._createOffer = function () {
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
     speedHack(offer)
+    offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
       self._debug('signal')
@@ -302,6 +304,7 @@ Peer.prototype._createAnswer = function () {
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     speedHack(answer)
+    answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
       self._debug('signal')
