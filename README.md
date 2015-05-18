@@ -192,11 +192,12 @@ If `opts` is specified, then the default options (shown below) will be overridde
 ```
 {
   initiator: false,
-  stream: false,
+  channelConfig: {},
+  channelName: '<random string>',
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
-  channelName: '<random string>',
-  channelConfig: {},
+  sdpTransform: function (sdp) { return sdp },
+  stream: false,
   trickle: true,
   wrtc: {} // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
 }
@@ -205,11 +206,12 @@ If `opts` is specified, then the default options (shown below) will be overridde
 The options do the following:
 
 - `initiator` - set to true if this is the initiating peer
-- `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
+- `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
+- `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
 - `constraints` - custom webrtc video/voice constaints (used by `RTCPeerConnection` constructor)
-- `channelName` - custom webrtc data channel name
-- `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
+- `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
+- `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 
