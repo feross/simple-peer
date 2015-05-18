@@ -76,21 +76,19 @@ test('data send/receive text', function (t) {
   }
 })
 
-test('sdpTransform is called', function (t) {
-
+test('sdpTransform function is called', function (t) {
   var peer1 = new Peer({ initiator: true, wrtc: wrtc })
-  var peer2 = new Peer({ wrtc: wrtc, sdpTransform: function (sdp) {
-    t.equal(typeof sdp, 'string', 'got a string as SDP')
+  var peer2 = new Peer({ wrtc: wrtc, sdpTransform: sdpTransform })
 
+  function sdpTransform (sdp) {
+    t.equal(typeof sdp, 'string', 'got a string as SDP')
     setTimeout(function () {
       peer1.destroy()
       peer2.destroy()
       t.end()
     })
-
-    return sdp;
+    return sdp
   }
-  })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
