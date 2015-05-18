@@ -154,6 +154,7 @@ Peer.prototype.signal = function (data) {
   self._debug('signal()')
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
+      if (self.destroyed) return
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, self._onError.bind(self))
   }
