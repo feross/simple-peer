@@ -207,6 +207,11 @@ Peer.prototype._destroy = function (err, onclose) {
 
   self._debug('destroy (error: %s)', err && err.message)
 
+  self.readable = self.writable = false
+
+  if (!self._readableState.ended) self.push(null)
+  if (!self._writableState.finished) self.end()
+
   self.destroyed = true
   self.connected = false
   self._pcReady = false
@@ -238,11 +243,6 @@ Peer.prototype._destroy = function (err, onclose) {
   }
   self._pc = null
   self._channel = null
-
-  self.readable = self.writable = false
-
-  if (!self._readableState.ended) self.push(null)
-  if (!self._writableState.finished) self.end()
 
   if (err) self.emit('error', err)
   self.emit('close')
