@@ -11,8 +11,6 @@ var once = require('once')
 var stream = require('stream')
 var toBuffer = require('typedarray-to-buffer')
 
-var MAX_BUFFERED_AMOUNT = 1000 * 1000
-
 inherits(Peer, stream.Duplex)
 
 /**
@@ -35,7 +33,7 @@ function Peer (opts) {
     sdpTransform: function (input) { return input },
     trickle: true,
     allowHalfOpen: false, // duplex stream option
-    highWaterMark: 1024 * 1024 // duplex stream option
+    highWaterMark: 1024 * 1024 // max bufferedAmount / duplex stream option
   }, opts)
 
   stream.Duplex.call(self, opts)
@@ -267,7 +265,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
 
   if (self.connected) {
     self.send(chunk)
-    if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+    if (self._channel.bufferedAmount > self.highWaterMark) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       self._cb = cb
     } else {
@@ -394,7 +392,7 @@ Peer.prototype._maybeReady = function () {
     }
 
     self._interval = setInterval(function () {
-      if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) return
+      if (!self._cb || !self._channel || self._channel.bufferedAmount > self.highWaterMark) return
       self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       var cb = self._cb
       self._cb = null
