@@ -29,13 +29,14 @@ function Peer (opts) {
   stream.Duplex.call(self, opts)
 
   self.initiator = opts.initiator || false
-  self.stream = opts.stream || false
-  self.config = opts.config || Peer.config
-  self.constraints = opts.constraints || Peer.constraints
+  self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.channelName = opts.channelName || hat(160)
   if (!opts.initiator) self.channelName = null
-  self.channelConfig = opts.channelConfig || Peer.channelConfig
-  self.sdpTransform = opts.sdpTransform || function (input) { return input }
+  self.config = opts.config || Peer.config
+  self.constraints = opts.constraints || Peer.constraints
+  self.reconnectTimer = opts.reconnectTimer || 0
+  self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
+  self.stream = opts.stream || false
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
@@ -65,7 +66,8 @@ function Peer (opts) {
 
   self._chunk = null
   self._cb = null
-  self._interval
+  self._interval = null
+  self._reconnectTimeout = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
   self._pc.oniceconnectionstatechange = self._onIceConnectionStateChange.bind(self)
@@ -215,10 +217,10 @@ Peer.prototype._destroy = function (err, onclose) {
   self._pcReady = false
   self._channelReady = false
 
-  clearInterval(self._interval)
-  self._interval = null
   self._chunk = null
   self._cb = null
+  clearInterval(self._interval)
+  clearTimeout(self._reconnectTimeout)
 
   if (self._pc) {
     try {
@@ -322,8 +324,20 @@ Peer.prototype._onIceConnectionStateChange = function () {
   self._debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
   self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+    clearTimeout(self._reconnectTimeout)
     self._pcReady = true
     self._maybeReady()
+  }
+  if (iceConnectionState === 'disconnected') {
+    if (self.reconnectTimer) {
+      // If user has set `opt.reconnectTimer`, allow time for ICE to attempt a reconnect
+      clearTimeout(self._reconnectTimeout)
+      self._reconnectTimeout = setTimeout(function () {
+        self._destroy()
+      }, self.reconnectTimer)
+    } else {
+      self._destroy()
+    }
   }
   if (iceConnectionState === 'closed') {
     self._destroy()

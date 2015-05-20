@@ -196,6 +196,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   channelName: '<random string>',
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
+  reconnectTimer: 0,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   trickle: true,
@@ -210,6 +211,7 @@ The options do the following:
 - `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
 - `constraints` - custom webrtc video/voice constaints (used by `RTCPeerConnection` constructor)
+- `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
