@@ -3,7 +3,6 @@
 module.exports = Peer
 
 var debug = require('debug')('simple-peer')
-var extend = require('xtend/mutable')
 var hat = require('hat')
 var inherits = require('inherits')
 var isTypedArray = require('is-typedarray')
@@ -21,43 +20,44 @@ inherits(Peer, stream.Duplex)
 function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
-  if (!opts) opts = {}
+  self._debug('new peer %o', opts)
 
-  extend(self, {
-    initiator: false,
-    stream: false,
-    config: Peer.config,
-    constraints: Peer.constraints,
-    channelName: (opts && opts.initiator) ? hat(160) : null,
-    channelConfig: Peer.channelConfig,
-    sdpTransform: function (input) { return input },
-    trickle: true,
-    allowHalfOpen: false, // duplex stream option
-    highWaterMark: 1024 * 1024 // max bufferedAmount / duplex stream option
-  }, opts)
+  if (!opts) opts = {}
+  opts.allowHalfOpen = false
+  if (opts.highWaterMark == null) opts.highWaterMark = 1024 * 1024
 
   stream.Duplex.call(self, opts)
 
-  var wrtc = opts.wrtc || getBrowserRTC()
-  if (!wrtc && typeof window === 'undefined') {
-    throw new Error('Missing WebRTC support - You must supply ' +
-      '`opts.wrtc` in this environment')
-  } else if (!wrtc) {
-    throw new Error('Missing WebRTC support - is this a supported browser?')
-  }
-  self._wrtc = wrtc
-
-  self._debug('new peer (initiator: %s)', self.initiator)
+  self.initiator = opts.initiator || false
+  self.stream = opts.stream || false
+  self.config = opts.config || Peer.config
+  self.constraints = opts.constraints || Peer.constraints
+  self.channelName = opts.channelName || hat(160)
+  if (!opts.initiator) self.channelName = null
+  self.channelConfig = opts.channelConfig || Peer.channelConfig
+  self.sdpTransform = opts.sdpTransform || function (input) { return input }
+  self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
   self.connected = false
 
+  // so Peer object always has same shape (V8 optimization)
   self.remoteAddress = undefined
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
   self.localPort = undefined
 
+  self._wrtc = opts.wrtc || getBrowserRTC()
+  if (!self._wrtc) {
+    if (typeof window === 'undefined') {
+      throw new Error('No WebRTC support: Specify `opts.wrtc` option in this environment')
+    } else {
+      throw new Error('No WebRTC support: Not a supported browser')
+    }
+  }
+
+  self._maxBufferedAmount = opts.highWaterMark
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
@@ -265,7 +265,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
 
   if (self.connected) {
     self.send(chunk)
-    if (self._channel.bufferedAmount > self.highWaterMark) {
+    if (self._channel.bufferedAmount > self._maxBufferedAmount) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       self._cb = cb
     } else {
@@ -392,7 +392,7 @@ Peer.prototype._maybeReady = function () {
     }
 
     self._interval = setInterval(function () {
-      if (!self._cb || !self._channel || self._channel.bufferedAmount > self.highWaterMark) return
+      if (!self._cb || !self._channel || self._channel.bufferedAmount > self._maxBufferedAmount) return
       self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       var cb = self._cb
       self._cb = null
