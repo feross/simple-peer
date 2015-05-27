@@ -290,8 +290,12 @@ Peer.prototype._createOffer = function () {
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
+      var signal = self._pc.localDescription || offer;
       self._debug('signal')
-      self.emit('signal', self._pc.localDescription || offer)
+      self.emit('signal', {
+        type: signal.type,
+        sdp: signal.sdp
+      })
     }
     if (self.trickle || self._iceComplete) sendOffer()
     else self.once('_iceComplete', sendOffer) // wait for candidates
@@ -308,8 +312,12 @@ Peer.prototype._createAnswer = function () {
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
+      var signal = self._pc.localDescription || answer;
       self._debug('signal')
-      self.emit('signal', self._pc.localDescription || answer)
+      self.emit('signal', {
+        type: signal.type,
+        sdp: signal.sdp
+      })
     }
     if (self.trickle || self._iceComplete) sendAnswer()
     else self.once('_iceComplete', sendAnswer)
@@ -430,7 +438,13 @@ Peer.prototype._onIceCandidate = function (event) {
   var self = this
   if (self.destroyed) return
   if (event.candidate && self.trickle) {
-    self.emit('signal', { candidate: event.candidate })
+    self.emit('signal', {
+      candidate: {
+        candidate: event.candidate,
+        sdpMLineIndex: event.candidate.sdpMLineIndex,
+        sdpMid: event.candidate.sdpMid
+      }
+    })
   } else if (!event.candidate) {
     self._iceComplete = true
     self.emit('_iceComplete')
