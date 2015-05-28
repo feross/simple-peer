@@ -440,7 +440,7 @@ Peer.prototype._onIceCandidate = function (event) {
   if (event.candidate && self.trickle) {
     self.emit('signal', {
       candidate: {
-        candidate: event.candidate,
+        candidate: event.candidate.candidate,
         sdpMLineIndex: event.candidate.sdpMLineIndex,
         sdpMid: event.candidate.sdpMid
       }
