@@ -286,7 +286,6 @@ Peer.prototype._createOffer = function () {
 
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
-    speedHack(offer)
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
     var sendOffer = function () {
@@ -308,7 +307,6 @@ Peer.prototype._createAnswer = function () {
 
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
-    speedHack(answer)
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
     var sendAnswer = function () {
@@ -517,11 +515,6 @@ function getBrowserRTC () {
   }
   if (!wrtc.RTCPeerConnection) return null
   return wrtc
-}
-
-function speedHack (obj) {
-  var s = obj.sdp.split('b=AS:30')
-  if (s.length > 1) obj.sdp = s[0] + 'b=AS:1638400' + s[1]
 }
 
 function noop () {}
