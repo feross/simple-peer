@@ -267,7 +267,11 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
 
   if (self.connected) {
-    self.send(chunk)
+    try {
+      self.send(chunk)
+    } catch (err) {
+      return self._onError(err)
+    }
     if (self._channel.bufferedAmount > self._maxBufferedAmount) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       self._cb = cb
@@ -403,7 +407,11 @@ Peer.prototype._maybeReady = function () {
     self.connected = true
 
     if (self._chunk) {
-      self.send(self._chunk)
+      try {
+        self.send(self._chunk)
+      } catch (err) {
+        return self._onError(err)
+      }
       self._chunk = null
       self._debug('sent chunk from "write before connect"')
 
