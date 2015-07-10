@@ -64,7 +64,7 @@ function Peer (opts) {
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
-  self._pendingCandidates = [];
+  self._pendingCandidates = []
 
   self._chunk = null
   self._cb = null
@@ -154,31 +154,29 @@ Peer.prototype.signal = function (data) {
     }
   }
   self._debug('signal()')
+
+  function addIceCandidate (candidate) {
+    try {
+      self._pc.addIceCandidate(
+        new self._wrtc.RTCIceCandidate(candidate), noop, self._onError.bind(self)
+      )
+    } catch (err) {
+      self._destroy(new Error('error adding candidate: ' + err.message))
+    }
+  }
+
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
 
-      self._pendingCandidates.forEach(function(c){
-        self._pc.addIceCandidate(
-	  new (self._wrtc.RTCIceCandidate)(c), noop, self._onError.bind(self)
-        );
-      });
-      self._pendingCandidates = [];
+      self._pendingCandidates.forEach(addIceCandidate)
+      self._pendingCandidates = []
     }, self._onError.bind(self))
   }
   if (data.candidate) {
-    try {
-      if(self._pc.remoteDescription === null){
-        self._pendingCandidates.push(data.candidate);
-      } else {
-        self._pc.addIceCandidate(
-          new (self._wrtc.RTCIceCandidate)(data.candidate), noop, self._onError.bind(self)
-        )
-      }
-    } catch (err) {
-      self._destroy(new Error('error adding candidate: ' + err.message))
-    }
+    if (self._pc.remoteDescription) addIceCandidate(data.candidate)
+    else self._pendingCandidates.push(data.candidate)
   }
   if (!data.sdp && !data.candidate) {
     self._destroy(new Error('signal() called with invalid signal data'))
