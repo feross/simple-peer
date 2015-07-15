@@ -177,6 +177,7 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
 - [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
 - [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site [demo]
+- [socket.io-p2p](https://github.com/socketio/socket.io-p2p) - P2P communication via socket.io events
 - *Your app here! - send a PR!*
 
 ## api
