@@ -2,6 +2,9 @@ language: node_js
 sudo: false
 node_js:
   - '0.12'
+before_script:
+  - npm install -g bower
+  - bower install
 env:
   global:
   - secure: nx+k8PyPPr5BAfJQf4eaKr4DZZoTe5Ef1MalZ97KRCEV87Tqwi/XwqNN4gEbpzUpKcVyc/Jasml1uOmCqFO93zSjUFUozjiO3C0R2BT6AL1XtslyORocA5zmMMwTj+rRux4y0fWFNTIpqp5pBPYdYd7VOpRIlcZjY0dddoZht+g=
