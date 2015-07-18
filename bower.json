@@ -50,5 +50,12 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
-  }
+  },
+  "ignore": [
+     "**/.*",
+     "node_modules",
+     "bower_components",
+     "test",
+     "tests"
+   ]
 }
