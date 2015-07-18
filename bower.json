@@ -1,9 +1,6 @@
 {
   "name": "simple-peer",
-  "main": [
-  "index.js",
-  "simplepeer.min.js"
-  ],
+  "main": "simplepeer.min.js",
   "version": "5.11.4",
   "homepage": "http://webtorrent.io",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
