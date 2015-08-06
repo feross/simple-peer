@@ -400,8 +400,8 @@ Peer.prototype._maybeReady = function () {
     items.forEach(function (item) {
       if (item.type === 'remotecandidate') {
         self.remoteAddress = item.ipAddress
-        self.remoteFamily = 'IPv4'
         self.remotePort = Number(item.portNumber)
+        self.remoteFamily = 'IPv4'
         self._debug(
           'connect remote: %s:%s (%s)',
           self.remoteAddress, self.remotePort, self.remoteFamily
