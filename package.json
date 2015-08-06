@@ -32,7 +32,6 @@
     "wrtc": "0.0.55",
     "zuul": "^3.0.0"
   },
-  "homepage": "http://webtorrent.io",
   "keywords": [
     "webrtc",
     "p2p",
