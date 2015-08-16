@@ -438,6 +438,16 @@ peer2.on('data', function (data) {
 })
 ```
 
+## connection does not work on some networks?
+
+If direct connection fails—in particular, because of enterprise NAT traversal and
+firewalls, WebRTC ICE uses an intermediary (relay) TURN server. In other words, ICE will
+first use STUN with UDP to directly connect peers and, if that fails, will fall back to a
+TURN relay server.
+
+In order to use a TURN server, you must specify the `config` option to the `SimplePeer`
+constructor. See the API docs above.
+
 [![js-standard-style](https://raw.githubusercontent.com/feross/standard/master/badge.png)](https://github.com/feross/standard)
 
 ## license
