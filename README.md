@@ -168,16 +168,19 @@ var peer1 = new SimplePeer({ initiator: true, wrtc: wrtc })
 var peer2 = new SimplePeer({ wrtc: wrtc })
 ```
 
-## production apps that use `simple-peer`
+## Who is using `simple-peer`?
 
-- [Friends](https://github.com/moose-team/friends) - P2P chat powered by the web
-- [ScreenCat](https://maxogden.github.io/screencat/) - screen sharing + remote collaboration app
-- [WebCat](https://github.com/mafintosh/webcat) - P2P pipe across the web using Github private/public key for auth
-- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
+- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
+- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
+- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
+- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
+- [WebCat](https://www.npmjs.com/package/webcat) - P2P pipe across the web using Github private/public key for auth
+- [RTCCat](https://www.npmjs.com/package/rtcat) - WebRTC netcat
+- [PeerNet](https://www.npmjs.com/package/peernet) - Peer-to-peer gossip network using randomized algorithms
 - [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
-- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site [demo]
-- [socket.io-p2p](https://github.com/socketio/socket.io-p2p) - P2P communication via socket.io events
+- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
+- [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
 - *Your app here! - send a PR!*
 
 ## api
