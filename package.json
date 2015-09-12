@@ -29,7 +29,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "uglify-js": "^2.4.15",
-    "wrtc": "0.0.55",
+    "wrtc": "0.0.58",
     "zuul": "^3.0.0"
   },
   "keywords": [
