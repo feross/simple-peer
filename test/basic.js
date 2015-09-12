@@ -1,6 +1,16 @@
+var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
 var wrtc = typeof window === 'undefined' && require('wrtc')
+
+var config
+test('get config', function (t) {
+  common.getConfig(function (err, _config) {
+    if (err) return t.fail(err)
+    config = _config
+    t.end()
+  })
+})
 
 test('detect WebRTC support', function (t) {
   t.equal(Peer.WEBRTC_SUPPORT, typeof window !== 'undefined', 'builtin webrtc support')
@@ -8,7 +18,7 @@ test('detect WebRTC support', function (t) {
 })
 
 test('signal event gets emitted', function (t) {
-  var peer = new Peer({ initiator: true, wrtc: wrtc })
+  var peer = new Peer({ config: config, initiator: true, wrtc: wrtc })
   peer.once('signal', function () {
     t.pass('got signal event')
     peer.destroy()
@@ -17,8 +27,8 @@ test('signal event gets emitted', function (t) {
 })
 
 test('data send/receive text', function (t) {
-  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
-  var peer2 = new Peer({ wrtc: wrtc })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ config: config, wrtc: wrtc })
 
   var numSignal1 = 0
   peer1.on('signal', function (data) {
@@ -77,8 +87,8 @@ test('data send/receive text', function (t) {
 })
 
 test('sdpTransform function is called', function (t) {
-  var peer1 = new Peer({ initiator: true, wrtc: wrtc })
-  var peer2 = new Peer({ wrtc: wrtc, sdpTransform: sdpTransform })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: wrtc })
+  var peer2 = new Peer({ config: config, wrtc: wrtc, sdpTransform: sdpTransform })
 
   function sdpTransform (sdp) {
     t.equal(typeof sdp, 'string', 'got a string as SDP')
