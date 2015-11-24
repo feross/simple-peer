@@ -448,7 +448,7 @@ server.
 In order to use a TURN server, you must specify the `config` option to the `SimplePeer`
 constructor. See the API docs above.
 
-[![js-standard-style](https://raw.githubusercontent.com/feross/standard/master/badge.png)](https://github.com/feross/standard)
+[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
 ## license
 
