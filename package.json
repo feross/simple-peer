@@ -23,7 +23,7 @@
     "typedarray-to-buffer": "^3.0.0"
   },
   "devDependencies": {
-    "browserify": "^11.1.0",
+    "browserify": "^12.0.1",
     "concat-stream": "^1.4.6",
     "simple-get": "^1.4.3",
     "standard": "^5.2.2",
