@@ -31,7 +31,6 @@
     "tape": "^4.0.0",
     "thunky": "^0.1.0",
     "uglify-js": "^2.4.15",
-    "wrtc": "0.0.x",
     "zuul": "^3.8.0"
   },
   "keywords": [
@@ -56,10 +55,10 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "test": "standard && npm run test-node && npm run test-browser",
+    "test": "standard && npm run test-browser",
     "test-browser": "zuul -- test/*.js",
     "test-browser-local": "zuul --local -- test/*.js",
-    "test-node": "tape test/*.js",
+    "test-node": "echo 'DISABLED' && tape test/*.js",
     "build": "browserify -s SimplePeer -r ./ | uglifyjs -m > simplepeer.min.js"
   },
   "testling": {
