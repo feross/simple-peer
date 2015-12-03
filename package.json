@@ -32,7 +32,7 @@
     "thunky": "^0.1.0",
     "uglify-js": "^2.4.15",
     "wrtc": "0.0.58",
-    "zuul": "feross/zuul"
+    "zuul": "^3.8.0"
   },
   "keywords": [
     "webrtc",
