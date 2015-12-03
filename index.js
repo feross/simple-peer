@@ -372,7 +372,7 @@ Peer.prototype._maybeReady = function () {
   self._connecting = true
 
   if (!self._pc.getStats) {
-    onStats([]);
+    onStats([])
   } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
     self._pc.getStats(null, function (res) {
       var items = []
