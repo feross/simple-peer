@@ -35,6 +35,8 @@ function Peer (opts) {
   if (!opts.initiator) self.channelName = null
   self.config = opts.config || Peer.config
   self.constraints = opts.constraints || Peer.constraints
+  self.offerConstraints = opts.offerConstraints
+  self.answerConstraints = opts.answerConstraints
   self.reconnectTimer = opts.reconnectTimer || 0
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
