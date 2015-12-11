@@ -84,11 +84,6 @@ function Peer (opts) {
   if (self.initiator) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.channelConfig) })
     self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
-    // Only Chrome triggers "negotiationneeded"; this is a workaround for other
-    // implementations
-    if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
-      self._pc.onnegotiationneeded()
-    }
   } else {
     self._pc.ondatachannel = self._setupData.bind(self)
   }
