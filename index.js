@@ -31,8 +31,7 @@ function Peer (opts) {
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
-  self.channelName = opts.channelName || hat(160)
-  if (!opts.initiator) self.channelName = null
+  self.channelName = opts.initiator ? (opts.channelName || hat(160)) : null
   self.config = opts.config || Peer.config
   self.constraints = opts.constraints || Peer.constraints
   self.offerConstraints = opts.offerConstraints
