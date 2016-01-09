@@ -36,7 +36,7 @@ function Peer (opts) {
   self.constraints = opts.constraints || Peer.constraints
   self.offerConstraints = opts.offerConstraints
   self.answerConstraints = opts.answerConstraints
-  self.reconnectTimer = opts.reconnectTimer || 0
+  self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
   self.trickle = opts.trickle !== undefined ? opts.trickle : true

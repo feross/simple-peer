@@ -200,7 +200,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   channelName: '<random string>',
   config: { iceServers: [ { url: 'stun:23.21.150.121' } ] },
   constraints: {},
-  reconnectTimer: 0,
+  reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   trickle: true,
