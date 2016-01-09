@@ -362,6 +362,9 @@ Peer.prototype._onIceConnectionStateChange = function () {
       self._destroy()
     }
   }
+  if (iceConnectionState === 'failed') {
+    self._destroy()
+  }
   if (iceConnectionState === 'closed') {
     self._destroy()
   }
