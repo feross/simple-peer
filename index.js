@@ -404,7 +404,7 @@ Peer.prototype._maybeReady = function () {
 
   function onStats (items) {
     items.forEach(function (item) {
-      if (item.type === 'remotecandidate') {
+      if (item.type === 'remotecandidate' && item.candidateType === 'host') {
         self.remoteAddress = item.ipAddress
         self.remotePort = Number(item.portNumber)
         self.remoteFamily = 'IPv4'
