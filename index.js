@@ -9,7 +9,6 @@ var inherits = require('inherits')
 var isTypedArray = require('is-typedarray')
 var once = require('once')
 var stream = require('stream')
-var toBuffer = require('typedarray-to-buffer')
 
 inherits(Peer, stream.Duplex)
 
@@ -481,7 +480,7 @@ Peer.prototype._onChannelMessage = function (event) {
   self._debug('read: %d bytes', data.byteLength || data.length)
 
   if (data instanceof ArrayBuffer) {
-    data = toBuffer(new Uint8Array(data))
+    data = new Buffer(data)
     self.push(data)
   } else {
     try {
