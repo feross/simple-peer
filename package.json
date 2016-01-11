@@ -7,9 +7,6 @@
     "email": "feross@feross.org",
     "url": "http://feross.org/"
   },
-  "browser": {
-    "wrtc": false
-  },
   "bugs": {
     "url": "https://github.com/feross/simple-peer/issues"
   },

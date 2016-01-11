@@ -2,7 +2,6 @@ var common = require('./common')
 var Peer = require('../')
 var str = require('string-to-stream')
 var test = require('tape')
-var wrtc = typeof window === 'undefined' && require('wrtc')
 
 var config
 test('get config', function (t) {
@@ -16,8 +15,8 @@ test('get config', function (t) {
 test('duplex stream: send data before "connect" event', function (t) {
   t.plan(9)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: wrtc })
-  var peer2 = new Peer({ config: config, wrtc: wrtc })
+  var peer1 = new Peer({ config: config, initiator: true })
+  var peer2 = new Peer({ config: config })
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
@@ -51,8 +50,8 @@ test('duplex stream: send data before "connect" event', function (t) {
 test('duplex stream: send data one-way', function (t) {
   t.plan(9)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: wrtc })
-  var peer2 = new Peer({ config: config, wrtc: wrtc })
+  var peer1 = new Peer({ config: config, initiator: true })
+  var peer2 = new Peer({ config: config })
   peer1.on('signal', function (data) { peer2.signal(data) })
   peer2.on('signal', function (data) { peer1.signal(data) })
   peer1.on('connect', tryTest)
