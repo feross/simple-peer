@@ -17,7 +17,7 @@ test('detect WebRTC support', function (t) {
 })
 
 test('signal event gets emitted', function (t) {
-  var peer = new Peer({ config: config, initiator: true })
+  var peer = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.pass('got signal event')
     peer.destroy()
@@ -26,8 +26,8 @@ test('signal event gets emitted', function (t) {
 })
 
 test('data send/receive text', function (t) {
-  var peer1 = new Peer({ config: config, initiator: true })
-  var peer2 = new Peer({ config: config })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
   var numSignal1 = 0
   peer1.on('signal', function (data) {
@@ -86,8 +86,8 @@ test('data send/receive text', function (t) {
 })
 
 test('sdpTransform function is called', function (t) {
-  var peer1 = new Peer({ config: config, initiator: true })
-  var peer2 = new Peer({ config: config, sdpTransform: sdpTransform })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, sdpTransform: sdpTransform, wrtc: common.wrtc })
 
   function sdpTransform (sdp) {
     t.equal(typeof sdp, 'string', 'got a string as SDP')
