@@ -50,6 +50,7 @@ function Peer (opts) {
   self.localAddress = undefined
   self.localPort = undefined
 
+  self._isWrtc = !!opts.wrtc // HACK: to fix `wrtc` bug. See issue: #60
   self._wrtc = opts.wrtc || getBrowserRTC()
   if (!self._wrtc) {
     if (typeof window === 'undefined') {
@@ -114,14 +115,6 @@ function Peer (opts) {
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
-
-try {
-  require('wrtc')
-  Peer.USING_WRTC = true
-} catch (err) {
-  if (err.message !== 'Cannot find module \'wtc\'') throw err
-  Peer.USING_WRTC = false
-}
 
 /**
  * Expose config, constraints, and data channel config for overriding all Peer
@@ -204,8 +197,8 @@ Peer.prototype.send = function (chunk) {
     chunk = JSON.stringify(chunk)
   }
 
-  // `wrtc` module doesn't accept node.js buffer
-  if (Peer.USING_WRTC && Buffer.isBuffer(chunk)) {
+  // HACK: `wrtc` module doesn't accept node.js buffer. See issue: #60
+  if (Buffer.isBuffer(chunk) && self._isWrtc) {
     chunk = new Uint8Array(chunk)
   }
 

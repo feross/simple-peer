@@ -1,6 +1,5 @@
 var get = require('simple-get')
 var thunky = require('thunky')
-var Peer = require('../')
 
 exports.getConfig = thunky(function (cb) {
   // Includes TURN -- needed for tests to pass on Sauce Labs
@@ -20,6 +19,4 @@ exports.getConfig = thunky(function (cb) {
 
 // For testing on node, you'll need a WebRTC implementation
 // Feel free to substitute in another implementation
-if (Peer.USING_WRTC) {
-  exports.wrtc = require('wrtc')
-}
+// exports.wrtc = require('wrtc')
