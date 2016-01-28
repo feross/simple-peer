@@ -12,8 +12,8 @@ test('get config', function (t) {
 })
 
 test('data send/receive Uint8Array', function (t) {
-  var peer1 = new Peer({ config: config, initiator: true })
-  var peer2 = new Peer({ config: config })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -26,15 +26,15 @@ test('data send/receive Uint8Array', function (t) {
   function tryTest () {
     if (!peer1.connected || !peer2.connected) return
 
-    peer1.send(new Uint8Array([1, 2, 3]))
+    peer1.send(new Uint8Array([0, 1, 2]))
     peer2.on('data', function (data) {
       t.ok(Buffer.isBuffer(data), 'data is Buffer')
-      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+      t.deepEqual(data, new Buffer([0, 1, 2]), 'got correct message')
 
-      peer2.send(new Uint8Array([2, 3, 4]))
+      peer2.send(new Uint8Array([0, 2, 4]))
       peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
         peer1.destroy(tryDone)
         peer2.destroy(tryDone)
@@ -51,8 +51,8 @@ test('data send/receive Uint8Array', function (t) {
 })
 
 test('data send/receive Buffer', function (t) {
-  var peer1 = new Peer({ config: config, initiator: true })
-  var peer2 = new Peer({ config: config })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -65,15 +65,15 @@ test('data send/receive Buffer', function (t) {
   function tryTest () {
     if (!peer1.connected || peer2.connected) return
 
-    peer1.send(new Buffer([1, 2, 3]))
+    peer1.send(new Buffer([0, 1, 2]))
     peer2.on('data', function (data) {
       t.ok(Buffer.isBuffer(data), 'data is Buffer')
-      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+      t.deepEqual(data, new Buffer([0, 1, 2]), 'got correct message')
 
-      peer2.send(new Buffer([2, 3, 4]))
+      peer2.send(new Buffer([0, 2, 4]))
       peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
         peer1.destroy(tryDone)
         peer2.destroy(tryDone)
@@ -90,8 +90,8 @@ test('data send/receive Buffer', function (t) {
 })
 
 test('data send/receive ArrayBuffer', function (t) {
-  var peer1 = new Peer({ config: config, initiator: true })
-  var peer2 = new Peer({ config: config })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -104,15 +104,15 @@ test('data send/receive ArrayBuffer', function (t) {
   function tryTest () {
     if (!peer1.connected || !peer2.connected) return
 
-    peer1.send(new Uint8Array([1, 2, 3]).buffer)
+    peer1.send(new Uint8Array([0, 1, 2]).buffer)
     peer2.on('data', function (data) {
       t.ok(Buffer.isBuffer(data), 'data is Buffer')
-      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+      t.deepEqual(data, new Buffer([0, 1, 2]), 'got correct message')
 
-      peer2.send(new Uint8Array([2, 3, 4]).buffer)
+      peer2.send(new Uint8Array([0, 2, 4]).buffer)
       peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
         peer1.destroy(tryDone)
         peer2.destroy(tryDone)

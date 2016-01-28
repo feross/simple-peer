@@ -115,6 +115,14 @@ function Peer (opts) {
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 
+try {
+  require('wrtc')
+  Peer.USING_WRTC = true
+} catch (err) {
+  if (err.message !== 'Cannot find module \'wtc\'') throw err
+  Peer.USING_WRTC = false
+}
+
 /**
  * Expose config, constraints, and data channel config for overriding all Peer
  * instances. Otherwise, just set opts.config, opts.constraints, or opts.channelConfig
@@ -197,7 +205,7 @@ Peer.prototype.send = function (chunk) {
   }
 
   // `wrtc` module doesn't accept node.js buffer
-  if (Buffer.isBuffer(chunk) && !isTypedArray.strict(chunk)) {
+  if (Peer.USING_WRTC && Buffer.isBuffer(chunk)) {
     chunk = new Uint8Array(chunk)
   }
 
