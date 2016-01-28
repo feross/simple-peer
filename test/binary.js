@@ -26,15 +26,15 @@ test('data send/receive Uint8Array', function (t) {
   function tryTest () {
     if (!peer1.connected || !peer2.connected) return
 
-    peer1.send(new Uint8Array([1, 2, 3]))
+    peer1.send(new Uint8Array([0, 1, 2]))
     peer2.on('data', function (data) {
       t.ok(Buffer.isBuffer(data), 'data is Buffer')
-      t.deepEqual(data, new Buffer([1, 2, 3]), 'got correct message')
+      t.deepEqual(data, new Buffer([0, 1, 2]), 'got correct message')
 
-      peer2.send(new Uint8Array([2, 3, 4]))
+      peer2.send(new Uint8Array([0, 2, 4]))
       peer1.on('data', function (data) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
-        t.deepEqual(data, new Buffer([2, 3, 4]), 'got correct message')
+        t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
         peer1.destroy(tryDone)
         peer2.destroy(tryDone)
