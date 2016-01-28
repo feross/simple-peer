@@ -13,6 +13,9 @@ test('get config', function (t) {
 
 test('detect WebRTC support', function (t) {
   t.equal(Peer.WEBRTC_SUPPORT, typeof window !== 'undefined', 'builtin webrtc support')
+  if (Peer.WEBRTC_SUPPORT) {
+    t.not(Peer.USING_WRTC, 'not using wrtc')
+  }
   t.end()
 })
 
