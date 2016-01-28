@@ -16,3 +16,6 @@ exports.getConfig = thunky(function (cb) {
     cb(null, data)
   })
 })
+
+// For testing on node, you'll need a WebRTC implementation
+// exports.wrtc = require('wrtc')
