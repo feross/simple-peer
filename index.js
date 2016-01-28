@@ -197,7 +197,7 @@ Peer.prototype.send = function (chunk) {
   }
 
   // `wrtc` module doesn't accept node.js buffer
-  if (Buffer.isBuffer(chunk) && !isTypedArray.strict(chunk)) {
+  if (Buffer.isBuffer(chunk)) {
     chunk = new Uint8Array(chunk)
   }
 
