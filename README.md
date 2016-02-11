@@ -296,7 +296,8 @@ Fired when the peer connection and data channel are ready to use.
 
 ### `peer.on('data', function (data) {})`
 
-Received a message from the remote peer (via the data channel).
+Received a message from the remote peer (via the data channel). JSON strings will be
+parsed and the resulting `Object` emitted.
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
