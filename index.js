@@ -369,24 +369,20 @@ Peer.prototype._onIceConnectionStateChange = function () {
   }
 }
 
-Peer.prototype._maybeReady = function () {
+Peer.prototype.getStats = function (cb) {
   var self = this
-  self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
-  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
-  self._connecting = true
-
-  if (!self._pc.getStats) {
-    onStats([])
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
+  if (!self._pc.getStats) { // No ability to call stats
+    cb([])
+  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) { // Mozilla
     self._pc.getStats(null, function (res) {
       var items = []
       res.forEach(function (item) {
         items.push(item)
       })
-      onStats(items)
+      cb(items)
     }, self._onError.bind(self))
   } else {
-    self._pc.getStats(function (res) {
+    self._pc.getStats(function (res) { // Chrome
       var items = []
       res.result().forEach(function (result) {
         var item = {}
@@ -398,11 +394,18 @@ Peer.prototype._maybeReady = function () {
         item.timestamp = result.timestamp
         items.push(item)
       })
-      onStats(items)
+      cb(items)
     })
   }
+}
 
-  function onStats (items) {
+Peer.prototype._maybeReady = function () {
+  var self = this
+  self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
+  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
+  self._connecting = true
+
+  self.getStats(function (items) {
     items.forEach(function (item) {
       if (item.type === 'remotecandidate' && item.candidateType === 'host') {
         self.remoteAddress = item.ipAddress
@@ -447,7 +450,7 @@ Peer.prototype._maybeReady = function () {
 
     self._debug('connect')
     self.emit('connect')
-  }
+  })
 }
 
 Peer.prototype._onSignalingStateChange = function () {
