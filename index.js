@@ -406,24 +406,38 @@ Peer.prototype._maybeReady = function () {
   self._connecting = true
 
   self.getStats(function (items) {
-    items.forEach(function (item) {
-      if (item.type === 'remotecandidate' && item.candidateType === 'host') {
-        self.remoteAddress = item.ipAddress
-        self.remotePort = Number(item.portNumber)
-        self.remoteFamily = 'IPv4'
-        self._debug(
-          'connect remote: %s:%s (%s)',
-          self.remoteAddress, self.remotePort, self.remoteFamily
-        )
-      } else if (item.type === 'localcandidate' && item.candidateType === 'host') {
-        self.localAddress = item.ipAddress
-        self.localPort = Number(item.portNumber)
-        self._debug('connect local: %s:%s', self.localAddress, self.localPort)
-      }
-    })
-
     self._connecting = false
     self.connected = true
+
+    var remoteCandidates = {}
+    var localCandidates = {}
+
+    function setActiveCandidates (item) {
+      var local = localCandidates[item.localCandidateId]
+      var remote = remoteCandidates[item.remoteCandidateId]
+
+      self.remoteAddress = remote.ipAddress
+      self.remotePort = Number(remote.portNumber)
+      self.remoteFamily = 'IPv4'
+      self._debug('connect remote: %s:%s', self.remoteAddress, self.remotePort)
+
+      self.localAddress = local.ipAddress
+      self.localPort = Number(local.portNumber)
+      self._debug('connect local: %s:%s', self.localAddress, self.localPort)
+    }
+
+    items.forEach(function (item) {
+      if (item.type === 'remotecandidate') remoteCandidates[item.id] = item
+      if (item.type === 'localcandidate') localCandidates[item.id] = item
+    })
+
+    items.forEach(function (item) {
+      var isCandidatePair = (
+        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
+        (item.type === 'candidatepair' && item.selected)
+      )
+      if (isCandidatePair) setActiveCandidates(item)
+    })
 
     if (self._chunk) {
       try {
