@@ -22,7 +22,7 @@
     "browserify": "^13.0.0",
     "concat-stream": "^1.4.6",
     "simple-get": "^1.4.3",
-    "standard": "^5.2.2",
+    "standard": "^6.0.5",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^0.1.0",
