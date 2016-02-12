@@ -52,11 +52,10 @@ test('data send/receive text', function (t) {
     t.equal(peer1.initiator, true, 'peer1 is initiator')
     t.equal(peer2.initiator, false, 'peer2 is not initiator')
 
-    t.equal(peer1.localAddress, peer2.remoteAddress)
-    t.equal(peer1.localPort, peer2.remotePort)
-
-    t.equal(peer2.localAddress, peer1.remoteAddress)
-    t.equal(peer2.localPort, peer1.remotePort)
+    t.equal(typeof peer1.localAddress, 'string')
+    t.equal(typeof peer1.localPort, 'number')
+    t.equal(typeof peer2.localAddress, 'string')
+    t.equal(typeof peer2.localPort, 'number')
 
     t.ok(typeof peer1.remoteFamily === 'string')
     t.ok(peer1.remoteFamily.indexOf('IPv') === 0)
