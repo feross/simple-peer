@@ -21,7 +21,7 @@
   "devDependencies": {
     "browserify": "^13.0.0",
     "concat-stream": "^1.4.6",
-    "simple-get": "^1.4.3",
+    "simple-get": "^2.0.0",
     "standard": "^6.0.5",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
