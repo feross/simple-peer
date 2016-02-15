@@ -191,12 +191,6 @@ Peer.prototype.signal = function (data) {
 Peer.prototype.send = function (chunk) {
   var self = this
 
-  if (!isTypedArray.strict(chunk) && !(chunk instanceof ArrayBuffer) &&
-    !Buffer.isBuffer(chunk) && typeof chunk !== 'string' &&
-    (typeof Blob === 'undefined' || !(chunk instanceof Blob))) {
-    chunk = JSON.stringify(chunk)
-  }
-
   // HACK: `wrtc` module doesn't accept node.js buffer. See issue: #60
   if (Buffer.isBuffer(chunk) && self._isWrtc) {
     chunk = new Uint8Array(chunk)
@@ -497,15 +491,8 @@ Peer.prototype._onChannelMessage = function (event) {
   var data = event.data
   self._debug('read: %d bytes', data.byteLength || data.length)
 
-  if (data instanceof ArrayBuffer) {
-    data = new Buffer(data)
-    self.push(data)
-  } else {
-    try {
-      data = JSON.parse(data)
-    } catch (err) {}
-    self.emit('data', data)
-  }
+  if (data instanceof ArrayBuffer) data = new Buffer(data)
+  self.push(data)
 }
 
 Peer.prototype._onChannelOpen = function () {
