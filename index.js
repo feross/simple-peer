@@ -1,12 +1,9 @@
-/* global Blob */
-
 module.exports = Peer
 
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var hat = require('hat')
 var inherits = require('inherits')
-var isTypedArray = require('is-typedarray')
 var once = require('once')
 var stream = require('stream')
 
