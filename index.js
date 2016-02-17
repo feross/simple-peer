@@ -411,7 +411,8 @@ Peer.prototype._maybeReady = function () {
         self.localAddress = local.ipAddress
         self.localPort = Number(local.portNumber)
       } else if (typeof item.googLocalAddress === 'string') {
-        // for `wrtc`
+        // Sometimes `item.id` is undefined in `wrtc` and Chrome
+        // See: https://github.com/feross/simple-peer/issues/66
         local = item.googLocalAddress.split(':')
         self.localAddress = local[0]
         self.localPort = Number(local[1])
