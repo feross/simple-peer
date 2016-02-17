@@ -407,14 +407,28 @@ Peer.prototype._maybeReady = function () {
       var local = localCandidates[item.localCandidateId]
       var remote = remoteCandidates[item.remoteCandidateId]
 
-      self.remoteAddress = remote.ipAddress
-      self.remotePort = Number(remote.portNumber)
-      self.remoteFamily = 'IPv4'
-      self._debug('connect remote: %s:%s', self.remoteAddress, self.remotePort)
-
-      self.localAddress = local.ipAddress
-      self.localPort = Number(local.portNumber)
+      if (local) {
+        self.localAddress = local.ipAddress
+        self.localPort = Number(local.portNumber)
+      } else if (typeof item.googLocalAddress === 'string') {
+        // for `wrtc`
+        local = item.googLocalAddress.split(':')
+        self.localAddress = local[0]
+        self.localPort = Number(local[1])
+      }
       self._debug('connect local: %s:%s', self.localAddress, self.localPort)
+
+      if (remote) {
+        self.remoteAddress = remote.ipAddress
+        self.remotePort = Number(remote.portNumber)
+        self.remoteFamily = 'IPv4'
+      } else if (typeof item.googRemoteAddress === 'string') {
+        remote = item.googRemoteAddress.split(':')
+        self.remoteAddress = remote[0]
+        self.remotePort = Number(remote[1])
+        self.remoteFamily = 'IPv4'
+      }
+      self._debug('connect remote: %s:%s', self.remoteAddress, self.remotePort)
     }
 
     items.forEach(function (item) {
