@@ -5,7 +5,7 @@ var getBrowserRTC = require('get-browser-rtc')
 var hat = require('hat')
 var inherits = require('inherits')
 var once = require('once')
-var stream = require('stream')
+var stream = require('readable-stream')
 
 inherits(Peer, stream.Duplex)
 
