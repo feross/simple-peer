@@ -109,6 +109,10 @@ function Peer (opts) {
       })
     }
   })
+
+  self.on('error', function (err) {
+    self._debug('error %s', err.message || err)
+  })
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
