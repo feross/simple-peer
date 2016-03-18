@@ -240,11 +240,11 @@ etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 Note: If this method is called before the `peer.on('connect')` event has fired, then data
 will be buffered.
 
-### `peer.destroy([onclose])`
+### `peer.destroy([err], [onclose])`
 
 Destroy and cleanup this peer connection.
 
-If the optional `onclose` parameter is passed, then it will be registered as a listener on the 'close' event.
+The optional `err` parameter will be used to invoke 'error' event listeners, while the optional `onclose` parameter will register a listener on the 'close' event.
 
 ### `Peer.WEBRTC_SUPPORT`
 
