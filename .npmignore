@@ -1,2 +1,4 @@
 img/
 node_modules/
+.*
+*.log
