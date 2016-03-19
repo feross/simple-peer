@@ -34,7 +34,6 @@ function Peer (opts) {
   self.answerConstraints = opts.answerConstraints
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
-  self.stream = opts.stream || false
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
@@ -74,21 +73,21 @@ function Peer (opts) {
   self._pc.onsignalingstatechange = self._onSignalingStateChange.bind(self)
   self._pc.onicecandidate = self._onIceCandidate.bind(self)
 
-  if (self.stream) self._pc.addStream(self.stream)
+  // Handle stream
+  if (opts.stream) self.addStream(self.stream)
   self._pc.onaddstream = self._onAddStream.bind(self)
 
+  // Handle data channel
   if (self.initiator) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.channelConfig) })
-    self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
-    // Only Chrome triggers "negotiationneeded"; this is a workaround for other
-    // implementations
-    if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
-      self._pc.onnegotiationneeded()
-    }
   } else {
     self._pc.ondatachannel = self._setupData.bind(self)
   }
 
+  // Initialize a forced negotiation
+  self.negotiate(true)
+
+  // Handle disconnection
   self.on('finish', function () {
     if (self.connected) {
       // When local peer is finished writing, close connection to remote peer.
@@ -135,6 +134,58 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
     return (self._channel && self._channel.bufferedAmount) || 0
   }
 })
+
+Peer.prototype.addStream = function (stream) {
+  var self = this
+
+  // Add stream to PeerConnection
+  self._pc.addStream(stream)
+
+  // Should renegotiate in case it has already an established connection
+  // NOTE: .renegotiate won't do its job if it isn't connected, so there's no
+  // harm here on don't having any sort of conditional
+  self.renegotiate()
+}
+
+Peer.prototype.renegotiate = function () {
+  var self = this
+
+  if ( ! self.connected ) {
+    return
+  }
+
+  return self.negotiate( true )
+}
+
+Peer.prototype.negotiate = function (force) {
+  var self = this
+
+  if (self.destroyed) throw new Error('cannot renegotiate after peer is destroyed')
+
+  if (self.connected && ! force) {
+    return
+  }
+
+  return this._negotiate()
+}
+
+Peer.prototype._negotiate = function () {
+  var self = this
+
+  if (self.initiator) {
+    self._createOffer()
+  }
+
+  function handleNegotiatedEmit (state) {
+    if ( state === 'stable' ) {
+      self.removeListener('signalingStateChange', handleNegotiatedEmit)
+      self._debug('negotiated')
+      self.emit('negotiated')
+    }
+  }
+
+  self.on('signalingStateChange', handleNegotiatedEmit)
+}
 
 Peer.prototype.address = function () {
   var self = this
