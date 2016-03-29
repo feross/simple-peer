@@ -70,23 +70,35 @@ function Peer (opts) {
   self._reconnectTimeout = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
-  self._pc.oniceconnectionstatechange = self._onIceConnectionStateChange.bind(self)
-  self._pc.onsignalingstatechange = self._onSignalingStateChange.bind(self)
-  self._pc.onicecandidate = self._onIceCandidate.bind(self)
+  self._pc.oniceconnectionstatechange = function () {
+    self._onIceConnectionStateChange()
+  }
+  self._pc.onsignalingstatechange = function () {
+    self._onSignalingStateChange()
+  }
+  self._pc.onicecandidate = function (event) {
+    self._onIceCandidate(event)
+  }
 
   if (self.stream) self._pc.addStream(self.stream)
-  self._pc.onaddstream = self._onAddStream.bind(self)
+  self._pc.onaddstream = function (event) {
+    self._onAddStream(event)
+  }
 
   if (self.initiator) {
     self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.channelConfig) })
-    self._pc.onnegotiationneeded = once(self._createOffer.bind(self))
+    self._pc.onnegotiationneeded = once(function () {
+      self._createOffer()
+    })
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
     if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
       self._pc.onnegotiationneeded()
     }
   } else {
-    self._pc.ondatachannel = self._setupData.bind(self)
+    self._pc.ondatachannel = function (event) {
+      self._setupData(event)
+    }
   }
 
   self.on('finish', function () {
@@ -156,7 +168,9 @@ Peer.prototype.signal = function (data) {
   function addIceCandidate (candidate) {
     try {
       self._pc.addIceCandidate(
-        new self._wrtc.RTCIceCandidate(candidate), noop, self._onError.bind(self)
+        new self._wrtc.RTCIceCandidate(candidate),
+        noop,
+        function (err) { self._onError(err) }
       )
     } catch (err) {
       self._destroy(new Error('error adding candidate: ' + err.message))
@@ -170,7 +184,7 @@ Peer.prototype.signal = function (data) {
 
       self._pendingCandidates.forEach(addIceCandidate)
       self._pendingCandidates = []
-    }, self._onError.bind(self))
+    }, function (err) { self._onError(err) })
   }
   if (data.candidate) {
     if (self._pc.remoteDescription) addIceCandidate(data.candidate)
@@ -257,9 +271,15 @@ Peer.prototype._setupData = function (event) {
   self.channelName = self._channel.label
 
   self._channel.binaryType = 'arraybuffer'
-  self._channel.onmessage = self._onChannelMessage.bind(self)
-  self._channel.onopen = self._onChannelOpen.bind(self)
-  self._channel.onclose = self._onChannelClose.bind(self)
+  self._channel.onmessage = function (event) {
+    self._onChannelMessage(event)
+  }
+  self._channel.onopen = function () {
+    self._onChannelOpen()
+  }
+  self._channel.onclose = function () {
+    self._onChannelClose()
+  }
 }
 
 Peer.prototype._read = function () {}
@@ -294,7 +314,7 @@ Peer.prototype._createOffer = function () {
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
-    self._pc.setLocalDescription(offer, noop, self._onError.bind(self))
+    self._pc.setLocalDescription(offer, noop, function (err) { self._onError(err) })
     var sendOffer = function () {
       var signal = self._pc.localDescription || offer
       self._debug('signal')
@@ -305,7 +325,7 @@ Peer.prototype._createOffer = function () {
     }
     if (self.trickle || self._iceComplete) sendOffer()
     else self.once('_iceComplete', sendOffer) // wait for candidates
-  }, self._onError.bind(self), self.offerConstraints)
+  }, function (err) { self._onError(err) }, self.offerConstraints)
 }
 
 Peer.prototype._createAnswer = function () {
@@ -315,7 +335,7 @@ Peer.prototype._createAnswer = function () {
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
-    self._pc.setLocalDescription(answer, noop, self._onError.bind(self))
+    self._pc.setLocalDescription(answer, noop, function (err) { self._onError(err) })
     var sendAnswer = function () {
       var signal = self._pc.localDescription || answer
       self._debug('signal')
@@ -326,7 +346,7 @@ Peer.prototype._createAnswer = function () {
     }
     if (self.trickle || self._iceComplete) sendAnswer()
     else self.once('_iceComplete', sendAnswer)
-  }, self._onError.bind(self), self.answerConstraints)
+  }, function (err) { self._onError(err) }, self.answerConstraints)
 }
 
 Peer.prototype._onIceConnectionStateChange = function () {
@@ -371,7 +391,7 @@ Peer.prototype.getStats = function (cb) {
         items.push(item)
       })
       cb(items)
-    }, self._onError.bind(self))
+    }, function (err) { self._onError(err) })
   } else {
     self._pc.getStats(function (res) { // Chrome
       var items = []
