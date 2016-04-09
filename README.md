@@ -181,6 +181,7 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 - [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
 - [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
 - [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
+- [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
 - *Your app here! - send a PR!*
 
 ## api
