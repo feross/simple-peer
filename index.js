@@ -86,7 +86,9 @@ function Peer (opts) {
   }
 
   if (self.initiator) {
-    self._setupData({ channel: self._pc.createDataChannel(self.channelName, self.channelConfig) })
+    self._setupData({
+      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
+    })
     self._pc.onnegotiationneeded = once(function () {
       self._createOffer()
     })
@@ -247,6 +249,9 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
+    self._pc.onaddstream = null
+    self._pc.onnegotiationneeded = null
+    self._pc.ondatachannel = null
   }
 
   if (self._channel) {
