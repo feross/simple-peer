@@ -157,7 +157,7 @@ Peer.prototype.address = function () {
   return { port: self.localPort, family: 'IPv4', address: self.localAddress }
 }
 
-Peer.prototype.signal = function (data,callback) {
+Peer.prototype.signal = function (data) {
   var self = this
   if (self.destroyed) throw new Error('cannot signal after peer is destroyed')
   if (typeof data === 'string') {
@@ -184,9 +184,8 @@ Peer.prototype.signal = function (data,callback) {
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
-      if (self._pc.remoteDescription.type === 'offer') {
-        (typeof callback === 'undefined') ? self._createAnswer() : self._createAnswer(function(res) { callback(res); }) ;
-      }	      
+      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
+
       self._pendingCandidates.forEach(addIceCandidate)
       self._pendingCandidates = []
     }, function (err) { self._onError(err) })
@@ -336,7 +335,7 @@ Peer.prototype._createOffer = function () {
   }, function (err) { self._onError(err) }, self.offerConstraints)
 }
 
-Peer.prototype._createAnswer = function (callback) {
+Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
 
@@ -346,10 +345,11 @@ Peer.prototype._createAnswer = function (callback) {
     self._pc.setLocalDescription(answer, noop, function (err) { self._onError(err) })
     var sendAnswer = function () {
       var signal = self._pc.localDescription || answer
-      var _answer = { type: signal.type, sdp: signal.sdp };
       self._debug('signal')
-      self.emit('signal', _answer)
-      if (typeof callback !== 'undefined') callback(_answer);
+      self.emit('signal', {
+        type: signal.type,
+        sdp: signal.sdp
+      })
     }
     if (self.trickle || self._iceComplete) sendAnswer()
     else self.once('_iceComplete', sendAnswer)
