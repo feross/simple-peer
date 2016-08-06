@@ -25,7 +25,7 @@
     "standard": "^7.0.0",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
-    "thunky": "^0.1.0",
+    "thunky": "^1.0.1",
     "uglify-js": "^2.4.15",
     "zuul": "^3.8.0"
   },
