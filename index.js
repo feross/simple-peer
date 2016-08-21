@@ -86,8 +86,17 @@ function Peer (opts) {
   }
 
   if (self.stream) self._pc.addStream(self.stream)
-  self._pc.onaddstream = function (event) {
-    self._onAddStream(event)
+
+  if ('ontrack' in self._pc) {
+    // WebRTC Spec, Firefox
+    self._pc.ontrack = function (event) {
+      self._onTrack(event)
+    }
+  } else {
+    // Chrome, etc. This can be removed once all browsers support `ontrack`
+    self._pc.onaddstream = function (event) {
+      self._onAddStream(event)
+    }
   }
 
   if (self.initiator) {
@@ -257,7 +266,11 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    self._pc.onaddstream = null
+    if ('ontrack' in self._pc) {
+      self._pc.ontrack = null
+    } else {
+      self._pc.onaddstream = null
+    }
     self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
   }
@@ -560,6 +573,13 @@ Peer.prototype._onAddStream = function (event) {
   if (self.destroyed) return
   self._debug('on add stream')
   self.emit('stream', event.stream)
+}
+
+Peer.prototype._onTrack = function (event) {
+  var self = this
+  if (self.destroyed) return
+  self._debug('on track')
+  self.emit('stream', event.streams[0])
 }
 
 Peer.prototype._onError = function (err) {
