@@ -31,7 +31,7 @@ function Peer (opts) {
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
   self.constraints = opts.constraints || Peer.constraints
-  self.offerConstraints = opts.offerConstraints
+  self.offerConstraints = opts.offerConstraints || {}
   self.answerConstraints = opts.answerConstraints
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
