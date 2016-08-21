@@ -1,7 +1,7 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "6.0.5",
+  "version": "6.0.6",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
