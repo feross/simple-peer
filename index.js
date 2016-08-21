@@ -2,8 +2,8 @@ module.exports = Peer
 
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
-var hat = require('hat')
 var inherits = require('inherits')
+var randombytes = require('randombytes')
 var stream = require('readable-stream')
 
 inherits(Peer, stream.Duplex)
@@ -17,7 +17,10 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
-  self.channelName = opts.initiator ? (opts.channelName || hat(160)) : null
+  self.channelName = opts.initiator
+    ? opts.channelName || randombytes(20).toString('hex')
+    : null
+
   self._debug('new peer %o', opts)
 
   if (!opts) opts = {}

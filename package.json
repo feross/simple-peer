@@ -13,8 +13,8 @@
   "dependencies": {
     "debug": "^2.1.0",
     "get-browser-rtc": "^1.0.0",
-    "hat": "0.0.3",
     "inherits": "^2.0.1",
+    "randombytes": "^2.0.3",
     "readable-stream": "^2.0.5"
   },
   "devDependencies": {
