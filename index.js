@@ -4,7 +4,6 @@ var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var hat = require('hat')
 var inherits = require('inherits')
-var once = require('once')
 var stream = require('readable-stream')
 
 inherits(Peer, stream.Duplex)
@@ -92,9 +91,12 @@ function Peer (opts) {
     self._setupData({
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
-    self._pc.onnegotiationneeded = once(function () {
-      self._createOffer()
-    })
+
+    var createdOffer = false
+    self._pc.onnegotiationneeded = function () {
+      if (!createdOffer) self._createOffer()
+      createdOffer = true
+    }
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
     if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
