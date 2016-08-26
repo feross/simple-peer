@@ -21,7 +21,7 @@
     "browserify": "^13.0.0",
     "concat-stream": "^1.4.6",
     "simple-get": "^2.0.0",
-    "standard": "^7.0.0",
+    "standard": "*",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
