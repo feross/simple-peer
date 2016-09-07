@@ -29,7 +29,7 @@ npm install simple-peer
 
 ## usage
 
-Let's create an html page that let's you manually connect two peers:
+Let's create an html page that lets you manually connect two peers:
 
 ```html
 <html>
