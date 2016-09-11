@@ -441,6 +441,19 @@ peer2.on('data', function (data) {
 })
 ```
 
+## memory usage
+
+If you call `peer.send(buf)`, `simple-peer` is not keeping a reference to `buf`
+and sending the buffer at some later point in time. We immediately call 
+`channel.send()` on the data channel. So it should be fine to mutate the buffer
+right afterward.
+
+However, beware that `peer.write(buf)` (a writable stream method) does not have
+the same contract. It will potentially buffer the data and call
+`channel.send()` at a future point in time, so definitely don't assume it's
+safe to mutate the buffer.
+
+
 ## connection does not work on some networks?
 
 If a direct connection fails, in particular, because of NAT traversal and/or firewalls,
