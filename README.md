@@ -87,7 +87,7 @@ Now you have a direct P2P connection between two browsers!
 
 ### A simpler example
 
-This example create two peers **in the web same page**.
+This example create two peers **in the same web page**.
 
 In a real-world application, *you would never do this*. The sender and receiver `Peer`
 instances would exist in separate browsers. A "signaling server" (usually implemented with
