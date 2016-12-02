@@ -17,17 +17,19 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
+  self._id = randombytes(4).toString('hex').slice(0, 7)
+  self._debug('new peer %o', opts)
+
+  opts = Object.assign({}, {
+    allowHalfOpen: false,
+    highWaterMark: 1024 * 1024
+  }, opts)
+
+  stream.Duplex.call(self, opts)
+
   self.channelName = opts.initiator
     ? opts.channelName || randombytes(20).toString('hex')
     : null
-
-  self._debug('new peer %o', opts)
-
-  if (!opts) opts = {}
-  opts.allowHalfOpen = false
-  if (opts.highWaterMark == null) opts.highWaterMark = 1024 * 1024
-
-  stream.Duplex.call(self, opts)
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
@@ -592,8 +594,7 @@ Peer.prototype._onError = function (err) {
 Peer.prototype._debug = function () {
   var self = this
   var args = [].slice.call(arguments)
-  var id = self.channelName && self.channelName.substring(0, 7)
-  args[0] = '[' + id + '] ' + args[0]
+  args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
 }
 

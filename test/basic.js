@@ -16,6 +16,15 @@ test('detect WebRTC support', function (t) {
   t.end()
 })
 
+test('create peer without options', function (t) {
+  var peer
+  t.doesNotThrow(function () {
+    peer = new Peer()
+  })
+  peer.destroy()
+  t.end()
+})
+
 test('signal event gets emitted', function (t) {
   var peer = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   peer.once('signal', function () {
