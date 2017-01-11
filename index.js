@@ -411,8 +411,8 @@ Peer.prototype.getStats = function (cb) {
   var self = this
   if (!self._pc.getStats) { // No ability to call stats
     cb([])
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) { // Mozilla
-    self._pc.getStats(null, function (res) {
+  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) { // Firefox
+    self._pc.getStats().then(function (res) {
       var items = []
       res.forEach(function (item) {
         items.push(item)
