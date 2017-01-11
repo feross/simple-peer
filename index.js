@@ -411,15 +411,7 @@ Peer.prototype.getStats = function (cb) {
   var self = this
   if (!self._pc.getStats) { // No ability to call stats
     cb([])
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) { // Firefox
-    self._pc.getStats().then(function (res) {
-      var items = []
-      res.forEach(function (item) {
-        items.push(item)
-      })
-      cb(items)
-    }, function (err) { self._onError(err) })
-  } else {
+  } else if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) { // Chrome (non-standard)
     self._pc.getStats(function (res) { // Chrome
       var items = []
       res.result().forEach(function (result) {
@@ -434,6 +426,14 @@ Peer.prototype.getStats = function (cb) {
       })
       cb(items)
     })
+  } else { // Firefox, standard-compliant browsers, etc.
+    self._pc.getStats().then(function (res) {
+      var items = []
+      res.forEach(function (item) {
+        items.push(item)
+      })
+      cb(items)
+    }, function (err) { self._onError(err) })
   }
 }
 
