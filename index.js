@@ -409,9 +409,9 @@ Peer.prototype._onIceConnectionStateChange = function () {
 
 Peer.prototype.getStats = function (cb) {
   var self = this
-  if (!self._pc.getStats) { // No ability to call stats
-    cb([])
-  } else if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) { // Chrome (non-standard)
+
+  // Chrome (non-standard)
+  if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) {
     self._pc.getStats(function (res) { // Chrome
       var items = []
       res.result().forEach(function (result) {
@@ -425,9 +425,21 @@ Peer.prototype.getStats = function (cb) {
         items.push(item)
       })
       cb(items)
-    })
-  } else { // Firefox, standard-compliant browsers, etc.
+    }, function (err) { self._onError(err) })
+
+  // Firefox (standards-compliant, promise version)
+  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
     self._pc.getStats().then(function (res) {
+      var items = []
+      res.forEach(function (item) {
+        items.push(item)
+      })
+      cb(items)
+    }, function (err) { self._onError(err) })
+
+  // Fallback (standards-compliant, callback version, deprecated)
+  } else {
+    self._pc.getStats(null, function (res) {
       var items = []
       res.forEach(function (item) {
         items.push(item)
