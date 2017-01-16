@@ -154,7 +154,7 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 Peer.config = {
   iceServers: [
     {
-      urls: 'stun:23.21.150.121'
+      urls: 'stun:stun.l.google.com:19302'
     }
   ]
 }
