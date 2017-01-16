@@ -410,8 +410,9 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype.getStats = function (cb) {
   var self = this
 
-  // Chrome (non-standard)
-  if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) {
+  // Chrome, or electron-webrtc (non-standard)
+  if ((typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) ||
+      typeof self._pc._callRemote === 'function' /* electron-webrtc */) {
     self._pc.getStats(function (res) { // Chrome
       var items = []
       res.result().forEach(function (result) {
