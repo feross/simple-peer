@@ -17,11 +17,16 @@ test('detect WebRTC support', function (t) {
 })
 
 test('create peer without options', function (t) {
-  var peer
-  t.doesNotThrow(function () {
-    peer = new Peer()
-  })
-  peer.destroy()
+  if (process.browser) {
+    var peer
+    t.doesNotThrow(function () {
+      peer = new Peer()
+    })
+    peer.destroy()
+  } else {
+    t.pass('Skip no-option test in Node.js, since the wrtc option is required')
+  }
+
   t.end()
 })
 
