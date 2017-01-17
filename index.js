@@ -447,6 +447,24 @@ Peer.prototype.getStats = function (cb) {
       })
       cb(items)
     }, function (err) { self._onError(err) })
+}
+
+// Detect the WebRTC implementation. We only need this in a few places where
+// feature-detection does not work correctly.
+Peer.prototype._browserDetect = function () {
+  var self = this
+  if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) {
+    return 'chrome' // (includes Opera)
+  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
+    return 'firefox'
+  } else if (Array.isArray(self._pc.RTCIceConnectionStates)) {
+    return 'node-wrtc'
+  } else if (typeof self._pc._callRemote === 'function') {
+    return 'electron-webrtc'
+  } else if (typeof self._pc._peerConnectionId === 'number') {
+    return 'react-native-webrtc'
+  } else {
+    return 'unknown'
   }
 }
 
