@@ -438,6 +438,16 @@ Peer.prototype.getStats = function (cb) {
       cb(items)
     }, function (err) { self._onError(err) })
 
+  // Node.js with wrtc (callback version)
+  } else if (self._isWrtc) {
+    self._pc.getStats(function (res) {
+      var items = []
+      res.result().forEach(function (item) {
+        items.push(item)
+      })
+      cb(items)
+    }, function (err) { self._onError(err) })
+
   // Fallback (standards-compliant, callback version, deprecated)
   } else {
     self._pc.getStats(null, function (res) {
