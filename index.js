@@ -111,9 +111,11 @@ function Peer (opts) {
       if (!createdOffer) self._createOffer()
       createdOffer = true
     }
+
+    // TODO: can we remove this?
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
-    if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
+    if (self._browserDetect() !== 'chrome') {
       self._pc.onnegotiationneeded()
     }
   } else {
@@ -410,9 +412,10 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype.getStats = function (cb) {
   var self = this
 
-  // Chrome, or electron-webrtc (non-standard)
-  if ((typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) ||
-      typeof self._pc._callRemote === 'function' /* electron-webrtc */) {
+  var browser = self._browserDetect()
+
+  // Single-parameter callback-based getStats() (non-standard)
+  if (['chrome', 'electron-webrtc', 'node-wrtc'].includes(browser)) {
     self._pc.getStats(function (res) { // Chrome
       var items = []
       res.result().forEach(function (result) {
@@ -428,8 +431,8 @@ Peer.prototype.getStats = function (cb) {
       cb(items)
     }, function (err) { self._onError(err) })
 
-  // Firefox (standards-compliant, promise version)
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
+  // Promise-based getStats() (standard)
+  } else if (browser === 'firefox') {
     self._pc.getStats().then(function (res) {
       var items = []
       res.forEach(function (item) {
@@ -438,8 +441,8 @@ Peer.prototype.getStats = function (cb) {
       cb(items)
     }, function (err) { self._onError(err) })
 
-  // Fallback (standards-compliant, callback version, deprecated)
-  } else {
+  // Two-parameter callback-based getStats() (deprecated, former standard)
+  } else if (browser === 'react-native-webrtc') {
     self._pc.getStats(null, function (res) {
       var items = []
       res.forEach(function (item) {
@@ -447,6 +450,12 @@ Peer.prototype.getStats = function (cb) {
       })
       cb(items)
     }, function (err) { self._onError(err) })
+
+  // Unknown browser, skip getStats() since it's anyone's guess which style of
+  // getStats() they implement.
+  } else {
+    cb([])
+  }
 }
 
 // Detect the WebRTC implementation. We only need this in a few places where
