@@ -416,10 +416,8 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype.getStats = function (cb) {
   var self = this
 
-  var getStatsLength = self._wrtc.RTCPeerConnection.prototype.getStats.length
-
   // Promise-based getStats() (standard)
-  if (getStatsLength === 0) {
+  if (self._pc.getStats.length === 0) {
     self._pc.getStats().then(function (res) {
       var reports = []
       res.forEach(function (report) {
@@ -439,7 +437,7 @@ Peer.prototype.getStats = function (cb) {
     }, function (err) { self._onError(err) })
 
   // Single-parameter callback-based getStats() (non-standard)
-  } else if (getStatsLength > 0) {
+  } else if (self._pc.getStats.length > 0) {
     self._pc.getStats(function (res) {
       var reports = []
       res.result().forEach(function (result) {
