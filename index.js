@@ -107,20 +107,18 @@ function Peer (opts) {
   }
 
   if (self.initiator) {
-    self._setupData({
-      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
-    })
-
     var createdOffer = false
     self._pc.onnegotiationneeded = function () {
       if (!createdOffer) self._createOffer()
       createdOffer = true
     }
 
-    // TODO: can we remove this?
-    // Only Chrome triggers "negotiationneeded"; this is a workaround for other
-    // implementations
-    if (self._browserDetect() !== 'chrome') {
+    self._setupData({
+      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
+    })
+
+    // HACK: wrtc doesn't fire the 'negotionneeded' event
+    if (self._isWrtc) {
       self._pc.onnegotiationneeded()
     }
   } else {
