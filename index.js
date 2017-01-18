@@ -45,17 +45,16 @@ function Peer (opts) {
   self.destroyed = false
   self.connected = false
 
-  // so Peer object always has same shape (V8 optimization)
   self.remoteAddress = undefined
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
   self.localPort = undefined
 
-  self._isWrtc = !!opts.wrtc // HACK: to fix `wrtc` bug. See issue: #60
   self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
     ? opts.wrtc
     : getBrowserRTC()
+
   if (!self._wrtc) {
     if (typeof window === 'undefined') {
       throw new Error('No WebRTC support: Specify `opts.wrtc` option in this environment')
@@ -77,6 +76,12 @@ function Peer (opts) {
   self._reconnectTimeout = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+
+  // We prefer feature detection whenever possible, but sometimes that's not
+  // possible for certain implementations.
+  self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
+  self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
+
   self._pc.oniceconnectionstatechange = function () {
     self._onIceConnectionStateChange()
   }
@@ -412,68 +417,49 @@ Peer.prototype._onIceConnectionStateChange = function () {
 Peer.prototype.getStats = function (cb) {
   var self = this
 
-  var browser = self._browserDetect()
-
-  // Single-parameter callback-based getStats() (non-standard)
-  if (['chrome', 'electron-webrtc', 'node-wrtc'].includes(browser)) {
-    self._pc.getStats(function (res) { // Chrome
-      var items = []
-      res.result().forEach(function (result) {
-        var item = {}
-        result.names().forEach(function (name) {
-          item[name] = result.stat(name)
-        })
-        item.id = result.id
-        item.type = result.type
-        item.timestamp = result.timestamp
-        items.push(item)
-      })
-      cb(items)
-    }, function (err) { self._onError(err) })
+  var getStatsLength = self._wrtc.RTCPeerConnection.prototype.getStats.length
 
   // Promise-based getStats() (standard)
-  } else if (browser === 'firefox') {
+  if (getStatsLength === 0) {
     self._pc.getStats().then(function (res) {
-      var items = []
-      res.forEach(function (item) {
-        items.push(item)
+      var reports = []
+      res.forEach(function (report) {
+        reports.push(report)
       })
-      cb(items)
+      cb(reports)
     }, function (err) { self._onError(err) })
 
   // Two-parameter callback-based getStats() (deprecated, former standard)
-  } else if (browser === 'react-native-webrtc') {
+  } else if (self._isReactNativeWebrtc) {
     self._pc.getStats(null, function (res) {
-      var items = []
-      res.forEach(function (item) {
-        items.push(item)
+      var reports = []
+      res.forEach(function (report) {
+        reports.push(report)
       })
-      cb(items)
+      cb(reports)
+    }, function (err) { self._onError(err) })
+
+  // Single-parameter callback-based getStats() (non-standard)
+  } else if (getStatsLength > 0) {
+    self._pc.getStats(function (res) {
+      var reports = []
+      res.result().forEach(function (result) {
+        var report = {}
+        result.names().forEach(function (name) {
+          report[name] = result.stat(name)
+        })
+        report.id = result.id
+        report.type = result.type
+        report.timestamp = result.timestamp
+        reports.push(report)
+      })
+      cb(reports)
     }, function (err) { self._onError(err) })
 
   // Unknown browser, skip getStats() since it's anyone's guess which style of
   // getStats() they implement.
   } else {
     cb([])
-  }
-}
-
-// Detect the WebRTC implementation. We only need this in a few places where
-// feature-detection does not work correctly.
-Peer.prototype._browserDetect = function () {
-  var self = this
-  if (typeof window !== 'undefined' && !!window.webkitRTCPeerConnection) {
-    return 'chrome' // (includes Opera)
-  } else if (typeof window !== 'undefined' && !!window.mozRTCPeerConnection) {
-    return 'firefox'
-  } else if (Array.isArray(self._pc.RTCIceConnectionStates)) {
-    return 'node-wrtc'
-  } else if (typeof self._pc._callRemote === 'function') {
-    return 'electron-webrtc'
-  } else if (typeof self._pc._peerConnectionId === 'number') {
-    return 'react-native-webrtc'
-  } else {
-    return 'unknown'
   }
 }
 
