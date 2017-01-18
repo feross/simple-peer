@@ -472,48 +472,82 @@ Peer.prototype._maybeReady = function () {
 
     var remoteCandidates = {}
     var localCandidates = {}
+    var candidatePairs = {}
 
-    function setActiveCandidates (item) {
-      var local = localCandidates[item.localCandidateId]
-      var remote = remoteCandidates[item.remoteCandidateId]
+    items.forEach(function (item) {
+      // TODO: Once all browsers support the hyphenated stats report types, remove
+      // the non-hypenated ones
+      if (item.type === 'remotecandidate' || item.type === 'remote-candidate') {
+        remoteCandidates[item.id] = item
+      }
+      if (item.type === 'localcandidate' || item.type === 'local-candidate') {
+        localCandidates[item.id] = item
+      }
+      if (item.type === 'candidatepair' || item.type === 'candidate-pair') {
+        candidatePairs[item.id] = item
+      }
+    })
 
-      if (local) {
+    items.forEach(function (item) {
+      // Spec-compliant
+      if (item.type === 'transport') {
+        setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
+      }
+
+      // Old implementations
+      if (
+        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
+        ((item.type === 'candidatepair' || item.type === 'candidate-pair') && item.selected)
+      ) {
+        setSelectedCandidatePair(item)
+      }
+    })
+
+    function setSelectedCandidatePair (selectedCandidatePair) {
+      var local = localCandidates[selectedCandidatePair.localCandidateId]
+
+      if (local && local.ip) {
+        // Spec
+        self.localAddress = local.ip
+        self.localPort = Number(local.port)
+      } else if (local && local.ipAddress) {
+        // Firefox
         self.localAddress = local.ipAddress
         self.localPort = Number(local.portNumber)
-      } else if (typeof item.googLocalAddress === 'string') {
-        // Sometimes `item.id` is undefined in `wrtc` and Chrome
-        // See: https://github.com/feross/simple-peer/issues/66
-        local = item.googLocalAddress.split(':')
+      } else if (typeof selectedCandidatePair.googLocalAddress === 'string') {
+        // TODO: remove this once Chrome 58 is released
+        local = selectedCandidatePair.googLocalAddress.split(':')
         self.localAddress = local[0]
         self.localPort = Number(local[1])
       }
-      self._debug('connect local: %s:%s', self.localAddress, self.localPort)
 
-      if (remote) {
+      var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
+
+      if (remote && remote.ip) {
+        // Spec
+        self.remoteAddress = remote.ip
+        self.remotePort = Number(remote.port)
+      } else if (remote && remote.ipAddress) {
+        // Firefox
         self.remoteAddress = remote.ipAddress
         self.remotePort = Number(remote.portNumber)
-        self.remoteFamily = 'IPv4'
-      } else if (typeof item.googRemoteAddress === 'string') {
-        remote = item.googRemoteAddress.split(':')
+      } else if (typeof selectedCandidatePair.googRemoteAddress === 'string') {
+        // TODO: remove this once Chrome 58 is released
+        remote = selectedCandidatePair.googRemoteAddress.split(':')
         self.remoteAddress = remote[0]
         self.remotePort = Number(remote[1])
-        self.remoteFamily = 'IPv4'
       }
-      self._debug('connect remote: %s:%s', self.remoteAddress, self.remotePort)
+      self.remoteFamily = 'IPv4'
+
+      self._debug(
+        'connect local: %s:%s remote: %s:%s',
+        self.localAddress, self.localPort, self.remoteAddress, self.remotePort
+      )
     }
 
-    items.forEach(function (item) {
-      if (item.type === 'remotecandidate') remoteCandidates[item.id] = item
-      if (item.type === 'localcandidate') localCandidates[item.id] = item
-    })
-
-    items.forEach(function (item) {
-      var isCandidatePair = (
-        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
-        (item.type === 'candidatepair' && item.selected)
-      )
-      if (isCandidatePair) setActiveCandidates(item)
-    })
+    console.log(items)
+    console.log(remoteCandidates)
+    console.log(localCandidates)
 
     if (self._chunk) {
       try {
