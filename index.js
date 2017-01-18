@@ -545,10 +545,6 @@ Peer.prototype._maybeReady = function () {
       )
     }
 
-    console.log(items)
-    console.log(remoteCandidates)
-    console.log(localCandidates)
-
     if (self._chunk) {
       try {
         self.send(self._chunk)
