@@ -2,7 +2,14 @@ language: node_js
 sudo: false
 node_js:
   - 'node'
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
 env:
   global:
+  - CXX=g++-4.8
   - secure: nx+k8PyPPr5BAfJQf4eaKr4DZZoTe5Ef1MalZ97KRCEV87Tqwi/XwqNN4gEbpzUpKcVyc/Jasml1uOmCqFO93zSjUFUozjiO3C0R2BT6AL1XtslyORocA5zmMMwTj+rRux4y0fWFNTIpqp5pBPYdYd7VOpRIlcZjY0dddoZht+g=
   - secure: USW/3KjJcPBeGe17mrjB5yjRqYdjZCTWALeC5dWGE9HIn10MR7kzPBYCG7+H4JYBXKKPljB8jzjAuTv9KzQLeTbPQsVKzEqLGhDo4wq1qmIg9BmaSZtMZgwoBQ7kV1xjbzG7jcy3xhIpXMc3kT/1HLv1XSMGcusXZ7izKhi/dc8=
