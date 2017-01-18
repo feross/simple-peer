@@ -17,24 +17,32 @@ test('detect WebRTC support', function (t) {
 })
 
 test('create peer without options', function (t) {
-  var peer
-  t.doesNotThrow(function () {
-    peer = new Peer()
-  })
-  peer.destroy()
-  t.end()
+  t.plan(1)
+
+  if (process.browser) {
+    var peer
+    t.doesNotThrow(function () {
+      peer = new Peer()
+    })
+    peer.destroy()
+  } else {
+    t.pass('Skip no-option test in Node.js, since the wrtc option is required')
+  }
 })
 
 test('signal event gets emitted', function (t) {
+  t.plan(2)
+
   var peer = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.pass('got signal event')
-    peer.destroy()
-    t.end()
+    peer.destroy(function () { t.pass('peer destroyed') })
   })
 })
 
 test('data send/receive text', function (t) {
+  t.plan(16)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -79,31 +87,25 @@ test('data send/receive text', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
-
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
 })
 
 test('sdpTransform function is called', function (t) {
+  t.plan(3)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, sdpTransform: sdpTransform, wrtc: common.wrtc })
 
   function sdpTransform (sdp) {
     t.equal(typeof sdp, 'string', 'got a string as SDP')
     setTimeout(function () {
-      peer1.destroy()
-      peer2.destroy()
-      t.end()
-    })
+      peer1.destroy(function () { t.pass('peer1 destroyed') })
+      peer2.destroy(function () { t.pass('peer2 destroyed') })
+    }, 0)
     return sdp
   }
 

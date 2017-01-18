@@ -20,28 +20,30 @@
   "devDependencies": {
     "browserify": "^13.0.0",
     "concat-stream": "^1.4.6",
+    "electron-webrtc": "^0.3.0",
     "simple-get": "^2.0.0",
     "standard": "*",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
     "uglify-js": "^2.4.15",
+    "wrtc": "0.0.61",
     "zuul": "^3.8.0"
   },
   "keywords": [
-    "webrtc",
-    "p2p",
-    "data channel",
-    "data channels",
     "data",
+    "data channel",
+    "data channel stream",
+    "data channels",
+    "p2p",
+    "peer",
+    "peer",
+    "peer-to-peer",
+    "stream",
     "video",
     "voice",
-    "peer",
-    "stream",
-    "peer-to-peer",
-    "data channel stream",
-    "webrtc stream",
-    "peer"
+    "webrtc",
+    "webrtc stream"
   ],
   "license": "MIT",
   "main": "index.js",
@@ -50,11 +52,13 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "test": "standard && npm run test-browser",
+    "build": "browserify -s SimplePeer -r ./ | uglifyjs -m > simplepeer.min.js",
+    "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "zuul -- test/*.js",
     "test-browser-local": "zuul --local -- test/*.js",
-    "test-node": "echo 'DISABLED' && tape test/*.js",
-    "build": "browserify -s SimplePeer -r ./ | uglifyjs -m > simplepeer.min.js"
+    "test-node": "npm run test-node-electron-webrtc && npm run test-node-wrtc",
+    "test-node-electron-webrtc": "WRTC=electron-webrtc tape test/*.js",
+    "test-node-wrtc": "WRTC=wrtc tape test/*.js"
   },
   "testling": {
     "files": "test/*.js"

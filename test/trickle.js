@@ -12,6 +12,8 @@ test('get config', function (t) {
 })
 
 test('disable trickle', function (t) {
+  t.plan(8)
+
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, trickle: false, wrtc: common.wrtc })
 
@@ -46,21 +48,16 @@ test('disable trickle', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
-
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
 })
 
 test('disable trickle (only initiator)', function (t) {
+  t.plan(8)
+
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -95,21 +92,16 @@ test('disable trickle (only initiator)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
-
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
 })
 
 test('disable trickle (only receiver)', function (t) {
+  t.plan(8)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, trickle: false, wrtc: common.wrtc })
 
@@ -144,15 +136,8 @@ test('disable trickle (only receiver)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
-
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }

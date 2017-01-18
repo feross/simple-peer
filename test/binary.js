@@ -12,6 +12,8 @@ test('get config', function (t) {
 })
 
 test('data send/receive Uint8Array', function (t) {
+  t.plan(6)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
@@ -36,21 +38,16 @@ test('data send/receive Uint8Array', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
-
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
 })
 
 test('data send/receive Buffer', function (t) {
+  t.plan(6)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
@@ -75,21 +72,16 @@ test('data send/receive Buffer', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
-
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
 })
 
 test('data send/receive ArrayBuffer', function (t) {
+  t.plan(6)
+
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
   peer1.on('signal', function (data) {
@@ -114,15 +106,8 @@ test('data send/receive ArrayBuffer', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, new Buffer([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(tryDone)
-        peer2.destroy(tryDone)
-
-        function tryDone () {
-          if (!peer1.connected && !peer2.connected) {
-            t.pass('both peers closed')
-            t.end()
-          }
-        }
+        peer1.destroy(function () { t.pass('peer1 destroyed') })
+        peer2.destroy(function () { t.pass('peer2 destroyed') })
       })
     })
   }
