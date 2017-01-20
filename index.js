@@ -147,6 +147,10 @@ function Peer (opts) {
       })
     }
   })
+
+  self.on('error', function (err) {
+    self._debug('error %s', err.message || err)
+  })
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
@@ -238,9 +242,9 @@ Peer.prototype.send = function (chunk) {
   self._debug('write: %d bytes', len)
 }
 
-Peer.prototype.destroy = function (onclose) {
+Peer.prototype.destroy = function (err, onclose) {
   var self = this
-  self._destroy(null, onclose)
+  self._destroy(err, onclose)
 }
 
 Peer.prototype._destroy = function (err, onclose) {
