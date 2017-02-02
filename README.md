@@ -199,7 +199,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [ { url: 'stun:stun.l.google.com:19305' } ] },
+  config: { iceServers: [ { url: 'stun:stun.l.google.com:19302' } ] },
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
@@ -444,7 +444,7 @@ peer2.on('data', function (data) {
 ## memory usage
 
 If you call `peer.send(buf)`, `simple-peer` is not keeping a reference to `buf`
-and sending the buffer at some later point in time. We immediately call 
+and sending the buffer at some later point in time. We immediately call
 `channel.send()` on the data channel. So it should be fine to mutate the buffer
 right afterward.
 
