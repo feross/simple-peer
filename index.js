@@ -233,9 +233,7 @@ Peer.prototype.send = function (chunk) {
     chunk = new Uint8Array(chunk)
   }
 
-  var len = chunk.length || chunk.byteLength || chunk.size
   self._channel.send(chunk)
-  self._debug('write: %d bytes', len)
 }
 
 Peer.prototype.destroy = function (onclose) {
