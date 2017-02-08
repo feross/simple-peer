@@ -41,7 +41,7 @@ test('signal event gets emitted', function (t) {
 })
 
 test('data send/receive text', function (t) {
-  t.plan(16)
+  t.plan(18)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -81,10 +81,12 @@ test('data send/receive text', function (t) {
 
     peer1.send('sup peer2')
     peer2.on('data', function (data) {
+      t.ok(Buffer.isBuffer(data), 'data is Buffer')
       t.equal(data.toString(), 'sup peer2', 'got correct message')
 
       peer2.send('sup peer1')
       peer1.on('data', function (data) {
+        t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
         peer1.destroy(function () { t.pass('peer1 destroyed') })
