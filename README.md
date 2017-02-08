@@ -203,12 +203,12 @@ If `opts` is specified, then the default options (shown below) will be overridde
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
-  objectMode: false,
   reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   trickle: true,
-  wrtc: {} // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
+  wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
+  objectMode: false
 }
 ```
 
@@ -221,12 +221,12 @@ The options do the following:
 - `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
 - `offerConstraints` - custom offer constraints (used by `createOffer` method)
 - `answerConstraints` - custom answer constraints (used by `createAnswer` method)
-- `objectMode` - set to `true` to switch the stream into [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode) to have the objects that come across the data channel not get converted into `Buffer` objects
 - `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
+- `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objets.
 
 ### `peer.signal(data)`
 
