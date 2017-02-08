@@ -203,6 +203,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
+  objectMode: false,
   reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
@@ -213,13 +214,14 @@ If `opts` is specified, then the default options (shown below) will be overridde
 
 The options do the following:
 
-- `initiator` - set to true if this is the initiating peer
+- `initiator` - set to `true` if this is the initiating peer
 - `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
 - `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
 - `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
 - `offerConstraints` - custom offer constraints (used by `createOffer` method)
 - `answerConstraints` - custom answer constraints (used by `createAnswer` method)
+- `objectMode` - set to `true` to switch the stream into [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode) to have the objects that come across the data channel not get converted into `Buffer` objects
 - `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
