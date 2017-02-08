@@ -21,13 +21,16 @@
     "browserify": "^14.0.0",
     "concat-stream": "^1.4.6",
     "electron-webrtc": "^0.3.0",
+    "prettier-bytes": "^1.0.3",
     "simple-get": "^2.0.0",
+    "speedometer": "^1.0.0",
     "standard": "*",
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
     "uglify-js": "^2.4.15",
     "wrtc": "0.0.61",
+    "ws": "^2.0.2",
     "zuul": "^3.8.0"
   },
   "keywords": [
