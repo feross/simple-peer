@@ -599,7 +599,6 @@ Peer.prototype._onChannelMessage = function (event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
-  self._debug('read: %d bytes', data.byteLength || data.length)
 
   if (data instanceof ArrayBuffer) data = new Buffer(data)
   self.push(data)
