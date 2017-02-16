@@ -174,33 +174,37 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
-  function addIceCandidate (candidate) {
-    try {
-      self._pc.addIceCandidate(
-        new self._wrtc.RTCIceCandidate(candidate),
-        noop,
-        function (err) { self._onError(err) }
-      )
-    } catch (err) {
-      self._destroy(new Error('error adding candidate: ' + err.message))
-    }
+  if (data.candidate) {
+    if (self._pc.remoteDescription) self._addIceCandidate(data.candidate)
+    else self._pendingCandidates.push(data.candidate)
   }
-
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
-      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
 
-      self._pendingCandidates.forEach(addIceCandidate)
+      self._pendingCandidates.forEach(function (candidate) {
+        self._addIceCandidate(candidate)
+      })
       self._pendingCandidates = []
+
+      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, function (err) { self._onError(err) })
-  }
-  if (data.candidate) {
-    if (self._pc.remoteDescription) addIceCandidate(data.candidate)
-    else self._pendingCandidates.push(data.candidate)
   }
   if (!data.sdp && !data.candidate) {
     self._destroy(new Error('signal() called with invalid signal data'))
+  }
+}
+
+Peer.prototype._addIceCandidate = function (candidate) {
+  var self = this
+  try {
+    self._pc.addIceCandidate(
+      new self._wrtc.RTCIceCandidate(candidate),
+      noop,
+      function (err) { self._onError(err) }
+    )
+  } catch (err) {
+    self._destroy(new Error('error adding candidate: ' + err.message))
   }
 }
 
@@ -385,7 +389,10 @@ Peer.prototype._createAnswer = function () {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer, noop, function (err) { self._onError(err) })
-    var sendAnswer = function () {
+    if (self.trickle || self._iceComplete) sendAnswer()
+    else self.once('_iceComplete', sendAnswer)
+
+    function sendAnswer () {
       var signal = self._pc.localDescription || answer
       self._debug('signal')
       self.emit('signal', {
@@ -393,8 +400,6 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-    if (self.trickle || self._iceComplete) sendAnswer()
-    else self.once('_iceComplete', sendAnswer)
   }, function (err) { self._onError(err) }, self.answerConstraints)
 }
 
