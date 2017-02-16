@@ -6,6 +6,8 @@ var inherits = require('inherits')
 var randombytes = require('randombytes')
 var stream = require('readable-stream')
 
+var MAX_BUFFERED_AMOUNT = 64 * 1024
+
 inherits(Peer, stream.Duplex)
 
 /**
@@ -21,8 +23,7 @@ function Peer (opts) {
   self._debug('new peer %o', opts)
 
   opts = Object.assign({}, {
-    allowHalfOpen: false,
-    highWaterMark: 1024 * 1024
+    allowHalfOpen: false
   }, opts)
 
   stream.Duplex.call(self, opts)
@@ -63,7 +64,6 @@ function Peer (opts) {
     }
   }
 
-  self._maxBufferedAmount = opts.highWaterMark
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
@@ -299,11 +299,19 @@ Peer.prototype._destroy = function (err, onclose) {
 Peer.prototype._setupData = function (event) {
   var self = this
   self._channel = event.channel
+  self._channel.binaryType = 'arraybuffer'
+
+  if (typeof self._channel.bufferedAmountLowThreshold === 'number') {
+    self._channel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT
+  }
+
   self.channelName = self._channel.label
 
-  self._channel.binaryType = 'arraybuffer'
   self._channel.onmessage = function (event) {
     self._onChannelMessage(event)
+  }
+  self._channel.onbufferedamountlow = function () {
+    self._onChannelBufferedAmountLow()
   }
   self._channel.onopen = function () {
     self._onChannelOpen()
@@ -325,7 +333,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     } catch (err) {
       return self._onError(err)
     }
-    if (self._channel.bufferedAmount > self._maxBufferedAmount) {
+    if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
       self._cb = cb
     } else {
@@ -557,14 +565,15 @@ Peer.prototype._maybeReady = function () {
       cb(null)
     }
 
-    self._interval = setInterval(function () {
-      if (!self._cb || !self._channel || self._channel.bufferedAmount > self._maxBufferedAmount) return
-      self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
-      var cb = self._cb
-      self._cb = null
-      cb(null)
-    }, 150)
-    if (self._interval.unref) self._interval.unref()
+    // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
+    // fallback to using setInterval to implement backpressure.
+    if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
+      self._interval = setInterval(function () {
+        if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) return
+        self._onChannelBufferedAmountLow()
+      }, 150)
+      if (self._interval.unref) self._interval.unref()
+    }
 
     self._debug('connect')
     self.emit('connect')
@@ -601,6 +610,15 @@ Peer.prototype._onChannelMessage = function (event) {
   var data = event.data
   if (data instanceof ArrayBuffer) data = new Buffer(data)
   self.push(data)
+}
+
+Peer.prototype._onChannelBufferedAmountLow = function () {
+  var self = this
+  if (self.destroyed || !self._cb) return
+  self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+  var cb = self._cb
+  self._cb = null
+  cb(null)
 }
 
 Peer.prototype._onChannelOpen = function () {
