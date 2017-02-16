@@ -127,26 +127,10 @@ function Peer (opts) {
     }
   }
 
-  self.on('finish', function () {
-    if (self.connected) {
-      // When local peer is finished writing, close connection to remote peer.
-      // Half open connections are currently not supported.
-      // Wait a bit before destroying so the datachannel flushes.
-      // TODO: is there a more reliable way to accomplish this?
-      setTimeout(function () {
-        self._destroy()
-      }, 100)
-    } else {
-      // If data channel is not connected when local peer is finished writing, wait until
-      // data is flushed to network at "connect" event.
-      // TODO: is there a more reliable way to accomplish this?
-      self.once('connect', function () {
-        setTimeout(function () {
-          self._destroy()
-        }, 100)
-      })
-    }
-  })
+  self._onFinishBound = function () {
+    self._onFinish()
+  }
+  self.once('finish', self._onFinishBound)
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
@@ -258,10 +242,15 @@ Peer.prototype._destroy = function (err, onclose) {
   self._pcReady = false
   self._channelReady = false
 
-  self._chunk = null
-  self._cb = null
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
+  self._interval = null
+  self._reconnectTimeout = null
+  self._chunk = null
+  self._cb = null
+
+  self.removeListener('finish', self._onFinishBound)
+  self._onFinishBound = null
 
   if (self._pc) {
     try {
@@ -343,6 +332,26 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     self._debug('write before connect')
     self._chunk = chunk
     self._cb = cb
+  }
+}
+
+Peer.prototype._onFinish = function () {
+  var self = this
+
+  // When stream finishes writing, close socket. Half open connections are not
+  // supported.
+  if (self.connected) {
+    destroySoon()
+  } else {
+    self.once('connect', destroySoon)
+  }
+
+  // Wait a bit before destroying so the socket flushes.
+  // TODO: is there a more reliable way to accomplish this?
+  function destroySoon () {
+    setTimeout(function () {
+      self._destroy()
+    }, 100)
   }
 }
 
