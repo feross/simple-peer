@@ -22,7 +22,7 @@ function Peer (opts) {
   self._id = randombytes(4).toString('hex').slice(0, 7)
   self._debug('new peer %o', opts)
 
-  opts = Object.assign({}, {
+  opts = Object.assign({
     allowHalfOpen: false
   }, opts)
 
@@ -249,7 +249,7 @@ Peer.prototype._destroy = function (err, onclose) {
   self._chunk = null
   self._cb = null
 
-  self.removeListener('finish', self._onFinishBound)
+  if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
   self._onFinishBound = null
 
   if (self._pc) {
@@ -335,11 +335,12 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   }
 }
 
+// When stream finishes writing, close socket. Half open connections are not
+// supported.
 Peer.prototype._onFinish = function () {
   var self = this
+  if (self.destroyed) return
 
-  // When stream finishes writing, close socket. Half open connections are not
-  // supported.
   if (self.connected) {
     destroySoon()
   } else {
