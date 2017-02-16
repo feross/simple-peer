@@ -577,16 +577,20 @@ Peer.prototype._maybeReady = function () {
     // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
     // fallback to using setInterval to implement backpressure.
     if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
-      self._interval = setInterval(function () {
-        if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) return
-        self._onChannelBufferedAmountLow()
-      }, 150)
+      self._interval = setInterval(function () { self._onInterval() }, 150)
       if (self._interval.unref) self._interval.unref()
     }
 
     self._debug('connect')
     self.emit('connect')
   })
+}
+
+Peer.prototype._onInterval = function () {
+  if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+    return
+  }
+  this._onChannelBufferedAmountLow()
 }
 
 Peer.prototype._onSignalingStateChange = function () {
