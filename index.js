@@ -95,20 +95,6 @@ function Peer (opts) {
     self._onIceCandidate(event)
   }
 
-  if (self.stream) self._pc.addStream(self.stream)
-
-  if ('ontrack' in self._pc) {
-    // WebRTC Spec, Firefox
-    self._pc.ontrack = function (event) {
-      self._onTrack(event)
-    }
-  } else {
-    // Chrome, etc. This can be removed once all browsers support `ontrack`
-    self._pc.onaddstream = function (event) {
-      self._onAddStream(event)
-    }
-  }
-
   if (self.initiator) {
     var createdOffer = false
     self._pc.onnegotiationneeded = function () {
@@ -119,15 +105,33 @@ function Peer (opts) {
     self._setupData({
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
-
-    // HACK: wrtc doesn't fire the 'negotionneeded' event
-    if (self._isWrtc) {
-      self._pc.onnegotiationneeded()
-    }
   } else {
     self._pc.ondatachannel = function (event) {
       self._setupData(event)
     }
+  }
+
+  if ('ontrack' in self._pc) {
+    // WebRTC Spec, Firefox
+    if (self.stream) {
+      self.stream.getTracks().forEach(function (track) {
+        self._pc.addTrack(track, self.stream)
+      })
+    }
+    self._pc.ontrack = function (event) {
+      self._onTrack(event)
+    }
+  } else {
+    // Chrome, etc. This can be removed once all browsers support `ontrack`
+    if (self.stream) self._pc.addStream(self.stream)
+    self._pc.onaddstream = function (event) {
+      self._onAddStream(event)
+    }
+  }
+
+  // HACK: wrtc doesn't fire the 'negotionneeded' event
+  if (self.initiator && self._isWrtc) {
+    self._pc.onnegotiationneeded()
   }
 
   self._onFinishBound = function () {
