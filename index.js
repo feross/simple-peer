@@ -35,9 +35,9 @@ function Peer (opts) {
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
-  self.constraints = transformConstraints(opts.constraints || Peer.constraints)
-  self.offerConstraints = transformConstraints(opts.offerConstraints || {})
-  self.answerConstraints = transformConstraints(opts.answerConstraints || {})
+  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
+  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
+  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
@@ -81,6 +81,7 @@ function Peer (opts) {
   // possible for certain implementations.
   self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
+  self._isChromium // _isChromium is needed eariler, see _transformConstraints
 
   self._pc.oniceconnectionstatechange = function () {
     self._onIceConnectionStateChange()
@@ -684,30 +685,20 @@ Peer.prototype._debug = function () {
 }
 
 // Transform constraints objects into the new format (unless Chromium)
-// This can be removed when Chromium supports the new format
-function transformConstraints (constraints) {
-  if (typeof (window) === 'undefined' || Object.keys(constraints).length === 0) {
+// TODO: This can be removed when Chromium supports the new format
+Peer.prototype._transformConstraints = function (constraints) {
+  var self = this
+  self._isChromium = typeof window !== 'undefined' && window.chrome
+
+  if (Object.keys(constraints).length === 0) {
     return constraints
   }
-  var isChromium = window.chrome
 
-  if ((constraints.mandatory || constraints.optional) && !isChromium) {
+  if ((constraints.mandatory || constraints.optional) && self.isChromium) {
     // convert to new format
-    var newConstraints = {}
-    var key
 
     // Merge mandatory and optional objects, prioritizing mandatory
-    if (constraints.optional) {
-      for (key in constraints.optional) {
-        newConstraints[key] = constraints.optional[key]
-      }
-    }
-
-    if (constraints.mandatory) {
-      for (key in constraints.mandatory) {
-        newConstraints[key] = constraints.mandatory[key]
-      }
-    }
+    var newConstraints = Object.assign({}, constraints.optional, constraints.mandatory)
 
     // fix casing
     if (newConstraints.OfferToReceiveVideo !== undefined) {
@@ -721,7 +712,7 @@ function transformConstraints (constraints) {
     }
 
     return newConstraints
-  } else if (!(constraints.mandatory || constraints.optional) && isChromium) {
+  } else if (!constraints.mandatory && !constraints.optional && self.isChromium) {
     // convert to old format
 
     // fix casing
