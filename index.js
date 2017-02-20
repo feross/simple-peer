@@ -694,7 +694,7 @@ Peer.prototype._transformConstraints = function (constraints) {
     return constraints
   }
 
-  if ((constraints.mandatory || constraints.optional) && self.isChromium) {
+  if ((constraints.mandatory || constraints.optional) && self._isChromium) {
     // convert to new format
 
     // Merge mandatory and optional objects, prioritizing mandatory
@@ -712,7 +712,7 @@ Peer.prototype._transformConstraints = function (constraints) {
     }
 
     return newConstraints
-  } else if (!constraints.mandatory && !constraints.optional && self.isChromium) {
+  } else if (!constraints.mandatory && !constraints.optional && self._isChromium) {
     // convert to old format
 
     // fix casing
