@@ -111,15 +111,19 @@ function Peer (opts) {
     }
   }
 
-  if (self.stream) self._pc.addStream(self.stream)
-
   if ('ontrack' in self._pc) {
     // WebRTC Spec, Firefox
+    if (self.stream) {
+      self.stream.getTracks().forEach(function (track) {
+        self._pc.addTrack(track, self.stream)
+      })
+    }
     self._pc.ontrack = function (event) {
       self._onTrack(event)
     }
   } else {
     // Chrome, etc. This can be removed once all browsers support `ontrack`
+    if (self.stream) self._pc.addStream(self.stream)
     self._pc.onaddstream = function (event) {
       self._onAddStream(event)
     }
