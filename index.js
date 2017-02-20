@@ -694,7 +694,7 @@ Peer.prototype._transformConstraints = function (constraints) {
     return constraints
   }
 
-  if ((constraints.mandatory || constraints.optional) && self._isChromium) {
+  if ((constraints.mandatory || constraints.optional) && !self._isChromium) {
     // convert to new format
 
     // Merge mandatory and optional objects, prioritizing mandatory
