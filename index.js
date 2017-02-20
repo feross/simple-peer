@@ -123,11 +123,9 @@ function Peer (opts) {
     }
   }
 
-  if (self.initiator) {
-    // HACK: wrtc doesn't fire the 'negotionneeded' event
-    if (self._isWrtc) {
-      self._pc.onnegotiationneeded()
-    }
+  // HACK: wrtc doesn't fire the 'negotionneeded' event
+  if (self.initiator && self._isWrtc) {
+    self._pc.onnegotiationneeded()
   }
 
   self._onFinishBound = function () {
