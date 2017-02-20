@@ -32,15 +32,10 @@ function Peer (opts) {
     ? opts.channelName || randombytes(20).toString('hex')
     : null
 
-  // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && window.chrome
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
-  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
-  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
-  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
@@ -78,12 +73,20 @@ function Peer (opts) {
   self._interval = null
   self._reconnectTimeout = null
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
   self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
+  self._isChromium = typeof window !== 'undefined' && window.chrome
+
+  self.offerConstraints = self._transformConstraints(
+    opts.offerConstraints || opts.constraints || Peer.constraints
+  )
+  self.answerConstraints = self._transformConstraints(
+    opts.answerConstraints || opts.constraints || Peer.constraints
+  )
 
   self._pc.oniceconnectionstatechange = function () {
     self._onIceConnectionStateChange()
