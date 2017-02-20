@@ -121,3 +121,53 @@ test('sdpTransform function is called', function (t) {
     peer1.signal(data)
   })
 })
+
+test('old constraint formats are used', function (t) {
+  t.plan(1)
+
+  var constraints = {
+    mandatory: {
+      OfferToReceiveAudio: true,
+      OfferToReceiveVideo: true
+    }
+  }
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, constraints: constraints })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc, constraints: constraints })
+
+  peer1.on('signal', function (data) {
+    peer2.signal(data)
+  })
+
+  peer2.on('signal', function (data) {
+    peer1.signal(data)
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peers connected')
+  })
+})
+
+test('new constraint formats are used', function (t) {
+  t.plan(1)
+
+  var constraints = {
+    offerToReceiveAudio: true,
+    offerToReceiveVideo: true
+  }
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, constraints: constraints })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc, constraints: constraints })
+
+  peer1.on('signal', function (data) {
+    peer2.signal(data)
+  })
+
+  peer2.on('signal', function (data) {
+    peer1.signal(data)
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peers connected')
+  })
+})

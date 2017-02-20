@@ -35,9 +35,9 @@ function Peer (opts) {
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
-  self.constraints = opts.constraints || Peer.constraints
-  self.offerConstraints = opts.offerConstraints || {}
-  self.answerConstraints = opts.answerConstraints || {}
+  self.constraints = transformConstraints(opts.constraints || Peer.constraints)
+  self.offerConstraints = transformConstraints(opts.offerConstraints || {})
+  self.answerConstraints = transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
@@ -681,6 +681,66 @@ Peer.prototype._debug = function () {
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+// Transform constraints objects into the new format (unless Chromium)
+// This can be removed when Chromium supports the new format
+function transformConstraints (constraints) {
+  if (typeof (window) === 'undefined' || Object.keys(constraints).length === 0) {
+    return constraints
+  }
+  var isChromium = window.chrome
+
+  if ((constraints.mandatory || constraints.optional) && !isChromium) {
+    // convert to new format
+    var newConstraints = {}
+    var key
+
+    // Merge mandatory and optional objects, prioritizing mandatory
+    if (constraints.optional) {
+      for (key in constraints.optional) {
+        newConstraints[key] = constraints.optional[key]
+      }
+    }
+
+    if (constraints.mandatory) {
+      for (key in constraints.mandatory) {
+        newConstraints[key] = constraints.mandatory[key]
+      }
+    }
+
+    // fix casing
+    if (newConstraints.OfferToReceiveVideo !== undefined) {
+      newConstraints.offerToReceiveVideo = newConstraints.OfferToReceiveVideo
+      delete newConstraints['OfferToReceiveVideo']
+    }
+
+    if (newConstraints.OfferToReceiveAudio !== undefined) {
+      newConstraints.offerToReceiveAudio = newConstraints.OfferToReceiveAudio
+      delete newConstraints['OfferToReceiveAudio']
+    }
+
+    return newConstraints
+  } else if (!(constraints.mandatory || constraints.optional) && isChromium) {
+    // convert to old format
+
+    // fix casing
+    if (constraints.offerToReceiveVideo !== undefined) {
+      constraints.OfferToReceiveVideo = constraints.offerToReceiveVideo
+      delete constraints['offerToReceiveVideo']
+    }
+
+    if (constraints.offerToReceiveAudio !== undefined) {
+      constraints.OfferToReceiveAudio = constraints.offerToReceiveAudio
+      delete constraints['offerToReceiveAudio']
+    }
+
+    return {
+      mandatory: constraints // NOTE: All constraints are upgraded to mandatory
+    }
+  }
+
+  return constraints
 }
 
 function noop () {}
