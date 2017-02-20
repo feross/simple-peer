@@ -32,6 +32,9 @@ function Peer (opts) {
     ? opts.channelName || randombytes(20).toString('hex')
     : null
 
+  // Needed by _transformConstraints, so set this early
+  self._isChromium = typeof window !== 'undefined' && window.chrome
+
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
@@ -81,7 +84,6 @@ function Peer (opts) {
   // possible for certain implementations.
   self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
-  self._isChromium // _isChromium is needed eariler, see _transformConstraints
 
   self._pc.oniceconnectionstatechange = function () {
     self._onIceConnectionStateChange()
@@ -688,7 +690,6 @@ Peer.prototype._debug = function () {
 // TODO: This can be removed when Chromium supports the new format
 Peer.prototype._transformConstraints = function (constraints) {
   var self = this
-  self._isChromium = typeof window !== 'undefined' && window.chrome
 
   if (Object.keys(constraints).length === 0) {
     return constraints
