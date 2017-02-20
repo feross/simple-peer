@@ -123,7 +123,7 @@ test('sdpTransform function is called', function (t) {
 })
 
 test('old constraint formats are used', function (t) {
-  t.plan(1)
+  t.plan(3)
 
   var constraints = {
     mandatory: {
@@ -145,11 +145,13 @@ test('old constraint formats are used', function (t) {
 
   peer1.on('connect', function () {
     t.pass('peers connected')
+    peer1.destroy(function () { t.pass('peer1 destroyed') })
+    peer2.destroy(function () { t.pass('peer2 destroyed') })
   })
 })
 
 test('new constraint formats are used', function (t) {
-  t.plan(1)
+  t.plan(3)
 
   var constraints = {
     offerToReceiveAudio: true,
@@ -169,5 +171,7 @@ test('new constraint formats are used', function (t) {
 
   peer1.on('connect', function () {
     t.pass('peers connected')
+    peer1.destroy(function () { t.pass('peer1 destroyed') })
+    peer2.destroy(function () { t.pass('peer2 destroyed') })
   })
 })
