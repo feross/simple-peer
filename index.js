@@ -32,7 +32,6 @@ function Peer (opts) {
     ? opts.channelName || randombytes(20).toString('hex')
     : null
 
-
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
