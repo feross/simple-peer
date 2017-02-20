@@ -92,6 +92,22 @@ function Peer (opts) {
     self._onIceCandidate(event)
   }
 
+  if (self.initiator) {
+    var createdOffer = false
+    self._pc.onnegotiationneeded = function () {
+      if (!createdOffer) self._createOffer()
+      createdOffer = true
+    }
+
+    self._setupData({
+      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
+    })
+  } else {
+    self._pc.ondatachannel = function (event) {
+      self._setupData(event)
+    }
+  }
+
   if (self.stream) self._pc.addStream(self.stream)
 
   if ('ontrack' in self._pc) {
@@ -107,23 +123,9 @@ function Peer (opts) {
   }
 
   if (self.initiator) {
-    var createdOffer = false
-    self._pc.onnegotiationneeded = function () {
-      if (!createdOffer) self._createOffer()
-      createdOffer = true
-    }
-
-    self._setupData({
-      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
-    })
-
     // HACK: wrtc doesn't fire the 'negotionneeded' event
     if (self._isWrtc) {
       self._pc.onnegotiationneeded()
-    }
-  } else {
-    self._pc.ondatachannel = function (event) {
-      self._setupData(event)
     }
   }
 
