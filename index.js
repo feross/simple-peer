@@ -33,7 +33,7 @@ function Peer (opts) {
     : null
 
   // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && window.chrome
+  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
@@ -151,6 +151,9 @@ Peer.config = {
   iceServers: [
     {
       urls: 'stun:stun.l.google.com:19302'
+    },
+    {
+      urls: 'stun:global.stun.twilio.com:3478?transport=udp'
     }
   ]
 }
