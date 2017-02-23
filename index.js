@@ -111,6 +111,7 @@ function Peer (opts) {
     }
   }
 
+  self._previousStreams = []
   if ('ontrack' in self._pc) {
     // WebRTC Spec, Firefox
     if (self.stream) {
@@ -676,6 +677,9 @@ Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
   self._debug('on track')
+  var id = event.streams[0].id
+  if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event per track
+  self._previousStreams.push(id)
   self.emit('stream', event.streams[0])
 }
 
