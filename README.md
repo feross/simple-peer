@@ -294,6 +294,8 @@ the other peer.** This usually entails using a websocket signaling server. This 
 `Object`, so  remember to call `JSON.stringify(data)` to serialize it first. Then, simply
 call `peer.signal(data)` on the remote peer.
 
+**To avoid losing the signaling answer, you need to listen for this event before calling `peer.signal(data)` with the offer.**
+
 ### `peer.on('connect', function () {})`
 
 Fired when the peer connection and data channel are ready to use.
