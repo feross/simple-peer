@@ -112,7 +112,7 @@ function Peer (opts) {
     }
   }
 
-  if ('ontrack' in self._pc) {
+  if ('addTrack' in self._pc) {
     // WebRTC Spec, Firefox
     if (self.stream) {
       self.stream.getTracks().forEach(function (track) {
@@ -276,7 +276,7 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    if ('ontrack' in self._pc) {
+    if ('addTrack' in self._pc) {
       self._pc.ontrack = null
     } else {
       self._pc.onaddstream = null
