@@ -72,6 +72,7 @@ function Peer (opts) {
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
   self._pendingCandidates = []
+  self._previousStreams = []
 
   self._chunk = null
   self._cb = null
@@ -111,7 +112,7 @@ function Peer (opts) {
     }
   }
 
-  if ('ontrack' in self._pc) {
+  if ('addTrack' in self._pc) {
     // WebRTC Spec, Firefox
     if (self.stream) {
       self.stream.getTracks().forEach(function (track) {
@@ -255,6 +256,7 @@ Peer.prototype._destroy = function (err, onclose) {
   self.connected = false
   self._pcReady = false
   self._channelReady = false
+  self._previousStreams = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -274,7 +276,7 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    if ('ontrack' in self._pc) {
+    if ('addTrack' in self._pc) {
       self._pc.ontrack = null
     } else {
       self._pc.onaddstream = null
@@ -676,6 +678,9 @@ Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
   self._debug('on track')
+  var id = event.streams[0].id
+  if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
+  self._previousStreams.push(id)
   self.emit('stream', event.streams[0])
 }
 
