@@ -456,8 +456,8 @@ Peer.prototype.getStats = function (cb) {
       res.forEach(function (report) {
         reports.push(report)
       })
-      cb(reports)
-    }, function (err) { self._onError(err) })
+      cb(null, reports)
+    }, function (err) { cb(err) })
 
   // Two-parameter callback-based getStats() (deprecated, former standard)
   } else if (self._isReactNativeWebrtc) {
@@ -466,8 +466,8 @@ Peer.prototype.getStats = function (cb) {
       res.forEach(function (report) {
         reports.push(report)
       })
-      cb(reports)
-    }, function (err) { self._onError(err) })
+      cb(null, reports)
+    }, function (err) { cb(err) })
 
   // Single-parameter callback-based getStats() (non-standard)
   } else if (self._pc.getStats.length > 0) {
@@ -483,13 +483,13 @@ Peer.prototype.getStats = function (cb) {
         report.timestamp = result.timestamp
         reports.push(report)
       })
-      cb(reports)
-    }, function (err) { self._onError(err) })
+      cb(null, reports)
+    }, function (err) { cb(err) })
 
   // Unknown browser, skip getStats() since it's anyone's guess which style of
   // getStats() they implement.
   } else {
-    cb([])
+    cb(null, [])
   }
 }
 
@@ -499,7 +499,10 @@ Peer.prototype._maybeReady = function () {
   if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
   self._connecting = true
 
-  self.getStats(function (items) {
+  self.getStats(function (err, items) {
+    // Treat getStats error as non-fatal. It's not essential.
+    if (err) items = []
+
     self._connecting = false
     self.connected = true
 
