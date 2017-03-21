@@ -1,8 +1,17 @@
-# simple-peer [![travis](https://img.shields.io/travis/feross/simple-peer/master.svg)](https://travis-ci.org/feross/simple-peer) [![npm](https://img.shields.io/npm/v/simple-peer.svg)](https://npmjs.org/package/simple-peer) [![npm downloads](https://img.shields.io/npm/dm/simple-peer.svg)](https://npmjs.org/package/simple-peer)
+# simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+
+[travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
+[travis-url]: https://travis-ci.org/feross/simple-peer
+[npm-image]: https://img.shields.io/npm/v/simple-peer.svg
+[npm-url]: https://npmjs.org/package/simple-peer
+[downloads-image]: https://img.shields.io/npm/dm/simple-peer.svg
+[downloads-url]: https://npmjs.org/package/simple-peer
+[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
+[standard-url]: https://standardjs.com
 
 #### Simple WebRTC video/voice and data channels.
 
-[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard) [![Sauce Test Status](https://saucelabs.com/browser-matrix/feross-simple-peer.svg)](https://saucelabs.com/u/feross-simple-peer)
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/feross-simple-peer.svg)](https://saucelabs.com/u/feross-simple-peer)
 
 ## features
 
