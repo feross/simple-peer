@@ -282,6 +282,7 @@ Peer.prototype._destroy = function (err, onclose) {
     } catch (err) {}
 
     self._pc.oniceconnectionstatechange = null
+    self._pc.onicegatheringstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
     if ('addTrack' in self._pc) {
@@ -301,6 +302,7 @@ Peer.prototype._destroy = function (err, onclose) {
     self._channel.onmessage = null
     self._channel.onopen = null
     self._channel.onclose = null
+    self._channel.onerror = null
   }
   self._pc = null
   self._channel = null
