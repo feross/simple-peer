@@ -89,7 +89,7 @@ function Peer (opts) {
   self._pc.oniceconnectionstatechange = function () {
     self._onIceStateChange()
   }
-  self._pc.onicegatheringstatechange = function (event) {
+  self._pc.onicegatheringstatechange = function () {
     self._onIceStateChange()
   }
   self._pc.onsignalingstatechange = function () {
