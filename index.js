@@ -334,6 +334,9 @@ Peer.prototype._setupData = function (event) {
   self._channel.onclose = function () {
     self._onChannelClose()
   }
+  self._channel.onerror = function (err) {
+    self._destroy(err)
+  }
 }
 
 Peer.prototype._read = function () {}
