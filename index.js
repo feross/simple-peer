@@ -507,6 +507,8 @@ Peer.prototype._maybeReady = function () {
   self._connecting = true
 
   self.getStats(function (err, items) {
+    if (self.destroyed) return
+
     // Treat getStats error as non-fatal. It's not essential.
     if (err) items = []
 
