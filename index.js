@@ -87,7 +87,10 @@ function Peer (opts) {
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
 
   self._pc.oniceconnectionstatechange = function () {
-    self._onIceConnectionStateChange()
+    self._onIceStateChange()
+  }
+  self._pc.onicegatheringstatechange = function (event) {
+    self._onIceStateChange()
   }
   self._pc.onsignalingstatechange = function () {
     self._onSignalingStateChange()
@@ -422,7 +425,7 @@ Peer.prototype._createAnswer = function () {
   }, function (err) { self._destroy(err) }, self.answerConstraints)
 }
 
-Peer.prototype._onIceConnectionStateChange = function () {
+Peer.prototype._onIceStateChange = function () {
   var self = this
   if (self.destroyed) return
   var iceGatheringState = self._pc.iceGatheringState
