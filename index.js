@@ -428,10 +428,16 @@ Peer.prototype._createAnswer = function () {
 Peer.prototype._onIceStateChange = function () {
   var self = this
   if (self.destroyed) return
-  var iceGatheringState = self._pc.iceGatheringState
   var iceConnectionState = self._pc.iceConnectionState
-  self._debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
-  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
+  var iceGatheringState = self._pc.iceGatheringState
+
+  self._debug(
+    'iceStateChange (connection: %s) (gathering: %s)',
+    iceConnectionState,
+    iceGatheringState
+  )
+  self.emit('iceStateChange', iceConnectionState, iceGatheringState)
+
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
     clearTimeout(self._reconnectTimeout)
     self._pcReady = true
