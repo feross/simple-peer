@@ -99,6 +99,11 @@ function Peer (opts) {
     self._onIceCandidate(event)
   }
 
+  // Other spec events, unused by this implementation:
+  // - onconnectionstatechange
+  // - onicecandidateerror
+  // - onfingerprintfailure
+
   if (self.initiator) {
     var createdOffer = false
     self._pc.onnegotiationneeded = function () {
