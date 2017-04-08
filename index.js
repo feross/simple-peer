@@ -87,7 +87,10 @@ function Peer (opts) {
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
 
   self._pc.oniceconnectionstatechange = function () {
-    self._onIceConnectionStateChange()
+    self._onIceStateChange()
+  }
+  self._pc.onicegatheringstatechange = function () {
+    self._onIceStateChange()
   }
   self._pc.onsignalingstatechange = function () {
     self._onSignalingStateChange()
@@ -95,6 +98,11 @@ function Peer (opts) {
   self._pc.onicecandidate = function (event) {
     self._onIceCandidate(event)
   }
+
+  // Other spec events, unused by this implementation:
+  // - onconnectionstatechange
+  // - onicecandidateerror
+  // - onfingerprintfailure
 
   if (self.initiator) {
     var createdOffer = false
@@ -199,7 +207,7 @@ Peer.prototype.signal = function (data) {
       self._pendingCandidates = []
 
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
-    }, function (err) { self._onError(err) })
+    }, function (err) { self._destroy(err) })
   }
   if (!data.sdp && !data.candidate) {
     self._destroy(new Error('signal() called with invalid signal data'))
@@ -212,7 +220,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
     self._pc.addIceCandidate(
       new self._wrtc.RTCIceCandidate(candidate),
       noop,
-      function (err) { self._onError(err) }
+      function (err) { self._destroy(err) }
     )
   } catch (err) {
     self._destroy(new Error('error adding candidate: ' + err.message))
@@ -245,7 +253,7 @@ Peer.prototype._destroy = function (err, onclose) {
   if (self.destroyed) return
   if (onclose) self.once('close', onclose)
 
-  self._debug('destroy (error: %s)', err && err.message)
+  self._debug('destroy (error: %s)', err && (err.message || err))
 
   self.readable = self.writable = false
 
@@ -274,6 +282,7 @@ Peer.prototype._destroy = function (err, onclose) {
     } catch (err) {}
 
     self._pc.oniceconnectionstatechange = null
+    self._pc.onicegatheringstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
     if ('addTrack' in self._pc) {
@@ -293,6 +302,7 @@ Peer.prototype._destroy = function (err, onclose) {
     self._channel.onmessage = null
     self._channel.onopen = null
     self._channel.onclose = null
+    self._channel.onerror = null
   }
   self._pc = null
   self._channel = null
@@ -307,7 +317,7 @@ Peer.prototype._setupData = function (event) {
     // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
     // which is invalid behavior. Handle it gracefully.
     // See: https://github.com/feross/simple-peer/issues/163
-    return self._onError(new Error('Data channel event is missing `channel` property'))
+    return self._destroy(new Error('Data channel event is missing `channel` property'))
   }
 
   self._channel = event.channel
@@ -331,6 +341,9 @@ Peer.prototype._setupData = function (event) {
   self._channel.onclose = function () {
     self._onChannelClose()
   }
+  self._channel.onerror = function (err) {
+    self._destroy(err)
+  }
 }
 
 Peer.prototype._read = function () {}
@@ -343,7 +356,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     try {
       self.send(chunk)
     } catch (err) {
-      return self._onError(err)
+      return self._destroy(err)
     }
     if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
@@ -386,7 +399,7 @@ Peer.prototype._createOffer = function () {
   self._pc.createOffer(function (offer) {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
-    self._pc.setLocalDescription(offer, noop, function (err) { self._onError(err) })
+    self._pc.setLocalDescription(offer, noop, function (err) { self._destroy(err) })
     var sendOffer = function () {
       var signal = self._pc.localDescription || offer
       self._debug('signal')
@@ -397,7 +410,7 @@ Peer.prototype._createOffer = function () {
     }
     if (self.trickle || self._iceComplete) sendOffer()
     else self.once('_iceComplete', sendOffer) // wait for candidates
-  }, function (err) { self._onError(err) }, self.offerConstraints)
+  }, function (err) { self._destroy(err) }, self.offerConstraints)
 }
 
 Peer.prototype._createAnswer = function () {
@@ -407,7 +420,7 @@ Peer.prototype._createAnswer = function () {
   self._pc.createAnswer(function (answer) {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
-    self._pc.setLocalDescription(answer, noop, function (err) { self._onError(err) })
+    self._pc.setLocalDescription(answer, noop, function (err) { self._destroy(err) })
     if (self.trickle || self._iceComplete) sendAnswer()
     else self.once('_iceComplete', sendAnswer)
 
@@ -419,16 +432,22 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self._onError(err) }, self.answerConstraints)
+  }, function (err) { self._destroy(err) }, self.answerConstraints)
 }
 
-Peer.prototype._onIceConnectionStateChange = function () {
+Peer.prototype._onIceStateChange = function () {
   var self = this
   if (self.destroyed) return
-  var iceGatheringState = self._pc.iceGatheringState
   var iceConnectionState = self._pc.iceConnectionState
-  self._debug('iceConnectionStateChange %s %s', iceGatheringState, iceConnectionState)
-  self.emit('iceConnectionStateChange', iceGatheringState, iceConnectionState)
+  var iceGatheringState = self._pc.iceGatheringState
+
+  self._debug(
+    'iceStateChange (connection: %s) (gathering: %s)',
+    iceConnectionState,
+    iceGatheringState
+  )
+  self.emit('iceStateChange', iceConnectionState, iceGatheringState)
+
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
     clearTimeout(self._reconnectTimeout)
     self._pcReady = true
@@ -594,7 +613,7 @@ Peer.prototype._maybeReady = function () {
       try {
         self.send(self._chunk)
       } catch (err) {
-        return self._onError(err)
+        return self._destroy(err)
       }
       self._chunk = null
       self._debug('sent chunk from "write before connect"')
@@ -694,13 +713,6 @@ Peer.prototype._onTrack = function (event) {
   if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
   self._previousStreams.push(id)
   self.emit('stream', event.streams[0])
-}
-
-Peer.prototype._onError = function (err) {
-  var self = this
-  if (self.destroyed) return
-  self._debug('error %s', err.message || err)
-  self._destroy(err)
 }
 
 Peer.prototype._debug = function () {
