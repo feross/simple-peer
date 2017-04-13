@@ -401,7 +401,7 @@ Peer.prototype._createOffer = function () {
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer, noop, function (err) { self._destroy(err) })
     var sendOffer = function () {
-      var signal = self._pc.localDescription || offer
+      var signal = offer
       self._debug('signal')
       self.emit('signal', {
         type: signal.type,
@@ -425,7 +425,7 @@ Peer.prototype._createAnswer = function () {
     else self.once('_iceComplete', sendAnswer)
 
     function sendAnswer () {
-      var signal = self._pc.localDescription || answer
+      var signal = answer
       self._debug('signal')
       self.emit('signal', {
         type: signal.type,
