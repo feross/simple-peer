@@ -29,7 +29,7 @@ function Peer (opts) {
   stream.Duplex.call(self, opts)
 
   self.channelName = opts.channelName || randombytes(20).toString('hex')
-  
+
   // Needed by _transformConstraints, so set this early
   self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
 
