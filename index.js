@@ -400,7 +400,10 @@ Peer.prototype._createOffer = function () {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer, noop, function (err) { self._destroy(err) })
-    var sendOffer = function () {
+    if (self.trickle || self._iceComplete) sendOffer()
+    else self.once('_iceComplete', sendOffer) // wait for candidates
+
+    function sendOffer () {
       var signal = self._pc.localDescription || offer
       self._debug('signal')
       self.emit('signal', {
@@ -408,8 +411,6 @@ Peer.prototype._createOffer = function () {
         sdp: signal.sdp
       })
     }
-    if (self.trickle || self._iceComplete) sendOffer()
-    else self.once('_iceComplete', sendOffer) // wait for candidates
   }, function (err) { self._destroy(err) }, self.offerConstraints)
 }
 
