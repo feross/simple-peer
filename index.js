@@ -220,7 +220,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
     self._pc.addIceCandidate(
       new self._wrtc.RTCIceCandidate(candidate),
       noop,
-      function (err) { self._destroy(err) }
+      function (err) { location.reload(); self._destroy(err) }
     )
   } catch (err) {
     self._destroy(new Error('error adding candidate: ' + err.message))
