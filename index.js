@@ -218,8 +218,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
   if (!self._pc || !self._pc.remoteDescription.type) {
     // Add candidate to queue
-  }
-  else {
+  } else {
     try {
       self._pc.addIceCandidate(
         new self._wrtc.RTCIceCandidate(candidate),
