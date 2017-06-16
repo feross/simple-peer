@@ -216,14 +216,17 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
-  try {
-    self._pc.addIceCandidate(
-      new self._wrtc.RTCIceCandidate(candidate),
-      noop,
-      function (err) { location.reload(); self._destroy(err) }
-    )
-  } catch (err) {
-    self._destroy(new Error('error adding candidate: ' + err.message))
+  if(!self._pc || !self._pc.remoteDescription.type){}
+  else{
+    try {
+      self._pc.addIceCandidate(
+        new self._wrtc.RTCIceCandidate(candidate),
+        noop,
+        function (err) { self._destroy(err) }
+      )
+    } catch (err) {
+      self._destroy(new Error('error adding candidate: ' + err.message))
+    }
   }
 }
 
