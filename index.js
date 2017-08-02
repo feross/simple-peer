@@ -478,7 +478,7 @@ Peer.prototype._createOffer = function() {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
 
-    self.setLocalDescription(offer, sendOffer)
+    self._setLocalDescription(offer, sendOffer)
 
     function sendOffer() {
       var signal = self._pc.localDescription || offer
@@ -510,7 +510,7 @@ Peer.prototype._createAnswer = function() {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
 
-    self.setLocalDescription(answer, sendAnswer)
+    self._setLocalDescription(answer, sendAnswer)
 
     function sendAnswer() {
       var signal = self._pc.localDescription || answer
