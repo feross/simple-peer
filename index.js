@@ -15,16 +15,19 @@ inherits(Peer, stream.Duplex)
  * Duplex stream.
  * @param {Object} opts
  */
-function Peer (opts) {
+function Peer(opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
   self._id = randombytes(4).toString('hex').slice(0, 7)
   self._debug('new peer %o', opts)
 
-  opts = Object.assign({
-    allowHalfOpen: false
-  }, opts)
+  opts = Object.assign(
+    {
+      allowHalfOpen: false
+    },
+    opts
+  )
 
   stream.Duplex.call(self, opts)
 
@@ -33,16 +36,27 @@ function Peer (opts) {
     : null
 
   // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
+  self._isChromium =
+    typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = opts.config || Peer.config
-  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
-  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
-  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
+  self.constraints = self._transformConstraints(
+    opts.constraints || Peer.constraints
+  )
+  self.offerConstraints = self._transformConstraints(
+    opts.offerConstraints || {}
+  )
+  self.answerConstraints = self._transformConstraints(
+    opts.answerConstraints || {}
+  )
   self.reconnectTimer = opts.reconnectTimer || false
-  self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
+  self.sdpTransform =
+    opts.sdpTransform ||
+    function(sdp) {
+      return sdp
+    }
   self.stream = opts.stream || false
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
   self._earlyMessage = null
@@ -56,13 +70,14 @@ function Peer (opts) {
   self.localAddress = undefined
   self.localPort = undefined
 
-  self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
-    ? opts.wrtc
-    : getBrowserRTC()
+  self._wrtc =
+    opts.wrtc && typeof opts.wrtc === 'object' ? opts.wrtc : getBrowserRTC()
 
   if (!self._wrtc) {
     if (typeof window === 'undefined') {
-      throw new Error('No WebRTC support: Specify `opts.wrtc` option in this environment')
+      throw new Error(
+        'No WebRTC support: Specify `opts.wrtc` option in this environment'
+      )
     } else {
       throw new Error('No WebRTC support: Not a supported browser')
     }
@@ -80,23 +95,23 @@ function Peer (opts) {
   self._interval = null
   self._reconnectTimeout = null
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  self._pc = new self._wrtc.RTCPeerConnection(self.config, self.constraints)
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
   self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
 
-  self._pc.oniceconnectionstatechange = function () {
+  self._pc.oniceconnectionstatechange = function() {
     self._onIceStateChange()
   }
-  self._pc.onicegatheringstatechange = function () {
+  self._pc.onicegatheringstatechange = function() {
     self._onIceStateChange()
   }
-  self._pc.onsignalingstatechange = function () {
+  self._pc.onsignalingstatechange = function() {
     self._onSignalingStateChange()
   }
-  self._pc.onicecandidate = function (event) {
+  self._pc.onicecandidate = function(event) {
     self._onIceCandidate(event)
   }
 
@@ -107,7 +122,7 @@ function Peer (opts) {
 
   if (self.initiator) {
     var createdOffer = false
-    self._pc.onnegotiationneeded = function () {
+    self._pc.onnegotiationneeded = function() {
       if (!createdOffer) self._createOffer()
       createdOffer = true
     }
@@ -116,7 +131,7 @@ function Peer (opts) {
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
   } else {
-    self._pc.ondatachannel = function (event) {
+    self._pc.ondatachannel = function(event) {
       self._setupData(event)
     }
   }
@@ -124,17 +139,17 @@ function Peer (opts) {
   if ('addTrack' in self._pc) {
     // WebRTC Spec, Firefox
     if (self.stream) {
-      self.stream.getTracks().forEach(function (track) {
+      self.stream.getTracks().forEach(function(track) {
         self._pc.addTrack(track, self.stream)
       })
     }
-    self._pc.ontrack = function (event) {
+    self._pc.ontrack = function(event) {
       self._onTrack(event)
     }
   } else {
     // Chrome, etc. This can be removed once all browsers support `ontrack`
     if (self.stream) self._pc.addStream(self.stream)
-    self._pc.onaddstream = function (event) {
+    self._pc.onaddstream = function(event) {
       self._onAddStream(event)
     }
   }
@@ -144,7 +159,7 @@ function Peer (opts) {
     self._pc.onnegotiationneeded()
   }
 
-  self._onFinishBound = function () {
+  self._onFinishBound = function() {
     self._onFinish()
   }
   self.once('finish', self._onFinishBound)
@@ -171,18 +186,18 @@ Peer.constraints = {}
 Peer.channelConfig = {}
 
 Object.defineProperty(Peer.prototype, 'bufferSize', {
-  get: function () {
+  get: function() {
     var self = this
     return (self._channel && self._channel.bufferedAmount) || 0
   }
 })
 
-Peer.prototype.address = function () {
+Peer.prototype.address = function() {
   var self = this
   return { port: self.localPort, family: 'IPv4', address: self.localAddress }
 }
 
-Peer.prototype.signal = function (data) {
+Peer.prototype.signal = function(data) {
   var self = this
   if (self.destroyed) throw new Error('cannot signal after peer is destroyed')
   if (typeof data === 'string') {
@@ -199,32 +214,52 @@ Peer.prototype.signal = function (data) {
     else self._pendingCandidates.push(data.candidate)
   }
   if (data.sdp) {
-    self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
-      if (self.destroyed) return
-
-      self._pendingCandidates.forEach(function (candidate) {
-        self._addIceCandidate(candidate)
-      })
-      self._pendingCandidates = []
-
-      if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
-    }, function (err) { self._destroy(err) })
+    self._setRemoteDescription(data)
   }
   if (!data.sdp && !data.candidate) {
     self._destroy(new Error('signal() called with invalid signal data'))
   }
 }
 
-Peer.prototype._addIceCandidate = function (candidate) {
+Peer.prototype._setRemoteDescription = function(data) {
   var self = this
+  data = new self._wrtc.RTCSessionDescription(data)
+  if (self._pc.setRemoteDescription.length <= 1) {
+    self._pc.setRemoteDescription(data).then(onSuccess).catch(onError)
+  } else {
+    self._pc.setRemoteDescription(data, onSuccess, onError)
+  }
+  function onSuccess() {
+    if (self.destroyed) return
+
+    self._pendingCandidates.forEach(function(candidate) {
+      self._addIceCandidate(candidate)
+    })
+    self._pendingCandidates = []
+
+    if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
+  }
+
+  function onError(err) {
+    self._destroy(err)
+  }
+}
+
+Peer.prototype._addIceCandidate = function(candidate) {
+  var self = this
+  candidate = new self._wrtc.RTCIceCandidate(candidate)
   try {
-    self._pc.addIceCandidate(
-      new self._wrtc.RTCIceCandidate(candidate),
-      noop,
-      function (err) { self._destroy(err) }
-    )
+    if (self._pc.addIceCandidate === 1) {
+      self._pc.addIceCandidate().catch(onError)
+    } else {
+      self._pc.addIceCandidate(candidate, noop, onError)
+    }
   } catch (err) {
     self._destroy(new Error('error adding candidate: ' + err.message))
+  }
+
+  function onError(err) {
+    self._destroy(err)
   }
 }
 
@@ -232,7 +267,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
  * Send text/binary data to the remote peer.
  * @param {TypedArrayView|ArrayBuffer|Buffer|string|Blob|Object} chunk
  */
-Peer.prototype.send = function (chunk) {
+Peer.prototype.send = function(chunk) {
   var self = this
 
   // HACK: `wrtc` module crashes on Node.js Buffer, so convert to Uint8Array
@@ -244,12 +279,12 @@ Peer.prototype.send = function (chunk) {
   self._channel.send(chunk)
 }
 
-Peer.prototype.destroy = function (onclose) {
+Peer.prototype.destroy = function(onclose) {
   var self = this
   self._destroy(null, onclose)
 }
 
-Peer.prototype._destroy = function (err, onclose) {
+Peer.prototype._destroy = function(err, onclose) {
   var self = this
   if (self.destroyed) return
   if (onclose) self.once('close', onclose)
@@ -313,13 +348,15 @@ Peer.prototype._destroy = function (err, onclose) {
   self.emit('close')
 }
 
-Peer.prototype._setupData = function (event) {
+Peer.prototype._setupData = function(event) {
   var self = this
   if (!event.channel) {
     // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
     // which is invalid behavior. Handle it gracefully.
     // See: https://github.com/feross/simple-peer/issues/163
-    return self._destroy(new Error('Data channel event is missing `channel` property'))
+    return self._destroy(
+      new Error('Data channel event is missing `channel` property')
+    )
   }
 
   self._channel = event.channel
@@ -331,33 +368,35 @@ Peer.prototype._setupData = function (event) {
 
   self.channelName = self._channel.label
 
-  self._channel.onmessage = function (event) {
-    if (!self._channelReady) { // HACK: Workaround for Chrome not firing "open" between tabs
+  self._channel.onmessage = function(event) {
+    if (!self._channelReady) {
+      // HACK: Workaround for Chrome not firing "open" between tabs
       self._earlyMessage = event
       self._onChannelOpen()
     } else {
       self._onChannelMessage(event)
     }
   }
-  self._channel.onbufferedamountlow = function () {
+  self._channel.onbufferedamountlow = function() {
     self._onChannelBufferedAmountLow()
   }
-  self._channel.onopen = function () {
+  self._channel.onopen = function() {
     if (!self._channelReady) self._onChannelOpen()
   }
-  self._channel.onclose = function () {
+  self._channel.onclose = function() {
     self._onChannelClose()
   }
-  self._channel.onerror = function (err) {
+  self._channel.onerror = function(err) {
     self._destroy(err)
   }
 }
 
-Peer.prototype._read = function () {}
+Peer.prototype._read = function() {}
 
-Peer.prototype._write = function (chunk, encoding, cb) {
+Peer.prototype._write = function(chunk, encoding, cb) {
   var self = this
-  if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
+  if (self.destroyed)
+    return cb(new Error('cannot write after peer is destroyed'))
 
   if (self.connected) {
     try {
@@ -366,7 +405,10 @@ Peer.prototype._write = function (chunk, encoding, cb) {
       return self._destroy(err)
     }
     if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-      self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+      self._debug(
+        'start backpressure: bufferedAmount %d',
+        self._channel.bufferedAmount
+      )
       self._cb = cb
     } else {
       cb(null)
@@ -380,7 +422,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
 
 // When stream finishes writing, close socket. Half open connections are not
 // supported.
-Peer.prototype._onFinish = function () {
+Peer.prototype._onFinish = function() {
   var self = this
   if (self.destroyed) return
 
@@ -392,33 +434,53 @@ Peer.prototype._onFinish = function () {
 
   // Wait a bit before destroying so the socket flushes.
   // TODO: is there a more reliable way to accomplish this?
-  function destroySoon () {
-    setTimeout(function () {
+  function destroySoon() {
+    setTimeout(function() {
       self._destroy()
     }, 1000)
   }
 }
 
-Peer.prototype._createOffer = function () {
+Peer.prototype._setLocalDescription = function(desc, callback) {
+  var self = this
+  if (self._pc.setLocalDescription.length <= 1) {
+    self._pc.setLocalDescription(desc).then(onSuccess).catch(onError)
+  } else {
+    self._pc.setLocalDescription(desc, onSuccess, onError)
+  }
+
+  function onSuccess() {
+    if (self.destroyed) return
+    if (self.trickle || self._iceComplete) {
+      callback()
+    } else {
+      self.once('_iceComplete', callback)
+    }
+  }
+
+  function onError(err) {
+    self._destroy(err)
+  }
+}
+
+Peer.prototype._createOffer = function() {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createOffer(function (offer) {
+  var constraints = self.offerConstraints
+  if (self._pc.createOffer.length === 0) {
+    self._pc.createOffer(constraints).then(onSuccess).catch(onError)
+  } else {
+    self._pc.createOffer(constraints, onSuccess, onError)
+  }
+
+  function onSuccess(offer) {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
-    self._pc.setLocalDescription(offer, onSuccess, onError)
 
-    function onSuccess () {
-      if (self.destroyed) return
-      if (self.trickle || self._iceComplete) sendOffer()
-      else self.once('_iceComplete', sendOffer) // wait for candidates
-    }
+    self._setLocalDescription(offer, sendOffer)
 
-    function onError (err) {
-      self._destroy(err)
-    }
-
-    function sendOffer () {
+    function sendOffer() {
       var signal = self._pc.localDescription || offer
       self._debug('signal')
       self.emit('signal', {
@@ -426,29 +488,31 @@ Peer.prototype._createOffer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self._destroy(err) }, self.offerConstraints)
+  }
+
+  function onError(err) {
+    self._destroy(err)
+  }
 }
 
-Peer.prototype._createAnswer = function () {
+Peer.prototype._createAnswer = function() {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createAnswer(function (answer) {
+  var constraints = self.answerConstraints
+  if (self._pc.createAnswer.length === 0) {
+    self._pc.createAnswer(constraints).then(onSuccess).catch(onError)
+  } else {
+    self._pc.createAnswer(onSuccess, onError, constraints)
+  }
+
+  function onSuccess(answer) {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
-    self._pc.setLocalDescription(answer, onSuccess, onError)
 
-    function onSuccess () {
-      if (self.destroyed) return
-      if (self.trickle || self._iceComplete) sendAnswer()
-      else self.once('_iceComplete', sendAnswer)
-    }
+    self._setLocalDescription(answer, sendAnswer)
 
-    function onError (err) {
-      self._destroy(err)
-    }
-
-    function sendAnswer () {
+    function sendAnswer() {
       var signal = self._pc.localDescription || answer
       self._debug('signal')
       self.emit('signal', {
@@ -456,10 +520,14 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self._destroy(err) }, self.answerConstraints)
+  }
+
+  function onError(err) {
+    self._destroy(err)
+  }
 }
 
-Peer.prototype._onIceStateChange = function () {
+Peer.prototype._onIceStateChange = function() {
   var self = this
   if (self.destroyed) return
   var iceConnectionState = self._pc.iceConnectionState
@@ -472,7 +540,10 @@ Peer.prototype._onIceStateChange = function () {
   )
   self.emit('iceStateChange', iceConnectionState, iceGatheringState)
 
-  if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+  if (
+    iceConnectionState === 'connected' ||
+    iceConnectionState === 'completed'
+  ) {
     clearTimeout(self._reconnectTimeout)
     self._pcReady = true
     self._maybeReady()
@@ -481,7 +552,7 @@ Peer.prototype._onIceStateChange = function () {
     if (self.reconnectTimer) {
       // If user has set `opt.reconnectTimer`, allow time for ICE to attempt a reconnect
       clearTimeout(self._reconnectTimeout)
-      self._reconnectTimeout = setTimeout(function () {
+      self._reconnectTimeout = setTimeout(function() {
         self._destroy()
       }, self.reconnectTimer)
     } else {
@@ -496,60 +567,82 @@ Peer.prototype._onIceStateChange = function () {
   }
 }
 
-Peer.prototype.getStats = function (cb) {
+Peer.prototype.getStats = function(cb) {
   var self = this
 
   // Promise-based getStats() (standard)
   if (self._pc.getStats.length === 0) {
-    self._pc.getStats().then(function (res) {
-      var reports = []
-      res.forEach(function (report) {
-        reports.push(report)
-      })
-      cb(null, reports)
-    }, function (err) { cb(err) })
-
-  // Two-parameter callback-based getStats() (deprecated, former standard)
-  } else if (self._isReactNativeWebrtc) {
-    self._pc.getStats(null, function (res) {
-      var reports = []
-      res.forEach(function (report) {
-        reports.push(report)
-      })
-      cb(null, reports)
-    }, function (err) { cb(err) })
-
-  // Single-parameter callback-based getStats() (non-standard)
-  } else if (self._pc.getStats.length > 0) {
-    self._pc.getStats(function (res) {
-      var reports = []
-      res.result().forEach(function (result) {
-        var report = {}
-        result.names().forEach(function (name) {
-          report[name] = result.stat(name)
+    self._pc.getStats().then(
+      function(res) {
+        var reports = []
+        res.forEach(function(report) {
+          reports.push(report)
         })
-        report.id = result.id
-        report.type = result.type
-        report.timestamp = result.timestamp
-        reports.push(report)
-      })
-      cb(null, reports)
-    }, function (err) { cb(err) })
+        cb(null, reports)
+      },
+      function(err) {
+        cb(err)
+      }
+    )
 
-  // Unknown browser, skip getStats() since it's anyone's guess which style of
-  // getStats() they implement.
+    // Two-parameter callback-based getStats() (deprecated, former standard)
+  } else if (self._isReactNativeWebrtc) {
+    self._pc.getStats(
+      null,
+      function(res) {
+        var reports = []
+        res.forEach(function(report) {
+          reports.push(report)
+        })
+        cb(null, reports)
+      },
+      function(err) {
+        cb(err)
+      }
+    )
+
+    // Single-parameter callback-based getStats() (non-standard)
+  } else if (self._pc.getStats.length > 0) {
+    self._pc.getStats(
+      function(res) {
+        var reports = []
+        res.result().forEach(function(result) {
+          var report = {}
+          result.names().forEach(function(name) {
+            report[name] = result.stat(name)
+          })
+          report.id = result.id
+          report.type = result.type
+          report.timestamp = result.timestamp
+          reports.push(report)
+        })
+        cb(null, reports)
+      },
+      function(err) {
+        cb(err)
+      }
+    )
+
+    // Unknown browser, skip getStats() since it's anyone's guess which style of
+    // getStats() they implement.
   } else {
     cb(null, [])
   }
 }
 
-Peer.prototype._maybeReady = function () {
+Peer.prototype._maybeReady = function() {
   var self = this
   self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
-  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
+  if (
+    self.connected ||
+    self._connecting ||
+    !self._pcReady ||
+    !self._channelReady
+  )
+    return
   self._connecting = true
 
-  self.getStats(function (err, items) {
+  self.getStats(function(err, items) {
     if (self.destroyed) return
 
     // Treat getStats error as non-fatal. It's not essential.
@@ -562,7 +655,7 @@ Peer.prototype._maybeReady = function () {
     var localCandidates = {}
     var candidatePairs = {}
 
-    items.forEach(function (item) {
+    items.forEach(function(item) {
       // TODO: Once all browsers support the hyphenated stats report types, remove
       // the non-hypenated ones
       if (item.type === 'remotecandidate' || item.type === 'remote-candidate') {
@@ -576,7 +669,7 @@ Peer.prototype._maybeReady = function () {
       }
     })
 
-    items.forEach(function (item) {
+    items.forEach(function(item) {
       // Spec-compliant
       if (item.type === 'transport') {
         setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
@@ -584,14 +677,16 @@ Peer.prototype._maybeReady = function () {
 
       // Old implementations
       if (
-        (item.type === 'googCandidatePair' && item.googActiveConnection === 'true') ||
-        ((item.type === 'candidatepair' || item.type === 'candidate-pair') && item.selected)
+        (item.type === 'googCandidatePair' &&
+          item.googActiveConnection === 'true') ||
+        ((item.type === 'candidatepair' || item.type === 'candidate-pair') &&
+          item.selected)
       ) {
         setSelectedCandidatePair(item)
       }
     })
 
-    function setSelectedCandidatePair (selectedCandidatePair) {
+    function setSelectedCandidatePair(selectedCandidatePair) {
       var local = localCandidates[selectedCandidatePair.localCandidateId]
 
       if (local && local.ip) {
@@ -629,7 +724,10 @@ Peer.prototype._maybeReady = function () {
 
       self._debug(
         'connect local: %s:%s remote: %s:%s',
-        self.localAddress, self.localPort, self.remoteAddress, self.remotePort
+        self.localAddress,
+        self.localPort,
+        self.remoteAddress,
+        self.remotePort
       )
     }
 
@@ -650,34 +748,41 @@ Peer.prototype._maybeReady = function () {
     // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
     // fallback to using setInterval to implement backpressure.
     if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
-      self._interval = setInterval(function () { self._onInterval() }, 150)
+      self._interval = setInterval(function() {
+        self._onInterval()
+      }, 150)
       if (self._interval.unref) self._interval.unref()
     }
 
     self._debug('connect')
     self.emit('connect')
-    if (self._earlyMessage) { // HACK: Workaround for Chrome not firing "open" between tabs
+    if (self._earlyMessage) {
+      // HACK: Workaround for Chrome not firing "open" between tabs
       self._onChannelMessage(self._earlyMessage)
       self._earlyMessage = null
     }
   })
 }
 
-Peer.prototype._onInterval = function () {
-  if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+Peer.prototype._onInterval = function() {
+  if (
+    !this._cb ||
+    !this._channel ||
+    this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT
+  ) {
     return
   }
   this._onChannelBufferedAmountLow()
 }
 
-Peer.prototype._onSignalingStateChange = function () {
+Peer.prototype._onSignalingStateChange = function() {
   var self = this
   if (self.destroyed) return
   self._debug('signalingStateChange %s', self._pc.signalingState)
   self.emit('signalingStateChange', self._pc.signalingState)
 }
 
-Peer.prototype._onIceCandidate = function (event) {
+Peer.prototype._onIceCandidate = function(event) {
   var self = this
   if (self.destroyed) return
   if (event.candidate && self.trickle) {
@@ -694,7 +799,7 @@ Peer.prototype._onIceCandidate = function (event) {
   }
 }
 
-Peer.prototype._onChannelMessage = function (event) {
+Peer.prototype._onChannelMessage = function(event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
@@ -702,16 +807,19 @@ Peer.prototype._onChannelMessage = function (event) {
   self.push(data)
 }
 
-Peer.prototype._onChannelBufferedAmountLow = function () {
+Peer.prototype._onChannelBufferedAmountLow = function() {
   var self = this
   if (self.destroyed || !self._cb) return
-  self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
+  self._debug(
+    'ending backpressure: bufferedAmount %d',
+    self._channel.bufferedAmount
+  )
   var cb = self._cb
   self._cb = null
   cb(null)
 }
 
-Peer.prototype._onChannelOpen = function () {
+Peer.prototype._onChannelOpen = function() {
   var self = this
   if (self.connected || self.destroyed) return
   self._debug('on channel open')
@@ -719,21 +827,21 @@ Peer.prototype._onChannelOpen = function () {
   self._maybeReady()
 }
 
-Peer.prototype._onChannelClose = function () {
+Peer.prototype._onChannelClose = function() {
   var self = this
   if (self.destroyed) return
   self._debug('on channel close')
   self._destroy()
 }
 
-Peer.prototype._onAddStream = function (event) {
+Peer.prototype._onAddStream = function(event) {
   var self = this
   if (self.destroyed) return
   self._debug('on add stream')
   self.emit('stream', event.stream)
 }
 
-Peer.prototype._onTrack = function (event) {
+Peer.prototype._onTrack = function(event) {
   var self = this
   if (self.destroyed) return
   self._debug('on track')
@@ -743,7 +851,7 @@ Peer.prototype._onTrack = function (event) {
   self.emit('stream', event.streams[0])
 }
 
-Peer.prototype._debug = function () {
+Peer.prototype._debug = function() {
   var self = this
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
@@ -752,7 +860,7 @@ Peer.prototype._debug = function () {
 
 // Transform constraints objects into the new format (unless Chromium)
 // TODO: This can be removed when Chromium supports the new format
-Peer.prototype._transformConstraints = function (constraints) {
+Peer.prototype._transformConstraints = function(constraints) {
   var self = this
 
   if (Object.keys(constraints).length === 0) {
@@ -763,7 +871,11 @@ Peer.prototype._transformConstraints = function (constraints) {
     // convert to new format
 
     // Merge mandatory and optional objects, prioritizing mandatory
-    var newConstraints = Object.assign({}, constraints.optional, constraints.mandatory)
+    var newConstraints = Object.assign(
+      {},
+      constraints.optional,
+      constraints.mandatory
+    )
 
     // fix casing
     if (newConstraints.OfferToReceiveVideo !== undefined) {
@@ -777,7 +889,11 @@ Peer.prototype._transformConstraints = function (constraints) {
     }
 
     return newConstraints
-  } else if (!constraints.mandatory && !constraints.optional && self._isChromium) {
+  } else if (
+    !constraints.mandatory &&
+    !constraints.optional &&
+    self._isChromium
+  ) {
     // convert to old format
 
     // fix casing
@@ -799,4 +915,4 @@ Peer.prototype._transformConstraints = function (constraints) {
   return constraints
 }
 
-function noop () {}
+function noop() {}
