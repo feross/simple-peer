@@ -192,7 +192,7 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 - [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
 - [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
 - [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
-- *Your app here! - send a PR!*
+- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
 
 ## api
 
