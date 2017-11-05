@@ -45,7 +45,6 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
-  self._earlyMessage = null
 
   self.destroyed = false
   self.connected = false
@@ -266,7 +265,6 @@ Peer.prototype._destroy = function (err, onclose) {
   self._pcReady = false
   self._channelReady = false
   self._previousStreams = null
-  self._earlyMessage = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -332,18 +330,13 @@ Peer.prototype._setupData = function (event) {
   self.channelName = self._channel.label
 
   self._channel.onmessage = function (event) {
-    if (!self._channelReady) { // HACK: Workaround for Chrome not firing "open" between tabs
-      self._earlyMessage = event
-      self._onChannelOpen()
-    } else {
-      self._onChannelMessage(event)
-    }
+    self._onChannelMessage(event)
   }
   self._channel.onbufferedamountlow = function () {
     self._onChannelBufferedAmountLow()
   }
   self._channel.onopen = function () {
-    if (!self._channelReady) self._onChannelOpen()
+    self._onChannelOpen()
   }
   self._channel.onclose = function () {
     self._onChannelClose()
@@ -656,10 +649,6 @@ Peer.prototype._maybeReady = function () {
 
     self._debug('connect')
     self.emit('connect')
-    if (self._earlyMessage) { // HACK: Workaround for Chrome not firing "open" between tabs
-      self._onChannelMessage(self._earlyMessage)
-      self._earlyMessage = null
-    }
   })
 }
 
