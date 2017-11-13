@@ -210,7 +210,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [ { url: 'stun:stun.l.google.com:19302' } ] },
+  config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] },
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
