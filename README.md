@@ -280,7 +280,7 @@ if (Peer.WEBRTC_SUPPORT) {
 
 ### duplex stream
 
-`Peer` objects are instances of `stream.Duplex`. The behave very similarly to a
+`Peer` objects are instances of `stream.Duplex`. They behave very similarly to a
 `net.Socket` from the node core `net` module. The duplex stream reads/writes to the data
 channel.
 
