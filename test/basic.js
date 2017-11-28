@@ -175,3 +175,33 @@ test('new constraint formats are used', function (t) {
     peer2.destroy(function () { t.pass('peer2 destroyed') })
   })
 })
+
+test('ensure remote address and port are available right after connection', function (t) {
+  t.plan(7)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) {
+    peer2.signal(data)
+  })
+
+  peer2.on('signal', function (data) {
+    peer1.signal(data)
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peers connected')
+
+    t.ok(peer1.remoteAddress, 'peer1 remote address is present')
+    t.ok(peer1.remotePort, 'peer1 remote port is present')
+
+    peer2.on('connect', function () {
+      t.ok(peer2.remoteAddress, 'peer2 remote address is present')
+      t.ok(peer2.remotePort, 'peer2 remote port is present')
+
+      peer1.destroy(function () { t.pass('peer1 destroyed') })
+      peer2.destroy(function () { t.pass('peer2 destroyed') })
+    })
+  })
+})
