@@ -553,15 +553,9 @@ Peer.prototype._maybeReady = function () {
 
   self._connecting = true
 
-  var withinIntervalCallback = false
   // We can't rely on order here, for details see https://github.com/js-platform/node-webrtc/issues/339
-  var interval = setInterval(function () {
-    if (self.destroyed) {
-      clearInterval(interval)
-      return
-    }
-    if (withinIntervalCallback) return
-    withinIntervalCallback = true
+  function findCandidatePair () {
+    if (self.destroyed) return
 
     self.getStats(function (err, items) {
       if (self.destroyed) return
@@ -647,10 +641,8 @@ Peer.prototype._maybeReady = function () {
         )
       }
 
-      withinIntervalCallback = false
-      if (self.connected) {
-        clearInterval(interval)
-      } else {
+      if (!self.connected) {
+        setTimeout(findCandidatePair, 100)
         return
       }
 
@@ -682,7 +674,8 @@ Peer.prototype._maybeReady = function () {
         self._earlyMessage = null
       }
     })
-  }, 100)
+  }
+  findCandidatePair()
 }
 
 Peer.prototype._onInterval = function () {
