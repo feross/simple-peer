@@ -566,6 +566,7 @@ Peer.prototype._maybeReady = function () {
       var remoteCandidates = {}
       var localCandidates = {}
       var candidatePairs = {}
+      var foundSelectedCandidatePair = false
 
       items.forEach(function (item) {
         // TODO: Once all browsers support the hyphenated stats report types, remove
@@ -597,8 +598,7 @@ Peer.prototype._maybeReady = function () {
       })
 
       function setSelectedCandidatePair (selectedCandidatePair) {
-        self._connecting = false
-        self.connected = true
+        foundSelectedCandidatePair = true
 
         var local = localCandidates[selectedCandidatePair.localCandidateId]
 
@@ -641,9 +641,12 @@ Peer.prototype._maybeReady = function () {
         )
       }
 
-      if (!self.connected) {
+      if (!foundSelectedCandidatePair && items.length) {
         setTimeout(findCandidatePair, 100)
         return
+      } else {
+        self._connecting = false
+        self.connected = true
       }
 
       if (self._chunk) {
