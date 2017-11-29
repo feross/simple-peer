@@ -553,7 +553,7 @@ Peer.prototype._maybeReady = function () {
 
   self._connecting = true
 
-  // We can't rely on order here, for details see https://github.com/js-platform/node-webrtc/issues/339
+  // HACK: We can't rely on order here, for details see https://github.com/js-platform/node-webrtc/issues/339
   function findCandidatePair () {
     if (self.destroyed) return
 
