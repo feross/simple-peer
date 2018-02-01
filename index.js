@@ -641,7 +641,9 @@ Peer.prototype._maybeReady = function () {
         )
       }
 
-      if (!foundSelectedCandidatePair && items.length) {
+      // Ignore candidate pair selection in browsers like Safari 11 that do not have any local or remote candidates
+      // But wait until at least 1 candidate pair is available
+      if (!foundSelectedCandidatePair && (!Object.keys(candidatePairs).length || Object.keys(localCandidates).length)) {
         setTimeout(findCandidatePair, 100)
         return
       } else {
