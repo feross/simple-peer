@@ -234,13 +234,6 @@ Peer.prototype._addIceCandidate = function (candidate) {
  */
 Peer.prototype.send = function (chunk) {
   var self = this
-
-  // HACK: `wrtc` module crashes on Node.js Buffer, so convert to Uint8Array
-  // See: https://github.com/feross/simple-peer/issues/60
-  if (self._isWrtc && Buffer.isBuffer(chunk)) {
-    chunk = new Uint8Array(chunk)
-  }
-
   self._channel.send(chunk)
 }
 
