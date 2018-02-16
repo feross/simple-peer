@@ -179,11 +179,12 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 
 ## Who is using `simple-peer`?
 
-- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
-- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
-- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
 - [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
+- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
+- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
+- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
+- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
 - [WebCat](https://www.npmjs.com/package/webcat) - P2P pipe across the web using Github private/public key for auth
 - [RTCCat](https://www.npmjs.com/package/rtcat) - WebRTC netcat
 - [PeerNet](https://www.npmjs.com/package/peernet) - Peer-to-peer gossip network using randomized algorithms
@@ -192,8 +193,6 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 - [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
 - [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
 - [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
-- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
-- [Magical /whiteboard](https://magicalmeet.com/whiteboard) - Live whiteboard meeting with WebRTC audio/video.
 - *Your app here! - send a PR!*
 
 ## api
