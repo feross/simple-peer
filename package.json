@@ -15,7 +15,7 @@
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
-    "readable-stream": "^2.0.5"
+    "readable-stream": "^2.3.4"
   },
   "devDependencies": {
     "browserify": "^16.1.0",
@@ -28,7 +28,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "uglify-js": "^3.3.9",
+    "uglify-js": "^3.3.11",
     "wrtc": "0.0.65",
     "ws": "^4.0.0",
     "zuul": "^3.8.0"
