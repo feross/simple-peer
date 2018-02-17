@@ -11,7 +11,6 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
-    "bowser": "^1.9.2",
     "debug": "^3.1.0",
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
@@ -19,6 +18,7 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
+    "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "concat-stream": "^1.4.6",
     "electron-webrtc": "^0.3.0",
