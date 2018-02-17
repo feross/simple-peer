@@ -669,10 +669,11 @@ Peer.prototype._maybeReady = function () {
 }
 
 Peer.prototype._onInterval = function () {
-  if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+  var self = this
+  if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
     return
   }
-  this._onChannelBufferedAmountLow()
+  self._onChannelBufferedAmountLow()
 }
 
 Peer.prototype._onSignalingStateChange = function () {
