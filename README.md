@@ -28,7 +28,8 @@
 This module works in the browser with [browserify](http://browserify.org/).
 
 **Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`.
+`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`. Wherever
+you see `Peer` in the examples below, substitute that with `SimplePeer`.
 
 ## install
 
@@ -106,10 +107,10 @@ peer-to-peer connection is established.
 ### data channels
 
 ```js
-var SimplePeer = require('simple-peer')
+var Peer = require('simple-peer')
 
-var peer1 = new SimplePeer({ initiator: true })
-var peer2 = new SimplePeer()
+var peer1 = new Peer({ initiator: true })
+var peer2 = new Peer()
 
 peer1.on('signal', function (data) {
   // when peer1 has signaling data, give it to peer2 somehow
@@ -137,14 +138,14 @@ peer2.on('data', function (data) {
 Video/voice is also super simple! In this example, peer1 sends video to peer2.
 
 ```js
-var SimplePeer = require('simple-peer')
+var Peer = require('simple-peer')
 
 // get video/voice stream
 navigator.getUserMedia({ video: true, audio: true }, gotMedia, function () {})
 
 function gotMedia (stream) {
-  var peer1 = new SimplePeer({ initiator: true, stream: stream })
-  var peer2 = new SimplePeer()
+  var peer1 = new Peer({ initiator: true, stream: stream })
+  var peer2 = new Peer()
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -170,11 +171,11 @@ For two-way video, simply pass a `stream` option into both `Peer` constructors. 
 To use this library in node, pass in `opts.wrtc` as a parameter:
 
 ```js
-var SimplePeer = require('simple-peer')
+var Peer = require('simple-peer')
 var wrtc = require('wrtc')
 
-var peer1 = new SimplePeer({ initiator: true, wrtc: wrtc })
-var peer2 = new SimplePeer({ wrtc: wrtc })
+var peer1 = new Peer({ initiator: true, wrtc: wrtc })
+var peer2 = new Peer({ wrtc: wrtc })
 ```
 
 ## Who is using `simple-peer`?
@@ -197,7 +198,7 @@ var peer2 = new SimplePeer({ wrtc: wrtc })
 
 ## api
 
-### `peer = new SimplePeer([opts])`
+### `peer = new Peer([opts])`
 
 Create a new WebRTC peer connection.
 
@@ -366,8 +367,8 @@ For clarity, here is the code to connect 3 peers together:
 
 ```js
 // These are peer1's connections to peer2 and peer3
-var peer2 = new SimplePeer({ initiator: true })
-var peer3 = new SimplePeer({ initiator: true })
+var peer2 = new Peer({ initiator: true })
+var peer3 = new Peer({ initiator: true })
 
 peer2.on('signal', function (data) {
   // send this signaling data to peer2 somehow
@@ -398,8 +399,8 @@ peer3.on('data', function (data) {
 
 ```js
 // These are peer2's connections to peer1 and peer3
-var peer1 = new SimplePeer()
-var peer3 = new SimplePeer({ initiator: true })
+var peer1 = new Peer()
+var peer3 = new Peer({ initiator: true })
 
 peer1.on('signal', function (data) {
   // send this signaling data to peer1 somehow
@@ -430,8 +431,8 @@ peer3.on('data', function (data) {
 
 ```js
 // These are peer3's connections to peer1 and peer2
-var peer1 = new SimplePeer()
-var peer2 = new SimplePeer()
+var peer1 = new Peer()
+var peer2 = new Peer()
 
 peer1.on('signal', function (data) {
   // send this signaling data to peer1 somehow
@@ -478,7 +479,7 @@ WebRTC ICE uses an intermediary (relay) TURN server. In other words, ICE will fi
 STUN with UDP to directly connect peers and, if that fails, will fall back to a TURN relay
 server.
 
-In order to use a TURN server, you must specify the `config` option to the `SimplePeer`
+In order to use a TURN server, you must specify the `config` option to the `Peer`
 constructor. See the API docs above.
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
