@@ -1,5 +1,6 @@
 var common = require('./common')
 var Peer = require('../')
+var bowser = require('bowser')
 var test = require('tape')
 
 var config
@@ -177,6 +178,12 @@ test('new constraint formats are used', function (t) {
 })
 
 test('ensure remote address and port are available right after connection', function (t) {
+  if (bowser.safari || bowser.ios) {
+    t.pass('Skip on Safari and iOS which do not support modern getStats() calls')
+    t.end()
+    return
+  }
+
   t.plan(7)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
