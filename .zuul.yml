@@ -4,3 +4,7 @@ browsers:
     version: latest
   - name: chrome
     version: latest
+  - name: safari
+    version: latest
+  - name: iphone
+    version: latest
