@@ -38,8 +38,10 @@ test('data send/receive Buffer', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, Buffer.from([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -74,8 +76,10 @@ test('data send/receive Uint8Array', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, Buffer.from([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -108,8 +112,10 @@ test('data send/receive ArrayBuffer', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is Buffer')
         t.deepEqual(data, Buffer.from([0, 2, 4]), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }

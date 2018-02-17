@@ -55,8 +55,10 @@ test('disable trickle', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -105,8 +107,10 @@ test('disable trickle (only initiator)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -155,8 +159,10 @@ test('disable trickle (only receiver)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
