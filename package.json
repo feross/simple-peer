@@ -18,6 +18,7 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
+    "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "concat-stream": "^1.4.6",
     "electron-webrtc": "^0.3.0",
