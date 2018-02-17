@@ -1,7 +1,7 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "8.1.1",
+  "version": "8.4.0",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
@@ -11,14 +11,14 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
-    "debug": "^2.1.0",
+    "debug": "^3.1.0",
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
-    "readable-stream": "^2.0.5"
+    "readable-stream": "^2.3.4"
   },
   "devDependencies": {
-    "browserify": "^14.0.0",
+    "browserify": "^16.1.0",
     "concat-stream": "^1.4.6",
     "electron-webrtc": "^0.3.0",
     "prettier-bytes": "^1.0.3",
@@ -28,9 +28,9 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "uglify-js": "^2.4.15",
-    "wrtc": "0.0.61",
-    "ws": "^2.0.2",
+    "uglify-js": "^3.3.11",
+    "wrtc": "0.0.66",
+    "ws": "^4.0.0",
     "zuul": "^3.8.0"
   },
   "keywords": [
@@ -62,8 +62,5 @@
     "test-node": "npm run test-node-electron-webrtc && npm run test-node-wrtc",
     "test-node-electron-webrtc": "WRTC=electron-webrtc tape test/*.js",
     "test-node-wrtc": "WRTC=wrtc tape test/*.js"
-  },
-  "testling": {
-    "files": "test/*.js"
   }
 }
