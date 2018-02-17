@@ -58,7 +58,7 @@ test('disable trickle', function (t) {
 
 test('disable trickle (only initiator)', function (t) {
   if (bowser.safari || bowser.ios) {
-    t.pass('Skip on Safari and iOS which do not support this, it seems')
+    t.pass('Skip on Safari and iOS which do not support this reliably, it seems')
     t.end()
     return
   }
@@ -107,6 +107,12 @@ test('disable trickle (only initiator)', function (t) {
 })
 
 test('disable trickle (only receiver)', function (t) {
+  if (bowser.safari || bowser.ios) {
+    t.pass('Skip on Safari and iOS which do not support this reliably, it seems')
+    t.end()
+    return
+  }
+
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
