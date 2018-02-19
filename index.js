@@ -207,10 +207,10 @@ Peer.prototype.signal = function (data) {
       self._pendingCandidates = []
 
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
-    }, function (err) { self._destroy(err) })
+    }, function (err) { self.destroy(err) })
   }
   if (!data.sdp && !data.candidate) {
-    self._destroy(new Error('signal() called with invalid signal data'))
+    self.destroy(new Error('signal() called with invalid signal data'))
   }
 }
 
@@ -220,10 +220,10 @@ Peer.prototype._addIceCandidate = function (candidate) {
     self._pc.addIceCandidate(
       new self._wrtc.RTCIceCandidate(candidate),
       noop,
-      function (err) { self._destroy(err) }
+      function (err) { self.destroy(err) }
     )
   } catch (err) {
-    self._destroy(new Error('error adding candidate: ' + err.message))
+    self.destroy(new Error('error adding candidate: ' + err.message))
   }
 }
 
@@ -236,15 +236,17 @@ Peer.prototype.send = function (chunk) {
   self._channel.send(chunk)
 }
 
-Peer.prototype.destroy = function (onclose) {
+// TODO: Delete this method once readable-stream is updated to contain a default
+// implementation of destroy() that automatically calls _destroy()
+// See: https://github.com/nodejs/readable-stream/issues/283
+Peer.prototype.destroy = function (err) {
   var self = this
-  self._destroy(null, onclose)
+  self._destroy(err, function () {})
 }
 
-Peer.prototype._destroy = function (err, onclose) {
+Peer.prototype._destroy = function (err, cb) {
   var self = this
   if (self.destroyed) return
-  if (onclose) self.once('close', onclose)
 
   self._debug('destroy (error: %s)', err && (err.message || err))
 
@@ -302,6 +304,7 @@ Peer.prototype._destroy = function (err, onclose) {
 
   if (err) self.emit('error', err)
   self.emit('close')
+  cb()
 }
 
 Peer.prototype._setupData = function (event) {
@@ -310,7 +313,7 @@ Peer.prototype._setupData = function (event) {
     // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
     // which is invalid behavior. Handle it gracefully.
     // See: https://github.com/feross/simple-peer/issues/163
-    return self._destroy(new Error('Data channel event is missing `channel` property'))
+    return self.destroy(new Error('Data channel event is missing `channel` property'))
   }
 
   self._channel = event.channel
@@ -335,7 +338,7 @@ Peer.prototype._setupData = function (event) {
     self._onChannelClose()
   }
   self._channel.onerror = function (err) {
-    self._destroy(err)
+    self.destroy(err)
   }
 }
 
@@ -349,7 +352,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
     try {
       self.send(chunk)
     } catch (err) {
-      return self._destroy(err)
+      return self.destroy(err)
     }
     if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
@@ -380,7 +383,7 @@ Peer.prototype._onFinish = function () {
   // TODO: is there a more reliable way to accomplish this?
   function destroySoon () {
     setTimeout(function () {
-      self._destroy()
+      self.destroy()
     }, 1000)
   }
 }
@@ -401,7 +404,7 @@ Peer.prototype._createOffer = function () {
     }
 
     function onError (err) {
-      self._destroy(err)
+      self.destroy(err)
     }
 
     function sendOffer () {
@@ -412,7 +415,7 @@ Peer.prototype._createOffer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self._destroy(err) }, self.offerConstraints)
+  }, function (err) { self.destroy(err) }, self.offerConstraints)
 }
 
 Peer.prototype._createAnswer = function () {
@@ -431,7 +434,7 @@ Peer.prototype._createAnswer = function () {
     }
 
     function onError (err) {
-      self._destroy(err)
+      self.destroy(err)
     }
 
     function sendAnswer () {
@@ -442,7 +445,7 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self._destroy(err) }, self.answerConstraints)
+  }, function (err) { self.destroy(err) }, self.answerConstraints)
 }
 
 Peer.prototype._onIceStateChange = function () {
@@ -468,17 +471,17 @@ Peer.prototype._onIceStateChange = function () {
       // If user has set `opt.reconnectTimer`, allow time for ICE to attempt a reconnect
       clearTimeout(self._reconnectTimeout)
       self._reconnectTimeout = setTimeout(function () {
-        self._destroy()
+        self.destroy()
       }, self.reconnectTimer)
     } else {
-      self._destroy()
+      self.destroy()
     }
   }
   if (iceConnectionState === 'failed') {
-    self._destroy(new Error('Ice connection failed.'))
+    self.destroy(new Error('Ice connection failed.'))
   }
   if (iceConnectionState === 'closed') {
-    self._destroy()
+    self.destroy()
   }
 }
 
@@ -641,7 +644,7 @@ Peer.prototype._maybeReady = function () {
         try {
           self.send(self._chunk)
         } catch (err) {
-          return self._destroy(err)
+          return self.destroy(err)
         }
         self._chunk = null
         self._debug('sent chunk from "write before connect"')
@@ -666,10 +669,11 @@ Peer.prototype._maybeReady = function () {
 }
 
 Peer.prototype._onInterval = function () {
-  if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+  var self = this
+  if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
     return
   }
-  this._onChannelBufferedAmountLow()
+  self._onChannelBufferedAmountLow()
 }
 
 Peer.prototype._onSignalingStateChange = function () {
@@ -725,7 +729,7 @@ Peer.prototype._onChannelClose = function () {
   var self = this
   if (self.destroyed) return
   self._debug('on channel close')
-  self._destroy()
+  self.destroy()
 }
 
 Peer.prototype._onAddStream = function (event) {

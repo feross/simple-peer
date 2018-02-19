@@ -38,8 +38,10 @@ test('data send/receive string {objectMode: true}', function (t) {
         t.equal(typeof data, 'string', 'data is a string')
         t.equal(data, 'this is another string', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -72,8 +74,10 @@ test('data send/receive Buffer {objectMode: true}', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is a Buffer')
         t.deepEqual(data, Buffer.from('this is another Buffer'), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -108,8 +112,10 @@ test('data send/receive Uint8Array {objectMode: true}', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is a Buffer')
         t.deepEqual(data, Buffer.from([1, 2, 3]), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
@@ -142,8 +148,10 @@ test('data send/receive ArrayBuffer {objectMode: true}', function (t) {
         t.ok(Buffer.isBuffer(data), 'data is a Buffer')
         t.deepEqual(data, Buffer.from([1, 2, 3]), 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
