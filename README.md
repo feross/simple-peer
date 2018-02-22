@@ -347,10 +347,9 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 ## error codes
 
-To make debugging and logging errors easier, `Error` objects have an attached error code.  The `err.code` will indicate the origin of the failure and `err.message` will share further details on what went wrong.
+To make debugging and logging errors easier, `Error` objects have an attached error code. The `err.code` property will indicate the origin of the failure and `err.message` will share further details on what went wrong.
 
-### err.code = ERR_CREATE_OFFER
-
+- `ERR_WEBRTC_SUPPORT` - The failure occurred in the webRTC support check
 - `ERR_CREATE_OFFER` - The failure occurred in the createOffer function
 - `ERR_CREATE_ANSWER` - The failure occurred in the createAnswer function
 - `ERR_SET_LOCAL_DESCRIPTION` - The failure occurred in the setLocalDescription function
