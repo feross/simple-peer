@@ -345,6 +345,22 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 `err` is an `Error` object.
 
+## error codes
+
+To make debugging and logging errors easier, `Error` objects have an attached error code.  The `err.code` will indicate the origin of the failure and `err.message` will share further details on what went wrong.
+
+### err.code = ERR_CREATE_OFFER
+
+- `ERR_CREATE_OFFER` - The failure occurred in the createOffer function
+- `ERR_CREATE_ANSWER` - The failure occurred in the createAnswer function
+- `ERR_SET_LOCAL_DESCRIPTION` - The failure occurred in the setLocalDescription function
+- `ERR_SET_REMOTE_DESCRIPTION` - The failure occurred in the setRemoteDescription function
+- `ERR_ADD_ICE_CANDIDATE` - The failure occurred in the addIceCandidate function
+- `ERR_ICE_CONNECTION_FAILURE` - There was a failure in the ice connection
+- `ERR_SIGNALING` - There was a signaling failure
+- `ERR_DATA_CHANNEL` - There was a failure establishing or sending on a data channel
+
+
 ## connecting more than 2 peers?
 
 The simplest way to do that is to create a full-mesh topology. That means that every peer
