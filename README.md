@@ -253,7 +253,7 @@ to get connected.
 ### `peer.send(data)`
 
 Send text/binary data to the remote peer. `data` can be any of several types: `String`,
-`Buffer` (see [buffer](https://github.com/feross/buffer)), `TypedArrayView` (`Uint8Array`,
+`Buffer` (see [buffer](https://github.com/feross/buffer)), `ArrayBufferView` (`Uint8Array`,
 etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
 Note: If this method is called before the `peer.on('connect')` event has fired, then data
@@ -307,7 +307,7 @@ the other peer.** This usually entails using a websocket signaling server. This 
 `Object`, so  remember to call `JSON.stringify(data)` to serialize it first. Then, simply
 call `peer.signal(data)` on the remote peer.
 
-(Be sure to listen to this event immediately to avoid missing it. For `initiator: true`
+(Be sure to listen to this event immediately to avoid missing it. For `initiator: true`
 peers, it fires right away. For `initatior: false` peers, it fires when the remote
 offer is received.)
 
