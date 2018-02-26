@@ -1,5 +1,6 @@
 var common = require('./common')
 var Peer = require('../')
+var bowser = require('bowser')
 var test = require('tape')
 
 var config
@@ -12,6 +13,13 @@ test('get config', function (t) {
 })
 
 test('disable trickle', function (t) {
+  if (bowser.safari || bowser.ios) {
+    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
+    t.pass('Skip on Safari and iOS which do not support this reliably')
+    t.end()
+    return
+  }
+
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
@@ -48,14 +56,23 @@ test('disable trickle', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
 })
 
 test('disable trickle (only initiator)', function (t) {
+  if (bowser.safari || bowser.ios) {
+    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
+    t.pass('Skip on Safari and iOS which do not support this reliably')
+    t.end()
+    return
+  }
+
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
@@ -92,14 +109,23 @@ test('disable trickle (only initiator)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
 })
 
 test('disable trickle (only receiver)', function (t) {
+  if (bowser.safari || bowser.ios) {
+    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
+    t.pass('Skip on Safari and iOS which do not support this reliably')
+    t.end()
+    return
+  }
+
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -136,8 +162,10 @@ test('disable trickle (only receiver)', function (t) {
       peer1.on('data', function (data) {
         t.equal(data.toString(), 'sup peer1', 'got correct message')
 
-        peer1.destroy(function () { t.pass('peer1 destroyed') })
-        peer2.destroy(function () { t.pass('peer2 destroyed') })
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
       })
     })
   }
