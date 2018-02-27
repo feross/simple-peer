@@ -229,7 +229,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
 
 /**
  * Send text/binary data to the remote peer.
- * @param {TypedArrayView|ArrayBuffer|Buffer|string|Blob|Object} chunk
+ * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
  */
 Peer.prototype.send = function (chunk) {
   var self = this
