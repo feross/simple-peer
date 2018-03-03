@@ -283,7 +283,7 @@ Remove the track associated with a `RTCRtpSender`. Will not take effect until `p
 
 ### `peer.renegotiate()`
 
-Renegotiate the connection. Calls to `addStream` and `addTrack` will not take effect until this is called.
+Renegotiate the connection. Changes to streams or tracks will not take effect until this is called. You do not need to call this if your streams were added in the `Peer` constructor.
 
 ### `peer.destroy([err])`
 
