@@ -11,36 +11,7 @@ test('get config', function (t) {
   })
 })
 
-test('single negotiation {renegotiation: false}', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
-  t.plan(4)
-
-  var peer1 = new Peer({ config: config, initiator: true, renegotiation: false, stream: common.getMediaStream(), wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, renegotiation: false, stream: common.getMediaStream(), wrtc: common.wrtc })
-
-  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
-  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
-
-  peer1.on('connect', function () {
-    t.pass('peer1 connected')
-  })
-  peer2.on('connect', function () {
-    t.pass('peer2 connected')
-  })
-
-  peer1.on('stream', function (stream) {
-    t.equal(stream.getTracks().length, 2, 'peer1 got stream with right tracks')
-  })
-  peer2.on('stream', function (stream) {
-    t.equal(stream.getTracks().length, 2, 'peer2 got stream with right tracks')
-  })
-})
-
-test('single negotiation {renegotiation: true}', function (t) {
+test('single negotiation', function (t) {
   if (common.wrtc) {
     t.pass('Skipping test, no MediaStream support on wrtc')
     t.end()
@@ -48,8 +19,8 @@ test('single negotiation {renegotiation: true}', function (t) {
   }
   t.plan(10)
 
-  var peer1 = new Peer({ config: config, initiator: true, renegotiation: true, stream: common.getMediaStream(), wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, renegotiation: true, stream: common.getMediaStream(), wrtc: common.wrtc })
+  var peer1 = new Peer({ config: config, initiator: true, stream: common.getMediaStream(), wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, stream: common.getMediaStream(), wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -87,11 +58,10 @@ test('single negotiation {renegotiation: true}', function (t) {
 })
 
 test('forced renegotiation', function (t) {
-  // wrtc should be able to run this test
   t.plan(2)
 
-  var peer1 = new Peer({ config: config, initiator: true, renegotiation: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, renegotiation: true, wrtc: common.wrtc })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -110,8 +80,8 @@ test('forced renegotiation', function (t) {
 test('repeated forced renegotiation', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, renegotiation: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, renegotiation: true, wrtc: common.wrtc })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -151,8 +121,8 @@ test('renegotiation after addStream', function (t) {
   }
   t.plan(4)
 
-  var peer1 = new Peer({ config: config, initiator: true, renegotiation: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, renegotiation: true, wrtc: common.wrtc })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -172,5 +142,94 @@ test('renegotiation after addStream', function (t) {
   })
   peer2.on('stream', function () {
     t.pass('peer2 got stream')
+  })
+})
+
+test('renegotiation after removeStream', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(8)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var senders1 = peer1.addStream(common.getMediaStream())
+  var senders2 = peer2.addStream(common.getMediaStream())
+  peer1.renegotiate()
+
+  peer1.on('stream', function (stream) {
+    t.equals(stream.getTracks().length, 2, 'peer2 got stream with right tracks')
+    peer2.removeStream(senders2)
+    peer2.renegotiate()
+  })
+  peer1.on('removetrack', function (track) {
+    t.pass('remote removetrack received')
+  })
+  peer1.on('removestream', function (track) {
+    t.pass('remote removestream received')
+  })
+
+  peer2.on('stream', function (stream) {
+    t.equals(stream.getTracks().length, 2, 'peer2 got stream with right tracks')
+    peer1.removeStream(senders1)
+    peer1.renegotiate()
+  })
+  peer2.on('removetrack', function (track) {
+    t.pass('remote removetrack received')
+  })
+  peer2.on('removestream', function (track) {
+    t.pass('remote removestream received')
+  })
+})
+
+test('renegotiation after removeTrack', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(6)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  var sender1 = peer1.addTrack(stream1.getTracks()[0], stream1)
+  var sender2 = peer2.addTrack(stream2.getTracks()[0], stream2)
+  peer1.renegotiate()
+
+  peer1.on('stream', function (stream) {
+    t.equals(stream.getTracks().length, 1, 'peer1 got stream with right tracks')
+    peer2.removeTrack(sender2)
+    peer2.renegotiate()
+  })
+  peer1.on('track', function (track) {
+    t.pass('peer1 got track event')
+  })
+  peer1.on('removetrack', function (track) {
+    t.pass('remote removetrack received')
+  })
+  
+  peer2.on('stream', function (stream) {
+    t.equals(stream.getTracks().length, 1, 'peer2 got stream with right tracks')
+    peer1.removeTrack(sender1)
+    peer1.renegotiate()
+  })
+  peer2.on('track', function (track) {
+    t.pass('peer2 got track event')
+  })
+  peer2.on('removetrack', function (track) {
+    t.pass('remote removetrack received')
   })
 })

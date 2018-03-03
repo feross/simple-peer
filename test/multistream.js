@@ -35,11 +35,23 @@ test('multistream', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  peer1.on('stream', function () {
+  var receivedIds = {}
+
+  peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
   })
-  peer2.on('stream', function () {
+  peer2.on('stream', function (stream) {
     t.pass('peer2 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
   })
 })
 
@@ -77,9 +89,16 @@ test('incremental multistream', function (t) {
     peer2.renegotiate()
   })
 
+  var receivedIds = {}
+
   var count1 = 0
-  peer1.on('stream', function () {
+  peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
     count1++
     if (count1 < 5) {
       peer1.addStream(common.getMediaStream())
@@ -88,12 +107,63 @@ test('incremental multistream', function (t) {
   })
 
   var count2 = 0
-  peer2.on('stream', function () {
+  peer2.on('stream', function (stream) {
     t.pass('peer2 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
     count2++
     if (count2 < 5) {
       peer2.addStream(common.getMediaStream())
       peer2.renegotiate()
     }
+  })
+})
+
+test('removeTrack immediately', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(2)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  var sender1 = peer1.addTrack(stream1.getTracks()[0], stream1)
+  var sender2 = peer2.addTrack(stream2.getTracks()[0], stream2)
+
+  peer1.removeTrack(sender1)
+  peer2.removeTrack(sender2)
+  peer1.renegotiate()
+
+  peer1.on('track', function (track) {
+    t.fail('peer1 did not get track event')
+  })
+  peer1.on('removetrack', function (track) {
+    t.fail('remote removetrack not received')
+  })
+  
+  peer2.on('track', function (track) {
+    t.fail('peer2 did not get track event')
+  })
+  peer2.on('removetrack', function (track) {
+    t.fail('remote removetrack not received')
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connected')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connected')
   })
 })

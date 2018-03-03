@@ -267,9 +267,9 @@ will be buffered.
 
 Add a MediaStream to the connection. Will not take effect until `peer.renegotiate()` is called.
 
-### `peer.addTrack(track)`
+### `peer.addTrack(track, stream)`
 
-Add a MediaStreamTrack to the connection. Will not take effect until `peer.renegotiate()` is called.
+Add a MediaStreamTrack to the connection. Must also pass the MediaStream you want to attatch it to. Will not take effect until `peer.renegotiate()` is called.
 
 ### `peer.renegotiate()`
 
@@ -351,9 +351,21 @@ peer.on('stream', function (stream) {
 })
 ```
 
+### `peer.on('removestream', function (stream) {})`
+
+Fired when the remote peer removes all of a video stream's tracks from the connection.
+
 ### `peer.on('track', function (track) {})`
 
-Received a remote video track. Streams contain multiple tracks.
+Received a remote audio/video track. Streams may contain multiple tracks.
+
+### `peer.on('removetrack', function (track) {})`
+
+Fired when the remote peer removes a audio/video track from the connection.
+
+### `peer.on('negotiate', function () {})`
+
+Fired when a round of session negotiation is completed. More negotiation may still be required.
 
 ### `peer.on('close', function () {})`
 

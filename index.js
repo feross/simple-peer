@@ -73,12 +73,14 @@ function Peer (opts) {
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
   self._pendingCandidates = []
-  self._previousStreams = []
 
-  self._initialNegotiation = true // is this the first negotiation for onnly the initiator?
-  self._isNegotiating = false     // is the peer currently negotiating?
+  self._initialNegotiation = true 
+  self._isNegotiating = false
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
+
+  self._remoteTracks = []
+  self._remoteStreams = []
 
   self._chunk = null
   self._cb = null
@@ -205,6 +207,8 @@ Peer.prototype.signal = function (data) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
 
+      self._checkForRemovals(data.sdp)
+
       self._pendingCandidates.forEach(function (candidate) {
         self._addIceCandidate(candidate)
       })
@@ -271,6 +275,62 @@ Peer.prototype.addTrack = function (track, stream) {
 }
 
 /**
+ * Add all tracks within a MediaStream to the connection.
+ * @param {MediaStream} stream
+ * @returns {RTCRtpSender[]}
+ */
+Peer.prototype.addStream = function (stream) {
+  var self = this
+
+  self._debug('addStream()')
+
+  var senders = []
+  stream.getTracks().forEach(function(track) {
+    senders.push(self.addTrack(track, stream))
+  })
+  return senders
+}
+
+/**
+ * Remove a RTCRtpSender from the connection.
+ * @param {RTCRtpSender} sender
+ * @returns {RTCRtpSender}
+ */
+Peer.prototype.removeSender = function (sender) {
+  var self = this
+
+  self._debug('removeSender()')
+
+  try {
+    self._pc.removeTrack(sender)
+  } catch (err) {
+    if (err.name === 'NS_ERROR_UNEXPECTED') {
+      self._sendersAwaitingStable.push(send) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
+    } else {
+      self.destroy(err)
+    }
+  }
+}
+Peer.prototype.removeTrack = Peer.prototype.removeSender // for symmetry in the API
+
+/**
+ * Remove an array of RTCRtpSenders from the connection.
+ * @param {RTCRtpSender[]} sender
+ * @param {MediaStream} stream
+ * @returns {RTCRtpSender}
+ */
+Peer.prototype.removeSenders = function (senders) {
+  var self = this
+
+  self._debug('removeSenders()')
+
+  senders.forEach(function (sender) {
+    self.removeSender(sender)
+  })
+}
+Peer.prototype.removeStream = Peer.prototype.removeSenders // for symmetry in the API
+
+/**
  * Renegotiate the peer connection.
  */
 Peer.prototype.renegotiate = function () {
@@ -323,8 +383,8 @@ Peer.prototype._destroy = function (err, cb) {
   self.connected = false
   self._pcReady = false
   self._channelReady = false
-  self._previousStreams = null
-  self.senders = null
+  self._remoteTracks = null
+  self._remoteStreams = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -627,7 +687,7 @@ Peer.prototype._maybeReady = function () {
 
       items.forEach(function (item) {
         // Spec-compliant
-        if (item.type === 'transport') {
+        if (item.type === 'transport' && item.selectedCandidatePairId) {
           setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
         }
 
@@ -813,15 +873,18 @@ Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
 
+  self._remoteTracks.push(event.track)
   self._debug('on track')
   self.emit('track', event.track)
 
   var id = event.streams[0].id
-  if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
-  self._previousStreams.push(id)
+  if (self._remoteStreams.some(function (stream) {
+    return stream.id === event.streams[0].id // Only fire one 'stream' event, even though there may be multiple tracks per stream
+  })) return 
+  self._remoteStreams.push(event.streams[0])
   setTimeout(function () {
-    self.emit('stream', event.streams[0])
-  }, 100)
+    self.emit('stream', event.streams[0]) // ensure all tracks have been added
+  }, 0)
 }
 
 Peer.prototype._debug = function () {
@@ -829,6 +892,69 @@ Peer.prototype._debug = function () {
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+// HACK: Check for removed tracks and streams in the SDP
+// Firefox and Safari won't emit removetrack event, or marked tracks as removed
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1347578
+// https://bugs.webkit.org/show_bug.cgi?id=183308
+Peer.prototype._checkForRemovals = function (sdp) {
+  var self = this
+
+  var newMsids = self._parseMsids(sdp)
+  self._remoteTracks = self._remoteTracks.filter(function (track) {
+    if (!newMsids.some(function (msid) {
+      var trackId = track.id[0] === '{' ? track.id.slice(1, -1) : track.id // slice brackets off of Firefox msids
+      return msid.trackId === trackId
+    })) {
+      self._debug('removetrack')
+      self.emit('removetrack', track)
+      return false
+    } else {
+      return true
+    }
+  })
+
+  self._remoteStreams = self._remoteStreams.filter(function (stream) {
+    if (!newMsids.some(function (msid) {
+      var streamId = stream.id[0] === '{' ? stream.id.slice(1, -1) : stream.id // slice brackets off of Firefox msids
+      return msid.streamId === streamId
+    })) {
+      self._debug('removestream')
+      self.emit('removestream', stream)
+      return false
+    } else {
+      return true
+    }
+  })
+}
+
+// parse ssrc msids out of an SDP remote description
+Peer.prototype._parseMsids = function (sdp) {
+
+  // Chromium's format
+  var chromium = sdp.split('\n').filter(function (line) {
+    return (line.indexOf('a=ssrc:') === 0) && (line.indexOf(' msid:') !== -1)
+  }).map(function (line) {
+    var ids = line.slice(line.indexOf(' msid:') + ' msid:'.length, -1).split(' ')
+    return {
+      streamId: ids[0],
+      trackId: ids[1]
+    }
+  })
+
+  // Firefox/Safari's format
+  var firefox = sdp.split('\n').filter(function (line) {
+    return (line.indexOf('a=msid:{') === 0)
+  }).map(function (line) {
+    var ids = line.slice(line.indexOf('a=msid:{') + 'a=msid:{'.length, -2).split('} {')
+    return {
+      streamId: ids[0],
+      trackId: ids[1]
+    }
+  })
+
+  return [].concat(chromium, firefox)
 }
 
 // Transform constraints objects into the new format (unless Chromium)
