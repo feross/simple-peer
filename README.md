@@ -265,11 +265,23 @@ will be buffered.
 
 ### `peer.addStream(stream)`
 
-Add a MediaStream to the connection. Will not take effect until `peer.renegotiate()` is called.
+Add a `MediaStream` to the connection. Will not take effect until `peer.renegotiate()` is called.
+
+Returns a `RTCRtpSender` array that you can pass into `peer.removeStream()`.
+
+### `peer.removeStream(senders)`
+
+Remove all tracks associated with a `RTCRtpSender` array. Will not take effect until `peer.renegotiate()` is called.
 
 ### `peer.addTrack(track, stream)`
 
-Add a MediaStreamTrack to the connection. Must also pass the MediaStream you want to attatch it to. Will not take effect until `peer.renegotiate()` is called.
+Add a `MediaStreamTrack` to the connection. Must also pass the MediaStream you want to attatch it to. Will not take effect until `peer.renegotiate()` is called.
+
+Returns a `RTCRtpSender` that you can pass into `peer.removeTrack()`.
+
+### `peer.removeTrack(sender)`
+
+Remove the track associated with a `RTCRtpSender`. Will not take effect until `peer.renegotiate()` is called.
 
 ### `peer.renegotiate()`
 
