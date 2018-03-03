@@ -218,6 +218,8 @@ If `opts` is specified, then the default options (shown below) will be overridde
   reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
+  streams: [],
+  tracks: [],
   trickle: true,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
   objectMode: false
@@ -236,6 +238,8 @@ The options do the following:
 - `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
+- `streams` - an array of MediaStreams returned from `getUserMedia`
+- `tracks` - an array of MediaStreamTracks
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
@@ -258,6 +262,18 @@ etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
 Note: If this method is called before the `peer.on('connect')` event has fired, then data
 will be buffered.
+
+### `peer.addStream(stream)`
+
+Add a MediaStream to the connection. Will not take effect until `peer.renegotiate()` is called.
+
+### `peer.addTrack(track)`
+
+Add a MediaStreamTrack to the connection. Will not take effect until `peer.renegotiate()` is called.
+
+### `peer.renegotiate()`
+
+Renegotiate the connection. Calls to `addStream` and `addTrack` will not take effect until this is called.
 
 ### `peer.destroy([err])`
 
@@ -334,6 +350,10 @@ peer.on('stream', function (stream) {
   video.play()
 })
 ```
+
+### `peer.on('track', function (track) {})`
+
+Received a remote video track. Streams contain multiple tracks.
 
 ### `peer.on('close', function () {})`
 

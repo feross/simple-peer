@@ -43,7 +43,8 @@ function Peer (opts) {
   self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
-  self.stream = opts.stream || false
+  self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
+  self.tracks = opts.tracks || []
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
@@ -74,6 +75,11 @@ function Peer (opts) {
   self._pendingCandidates = []
   self._previousStreams = []
 
+  self._initialNegotiation = true // is this the first negotiation for onnly the initiator?
+  self._isNegotiating = false     // is the peer currently negotiating?
+  self._queuedNegotiation = false // is there a queued negotiation request?
+  self._sendersAwaitingStable = []
+
   self._chunk = null
   self._cb = null
   self._interval = null
@@ -98,6 +104,7 @@ function Peer (opts) {
   self._pc.onicecandidate = function (event) {
     self._onIceCandidate(event)
   }
+  self._pc.onnegotiationneeded = null // wrtc doesn't fire this event, Chromium fires it too often, and Firefox doesn't fire it enough
 
   // Other spec events, unused by this implementation:
   // - onconnectionstatechange
@@ -105,12 +112,6 @@ function Peer (opts) {
   // - onfingerprintfailure
 
   if (self.initiator) {
-    var createdOffer = false
-    self._pc.onnegotiationneeded = function () {
-      if (!createdOffer) self._createOffer()
-      createdOffer = true
-    }
-
     self._setupData({
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
@@ -121,26 +122,25 @@ function Peer (opts) {
   }
 
   if ('addTrack' in self._pc) {
-    // WebRTC Spec, Firefox
-    if (self.stream) {
-      self.stream.getTracks().forEach(function (track) {
-        self._pc.addTrack(track, self.stream)
+    if (self.streams) {
+      self.streams.forEach(function (stream) {
+        self._negotationsToIgnore+=stream.getTracks().length
+        self.addStream(stream)
+      })
+    }
+    if (self.tracks) {
+      self.tracks.forEach(function (track) {
+        self._negotationsToIgnore++
+        self.addTrack(track, null)
       })
     }
     self._pc.ontrack = function (event) {
       self._onTrack(event)
     }
-  } else {
-    // Chrome, etc. This can be removed once all browsers support `ontrack`
-    if (self.stream) self._pc.addStream(self.stream)
-    self._pc.onaddstream = function (event) {
-      self._onAddStream(event)
-    }
   }
 
-  // HACK: wrtc doesn't fire the 'negotionneeded' event
-  if (self.initiator && self._isWrtc) {
-    self._pc.onnegotiationneeded()
+  if (self.initiator) {
+    self._negotiate()
   }
 
   self._onFinishBound = function () {
@@ -193,6 +193,10 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
+  if (data.renegotiate) {
+    self._debug('got request to renegotiate')
+    self._negotiate()
+  }
   if (data.candidate) {
     if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
     else self._pendingCandidates.push(data.candidate)
@@ -209,7 +213,7 @@ Peer.prototype.signal = function (data) {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, function (err) { self.destroy(err) })
   }
-  if (!data.sdp && !data.candidate) {
+  if (!data.sdp && !data.candidate && !data.renegotiate) {
     self.destroy(new Error('signal() called with invalid signal data'))
   }
 }
@@ -236,6 +240,66 @@ Peer.prototype.send = function (chunk) {
   self._channel.send(chunk)
 }
 
+/**
+ * Add all tracks within a MediaStream to the connection.
+ * @param {MediaStream} stream
+ * @returns {RTCRtpSender[]}
+ */
+Peer.prototype.addStream = function (stream) {
+  var self = this
+
+  self._debug('addStream()')
+
+  var senders = []
+  stream.getTracks().forEach(function(track) {
+    senders.push(self.addTrack(track, stream))
+  })
+  return senders
+}
+
+/**
+ * Add a MediaStreamTrack to the connection. Returns the RTCRtpSender used to remove the track.
+ * @param {MediaStreamTrack} track
+ * @returns {RTCRtpSender}
+ */
+Peer.prototype.addTrack = function (track, stream) {
+  var self = this
+
+  self._debug('addTrack()')
+
+  return self._pc.addTrack(track, stream)
+}
+
+/**
+ * Renegotiate the peer connection.
+ */
+Peer.prototype.renegotiate = function () {
+  var self = this
+
+  self._debug('renegotiate()')
+  self._negotiate()
+}
+
+Peer.prototype._negotiate = function () {
+  var self = this
+
+  if (self.initiator) {
+    if (self._isNegotiating) {
+      self._queuedNegotiation = true
+      self._debug('already negotiating, queueing')
+    } else {
+      self._debug('start negotiation')
+      self._createOffer()
+    }
+  } else {
+    self._debug('requesting negotiation from initiator')
+    self.emit('signal', JSON.stringify({ // request initiator to renegotiate
+      renegotiate: true
+    }))
+  }
+  self._isNegotiating = true
+}
+
 // TODO: Delete this method once readable-stream is updated to contain a default
 // implementation of destroy() that automatically calls _destroy()
 // See: https://github.com/nodejs/readable-stream/issues/283
@@ -260,6 +324,7 @@ Peer.prototype._destroy = function (err, cb) {
   self._pcReady = false
   self._channelReady = false
   self._previousStreams = null
+  self.senders = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -282,8 +347,6 @@ Peer.prototype._destroy = function (err, cb) {
     self._pc.onicecandidate = null
     if ('addTrack' in self._pc) {
       self._pc.ontrack = null
-    } else {
-      self._pc.onaddstream = null
     }
     self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
@@ -398,12 +461,14 @@ Peer.prototype._createOffer = function () {
     self._pc.setLocalDescription(offer, onSuccess, onError)
 
     function onSuccess () {
+      self._debug('createOffer success')
       if (self.destroyed) return
       if (self.trickle || self._iceComplete) sendOffer()
       else self.once('_iceComplete', sendOffer) // wait for candidates
     }
 
     function onError (err) {
+      self._debug('createOffer error')
       self.destroy(err)
     }
 
@@ -466,22 +531,11 @@ Peer.prototype._onIceStateChange = function () {
     self._pcReady = true
     self._maybeReady()
   }
-  if (iceConnectionState === 'disconnected') {
-    if (self.reconnectTimer) {
-      // If user has set `opt.reconnectTimer`, allow time for ICE to attempt a reconnect
-      clearTimeout(self._reconnectTimeout)
-      self._reconnectTimeout = setTimeout(function () {
-        self.destroy()
-      }, self.reconnectTimer)
-    } else {
-      self.destroy()
-    }
-  }
   if (iceConnectionState === 'failed') {
     self.destroy(new Error('Ice connection failed.'))
   }
   if (iceConnectionState === 'closed') {
-    self.destroy()
+    self.destroy(new Error('Ice connection closed.'))
   }
 }
 
@@ -679,6 +733,29 @@ Peer.prototype._onInterval = function () {
 Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
+
+  if (self._pc.signalingState === 'stable') {
+    self._isNegotiating = false
+    self._initialNegotiation = false
+
+    // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
+    self._debug('flushing sender queue', self._sendersAwaitingStable)
+    self._sendersAwaitingStable.forEach(function (sender) {
+      self.removeTrack(sender)
+      self._queuedNegotiation = true
+    })
+    self._sendersAwaitingStable = []
+
+    if (self._queuedNegotiation) {
+      self._debug('flushing negotiation queue')
+      self._queuedNegotiation = false
+      self._negotiate() // negotiate again
+    }
+
+    self._debug('negotiate')
+    self.emit('negotiate')
+  }
+
   self._debug('signalingStateChange %s', self._pc.signalingState)
   self.emit('signalingStateChange', self._pc.signalingState)
 }
@@ -732,21 +809,19 @@ Peer.prototype._onChannelClose = function () {
   self.destroy()
 }
 
-Peer.prototype._onAddStream = function (event) {
-  var self = this
-  if (self.destroyed) return
-  self._debug('on add stream')
-  self.emit('stream', event.stream)
-}
-
 Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
+
   self._debug('on track')
+  self.emit('track', event.track)
+
   var id = event.streams[0].id
   if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
   self._previousStreams.push(id)
-  self.emit('stream', event.streams[0])
+  setTimeout(function () {
+    self.emit('stream', event.streams[0])
+  }, 100)
 }
 
 Peer.prototype._debug = function () {
