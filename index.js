@@ -74,7 +74,7 @@ function Peer (opts) {
   self._channel = null
   self._pendingCandidates = []
 
-  self._initialNegotiation = true 
+  self._initialNegotiation = true
   self._isNegotiating = false
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
@@ -126,7 +126,7 @@ function Peer (opts) {
   if ('addTrack' in self._pc) {
     if (self.streams) {
       self.streams.forEach(function (stream) {
-        self._negotationsToIgnore+=stream.getTracks().length
+        self._negotationsToIgnore += stream.getTracks().length
         self.addStream(stream)
       })
     }
@@ -255,7 +255,7 @@ Peer.prototype.addStream = function (stream) {
   self._debug('addStream()')
 
   var senders = []
-  stream.getTracks().forEach(function(track) {
+  stream.getTracks().forEach(function (track) {
     senders.push(self.addTrack(track, stream))
   })
   return senders
@@ -285,7 +285,7 @@ Peer.prototype.addStream = function (stream) {
   self._debug('addStream()')
 
   var senders = []
-  stream.getTracks().forEach(function(track) {
+  stream.getTracks().forEach(function (track) {
     senders.push(self.addTrack(track, stream))
   })
   return senders
@@ -305,7 +305,7 @@ Peer.prototype.removeSender = function (sender) {
     self._pc.removeTrack(sender)
   } catch (err) {
     if (err.name === 'NS_ERROR_UNEXPECTED') {
-      self._sendersAwaitingStable.push(send) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
+      self._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
     } else {
       self.destroy(err)
     }
@@ -877,10 +877,9 @@ Peer.prototype._onTrack = function (event) {
   self._debug('on track')
   self.emit('track', event.track)
 
-  var id = event.streams[0].id
   if (self._remoteStreams.some(function (stream) {
     return stream.id === event.streams[0].id // Only fire one 'stream' event, even though there may be multiple tracks per stream
-  })) return 
+  })) return
   self._remoteStreams.push(event.streams[0])
   setTimeout(function () {
     self.emit('stream', event.streams[0]) // ensure all tracks have been added
@@ -931,8 +930,7 @@ Peer.prototype._checkForRemovals = function (sdp) {
 
 // parse ssrc msids out of an SDP remote description
 Peer.prototype._parseMsids = function (sdp) {
-
-  // Chromium's format
+  // Chromium's a=ssrc format
   var chromium = sdp.split('\n').filter(function (line) {
     return (line.indexOf('a=ssrc:') === 0) && (line.indexOf(' msid:') !== -1)
   }).map(function (line) {
@@ -943,7 +941,7 @@ Peer.prototype._parseMsids = function (sdp) {
     }
   })
 
-  // Firefox/Safari's format
+  // Firefox/Safari's a=msid format
   var firefox = sdp.split('\n').filter(function (line) {
     return (line.indexOf('a=msid:{') === 0)
   }).map(function (line) {

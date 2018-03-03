@@ -220,7 +220,7 @@ test('renegotiation after removeTrack', function (t) {
   peer1.on('removetrack', function (track) {
     t.pass('remote removetrack received')
   })
-  
+
   peer2.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 1, 'peer2 got stream with right tracks')
     peer1.removeTrack(sender1)

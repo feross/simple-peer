@@ -152,7 +152,7 @@ test('removeTrack immediately', function (t) {
   peer1.on('removetrack', function (track) {
     t.fail('remote removetrack not received')
   })
-  
+
   peer2.on('track', function (track) {
     t.fail('peer2 did not get track event')
   })
