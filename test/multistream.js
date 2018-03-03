@@ -27,7 +27,6 @@ test('multistream', function (t) {
   })
   var peer2 = new Peer({
     config: config,
-    renegotiation: true,
     wrtc: common.wrtc,
     streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
   })
@@ -81,12 +80,10 @@ test('incremental multistream', function (t) {
   peer1.on('connect', function () {
     t.pass('peer1 connected')
     peer1.addStream(common.getMediaStream())
-    peer1.renegotiate()
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
     peer2.addStream(common.getMediaStream())
-    peer2.renegotiate()
   })
 
   var receivedIds = {}
@@ -102,7 +99,6 @@ test('incremental multistream', function (t) {
     count1++
     if (count1 < 5) {
       peer1.addStream(common.getMediaStream())
-      peer1.renegotiate()
     }
   })
 
@@ -117,7 +113,6 @@ test('incremental multistream', function (t) {
     count2++
     if (count2 < 5) {
       peer2.addStream(common.getMediaStream())
-      peer2.renegotiate()
     }
   })
 })
@@ -139,12 +134,11 @@ test('removeTrack immediately', function (t) {
   var stream1 = common.getMediaStream()
   var stream2 = common.getMediaStream()
 
-  var sender1 = peer1.addTrack(stream1.getTracks()[0], stream1)
-  var sender2 = peer2.addTrack(stream2.getTracks()[0], stream2)
+  peer1.addTrack(stream1.getTracks()[0], stream1)
+  peer2.addTrack(stream2.getTracks()[0], stream2)
 
-  peer1.removeTrack(sender1)
-  peer2.removeTrack(sender2)
-  peer1.renegotiate()
+  peer1.removeTrack(stream1.getTracks()[0])
+  peer2.removeTrack(stream2.getTracks()[0])
 
   peer1.on('track', function (track) {
     t.fail('peer1 did not get track event')

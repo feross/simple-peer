@@ -73,10 +73,11 @@ function Peer (opts) {
   self._channel = null
   self._pendingCandidates = []
 
-  self._initialNegotiation = true
-  self._isNegotiating = false
-  self._queuedNegotiation = false // is there a queued negotiation request?
+  self._isNegotiating = false       // is this peer waiting for negotiation to complete?
+  self._batchedNegotiation = false  // batch synchronous negotiations
+  self._queuedNegotiation = false   // is there a queued negotiation request?
   self._sendersAwaitingStable = []
+  self._senderMap = new WeakMap()
 
   self._remoteTracks = []
   self._remoteStreams = []
@@ -105,12 +106,12 @@ function Peer (opts) {
   self._pc.onicecandidate = function (event) {
     self._onIceCandidate(event)
   }
-  self._pc.onnegotiationneeded = null // wrtc doesn't fire this event, Chromium fires it too often, and Firefox doesn't fire it enough
 
   // Other spec events, unused by this implementation:
   // - onconnectionstatechange
   // - onicecandidateerror
   // - onfingerprintfailure
+  // - onnegotiationneeded
 
   if (self.initiator) {
     self._setupData({
@@ -125,7 +126,6 @@ function Peer (opts) {
   if ('addTrack' in self._pc) {
     if (self.streams) {
       self.streams.forEach(function (stream) {
-        self._negotationsToIgnore += stream.getTracks().length
         self.addStream(stream)
       })
     }
@@ -135,7 +135,7 @@ function Peer (opts) {
   }
 
   if (self.initiator) {
-    self._negotiate()
+    self._needsNegotiation()
   }
 
   self._onFinishBound = function () {
@@ -190,7 +190,7 @@ Peer.prototype.signal = function (data) {
 
   if (data.renegotiate) {
     self._debug('got request to renegotiate')
-    self._negotiate()
+    self.negotiate()
   }
   if (data.candidate) {
     if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
@@ -238,62 +238,43 @@ Peer.prototype.send = function (chunk) {
 }
 
 /**
- * Add all tracks within a MediaStream to the connection.
+ * Add a MediaStream to the connection.
  * @param {MediaStream} stream
- * @returns {RTCRtpSender[]}
  */
 Peer.prototype.addStream = function (stream) {
   var self = this
 
   self._debug('addStream()')
 
-  var senders = []
   stream.getTracks().forEach(function (track) {
-    senders.push(self.addTrack(track, stream))
+    self.addTrack(track, stream)
   })
-  return senders
 }
 
 /**
- * Add a MediaStreamTrack to the connection. Returns the RTCRtpSender used to remove the track.
+ * Add a MediaStreamTrack to the connection. 
  * @param {MediaStreamTrack} track
- * @returns {RTCRtpSender}
  */
 Peer.prototype.addTrack = function (track, stream) {
   var self = this
 
   self._debug('addTrack()')
 
-  return self._pc.addTrack(track, stream)
+  var sender = self._pc.addTrack(track, stream)
+  self._senderMap.set(track, sender)
+  self._needsNegotiation()
 }
 
 /**
- * Add all tracks within a MediaStream to the connection.
- * @param {MediaStream} stream
- * @returns {RTCRtpSender[]}
+ * Remove a MediaStreamTrack from the connection.
+ * @param {MediaStreamTrack} sender
  */
-Peer.prototype.addStream = function (stream) {
-  var self = this
-
-  self._debug('addStream()')
-
-  var senders = []
-  stream.getTracks().forEach(function (track) {
-    senders.push(self.addTrack(track, stream))
-  })
-  return senders
-}
-
-/**
- * Remove a RTCRtpSender from the connection.
- * @param {RTCRtpSender} sender
- * @returns {RTCRtpSender}
- */
-Peer.prototype.removeSender = function (sender) {
+Peer.prototype.removeTrack = function (track) {
   var self = this
 
   self._debug('removeSender()')
 
+  var sender = self._senderMap.get(track)
   try {
     self._pc.removeTrack(sender)
   } catch (err) {
@@ -304,36 +285,34 @@ Peer.prototype.removeSender = function (sender) {
     }
   }
 }
-Peer.prototype.removeTrack = Peer.prototype.removeSender // for symmetry in the API
 
 /**
- * Remove an array of RTCRtpSenders from the connection.
- * @param {RTCRtpSender[]} sender
+ * Remove a MediaStream from the connection.
  * @param {MediaStream} stream
- * @returns {RTCRtpSender}
  */
-Peer.prototype.removeSenders = function (senders) {
+Peer.prototype.removeStream = function (stream) {
   var self = this
 
   self._debug('removeSenders()')
 
-  senders.forEach(function (sender) {
-    self.removeSender(sender)
+  stream.getTracks().forEach(function (track) {
+    self.removeTrack(track)
   })
 }
-Peer.prototype.removeStream = Peer.prototype.removeSenders // for symmetry in the API
 
-/**
- * Renegotiate the peer connection.
- */
-Peer.prototype.renegotiate = function () {
+Peer.prototype._needsNegotiation = function () {
   var self = this
 
-  self._debug('renegotiate()')
-  self._negotiate()
+  self._debug('_needsNegotiation')
+  if (self._batchedNegotiation) return // batch synchronous renegotiations
+  self._batchedNegotiation = true
+  setTimeout(function () {
+    self._batchedNegotiation = false
+    self.negotiate()
+  }, 0)
 }
 
-Peer.prototype._negotiate = function () {
+Peer.prototype.negotiate = function () {
   var self = this
 
   if (self.initiator) {
@@ -378,6 +357,7 @@ Peer.prototype._destroy = function (err, cb) {
   self._channelReady = false
   self._remoteTracks = null
   self._remoteStreams = null
+  self._senderMap = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -401,7 +381,6 @@ Peer.prototype._destroy = function (err, cb) {
     if ('addTrack' in self._pc) {
       self._pc.ontrack = null
     }
-    self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
   }
 
@@ -680,7 +659,7 @@ Peer.prototype._maybeReady = function () {
 
       items.forEach(function (item) {
         // Spec-compliant
-        if (item.type === 'transport' && item.selectedCandidatePairId) {
+        if (item.type === 'transport') {
           setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
         }
 
@@ -789,7 +768,6 @@ Peer.prototype._onSignalingStateChange = function () {
 
   if (self._pc.signalingState === 'stable') {
     self._isNegotiating = false
-    self._initialNegotiation = false
 
     // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
     self._debug('flushing sender queue', self._sendersAwaitingStable)
@@ -802,7 +780,7 @@ Peer.prototype._onSignalingStateChange = function () {
     if (self._queuedNegotiation) {
       self._debug('flushing negotiation queue')
       self._queuedNegotiation = false
-      self._negotiate() // negotiate again
+      self._needsNegotiation() // negotiate again
     }
 
     self._debug('negotiate')
@@ -870,13 +848,16 @@ Peer.prototype._onTrack = function (event) {
   self._debug('on track')
   self.emit('track', event.track)
 
-  if (self._remoteStreams.some(function (stream) {
-    return stream.id === event.streams[0].id // Only fire one 'stream' event, even though there may be multiple tracks per stream
-  })) return
-  self._remoteStreams.push(event.streams[0])
-  setTimeout(function () {
-    self.emit('stream', event.streams[0]) // ensure all tracks have been added
-  }, 0)
+  event.streams.forEach(function (eventStream) {
+    if (self._remoteStreams.some(function (remoteStream) {
+      return remoteStream.id === eventStream.id 
+    })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
+
+    self._remoteStreams.push(eventStream)
+    setTimeout(function () {
+      self.emit('stream', eventStream) // ensure all tracks have been added
+    }, 0)
+  })
 }
 
 Peer.prototype._debug = function () {

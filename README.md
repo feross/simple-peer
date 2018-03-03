@@ -263,27 +263,19 @@ will be buffered.
 
 ### `peer.addStream(stream)`
 
-Add a `MediaStream` to the connection. Will not take effect until `peer.renegotiate()` is called.
+Add a `MediaStream` to the connection.
 
-Returns a `RTCRtpSender` array that you can pass into `peer.removeStream()`.
+### `peer.removeStream(stream)`
 
-### `peer.removeStream(senders)`
-
-Remove all tracks associated with a `RTCRtpSender` array. Will not take effect until `peer.renegotiate()` is called.
+Remove a `MediaStream` from the connection.
 
 ### `peer.addTrack(track, stream)`
 
-Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you want to attatch it to. Will not take effect until `peer.renegotiate()` is called.
+Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you want to attach it to.
 
-Returns a `RTCRtpSender` that you can pass into `peer.removeTrack()`.
+### `peer.removeTrack(track)`
 
-### `peer.removeTrack(sender)`
-
-Remove the track associated with a `RTCRtpSender`. Will not take effect until `peer.renegotiate()` is called.
-
-### `peer.renegotiate()`
-
-Renegotiate the connection. Changes to streams or tracks will not take effect until this is called. You do not need to call this if your streams were added through the `Peer` constructor.
+Remove a `MediaStreamTrack` from the connection.
 
 ### `peer.destroy([err])`
 
@@ -372,10 +364,6 @@ Received a remote audio/video track. Streams may contain multiple tracks.
 ### `peer.on('removetrack', function (track) {})`
 
 Fired when the remote peer removes a audio/video track from the connection.
-
-### `peer.on('negotiate', function () {})`
-
-Fired when a round of session negotiation is completed. More negotiation may still be required.
 
 ### `peer.on('close', function () {})`
 

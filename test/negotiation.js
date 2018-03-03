@@ -57,7 +57,7 @@ test('single negotiation', function (t) {
   })
 })
 
-test('forced renegotiation', function (t) {
+test('manual renegotiation', function (t) {
   t.plan(2)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -67,7 +67,8 @@ test('forced renegotiation', function (t) {
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
   peer1.on('connect', function () {
-    peer1.renegotiate()
+    peer1.negotiate()
+
     peer1.on('negotiate', function () {
       t.pass('peer1 negotiated')
     })
@@ -77,7 +78,7 @@ test('forced renegotiation', function (t) {
   })
 })
 
-test('repeated forced renegotiation', function (t) {
+test('repeated manual renegotiation', function (t) {
   t.plan(6)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -87,14 +88,14 @@ test('repeated forced renegotiation', function (t) {
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
   peer1.once('connect', function () {
-    peer1.renegotiate()
+    peer1.negotiate()
   })
   peer1.once('negotiate', function () {
     t.pass('peer1 negotiated')
-    peer1.renegotiate()
+    peer1.negotiate()
     peer1.once('negotiate', function () {
       t.pass('peer1 negotiated again')
-      peer1.renegotiate()
+      peer1.negotiate()
       peer1.once('negotiate', function () {
         t.pass('peer1 negotiated again')
       })
@@ -102,10 +103,10 @@ test('repeated forced renegotiation', function (t) {
   })
   peer2.once('negotiate', function () {
     t.pass('peer2 negotiated')
-    peer2.renegotiate()
+    peer2.negotiate()
     peer2.once('negotiate', function () {
       t.pass('peer2 negotiated again')
-      peer1.renegotiate()
+      peer1.negotiate()
       peer1.once('negotiate', function () {
         t.pass('peer1 negotiated again')
       })
@@ -130,12 +131,10 @@ test('renegotiation after addStream', function (t) {
   peer1.on('connect', function () {
     t.pass('peer1 connect')
     peer1.addStream(common.getMediaStream())
-    peer1.renegotiate()
   })
   peer2.on('connect', function () {
     t.pass('peer2 connect')
     peer2.addStream(common.getMediaStream())
-    peer2.renegotiate()
   })
   peer1.on('stream', function () {
     t.pass('peer1 got stream')
@@ -159,14 +158,15 @@ test('renegotiation after removeStream', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var senders1 = peer1.addStream(common.getMediaStream())
-  var senders2 = peer2.addStream(common.getMediaStream())
-  peer1.renegotiate()
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  peer1.addStream(stream1)
+  peer2.addStream(stream2)
 
   peer1.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 2, 'peer2 got stream with right tracks')
-    peer2.removeStream(senders2)
-    peer2.renegotiate()
+    peer2.removeStream(stream2)
   })
   peer1.on('removetrack', function (track) {
     t.pass('remote removetrack received')
@@ -177,8 +177,7 @@ test('renegotiation after removeStream', function (t) {
 
   peer2.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 2, 'peer2 got stream with right tracks')
-    peer1.removeStream(senders1)
-    peer1.renegotiate()
+    peer1.removeStream(stream1)
   })
   peer2.on('removetrack', function (track) {
     t.pass('remote removetrack received')
@@ -205,14 +204,12 @@ test('renegotiation after removeTrack', function (t) {
   var stream1 = common.getMediaStream()
   var stream2 = common.getMediaStream()
 
-  var sender1 = peer1.addTrack(stream1.getTracks()[0], stream1)
-  var sender2 = peer2.addTrack(stream2.getTracks()[0], stream2)
-  peer1.renegotiate()
+  peer1.addTrack(stream1.getTracks()[0], stream1)
+  peer2.addTrack(stream2.getTracks()[0], stream2)
 
   peer1.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 1, 'peer1 got stream with right tracks')
-    peer2.removeTrack(sender2)
-    peer2.renegotiate()
+    peer2.removeTrack(stream2.getTracks()[0])
   })
   peer1.on('track', function (track) {
     t.pass('peer1 got track event')
@@ -223,8 +220,7 @@ test('renegotiation after removeTrack', function (t) {
 
   peer2.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 1, 'peer2 got stream with right tracks')
-    peer1.removeTrack(sender1)
-    peer1.renegotiate()
+    peer1.removeTrack(stream1.getTracks()[0])
   })
   peer2.on('track', function (track) {
     t.pass('peer2 got track event')
