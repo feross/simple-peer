@@ -252,7 +252,7 @@ Peer.prototype.addStream = function (stream) {
 }
 
 /**
- * Add a MediaStreamTrack to the connection. 
+ * Add a MediaStreamTrack to the connection.
  * @param {MediaStreamTrack} track
  */
 Peer.prototype.addTrack = function (track, stream) {
@@ -850,7 +850,7 @@ Peer.prototype._onTrack = function (event) {
 
   event.streams.forEach(function (eventStream) {
     if (self._remoteStreams.some(function (remoteStream) {
-      return remoteStream.id === eventStream.id 
+      return remoteStream.id === eventStream.id
     })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
 
     self._remoteStreams.push(eventStream)
