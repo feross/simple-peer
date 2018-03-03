@@ -219,7 +219,6 @@ If `opts` is specified, then the default options (shown below) will be overridde
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   streams: [],
-  tracks: [],
   trickle: true,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
   objectMode: false
@@ -239,7 +238,6 @@ The options do the following:
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `streams` - an array of MediaStreams returned from `getUserMedia`
-- `tracks` - an array of MediaStreamTracks
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.

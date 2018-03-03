@@ -44,7 +44,6 @@ function Peer (opts) {
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
-  self.tracks = opts.tracks || []
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
@@ -128,12 +127,6 @@ function Peer (opts) {
       self.streams.forEach(function (stream) {
         self._negotationsToIgnore += stream.getTracks().length
         self.addStream(stream)
-      })
-    }
-    if (self.tracks) {
-      self.tracks.forEach(function (track) {
-        self._negotationsToIgnore++
-        self.addTrack(track, null)
       })
     }
     self._pc.ontrack = function (event) {
