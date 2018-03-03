@@ -273,9 +273,9 @@ Remove a `MediaStream` from the connection.
 
 Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you want to attach it to.
 
-### `peer.removeTrack(track)`
+### `peer.removeTrack(track, stream)`
 
-Remove a `MediaStreamTrack` from the connection.
+Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
 ### `peer.destroy([err])`
 
@@ -353,13 +353,13 @@ peer.on('stream', function (stream) {
 })
 ```
 
-### `peer.on('removestream', function (stream) {})`
-
-Fired when the remote peer removes all of a video stream's tracks from the connection.
-
 ### `peer.on('track', function (track) {})`
 
 Received a remote audio/video track. Streams may contain multiple tracks.
+
+### `peer.on('removestream', function (stream) {})`
+
+Fired when the remote peer removes all of a video stream's tracks from the connection.
 
 ### `peer.on('removetrack', function (track) {})`
 

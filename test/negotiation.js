@@ -209,7 +209,7 @@ test('renegotiation after removeTrack', function (t) {
 
   peer1.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 1, 'peer1 got stream with right tracks')
-    peer2.removeTrack(stream2.getTracks()[0])
+    peer2.removeTrack(stream2.getTracks()[0], stream2)
   })
   peer1.on('track', function (track) {
     t.pass('peer1 got track event')
@@ -220,7 +220,7 @@ test('renegotiation after removeTrack', function (t) {
 
   peer2.on('stream', function (stream) {
     t.equals(stream.getTracks().length, 1, 'peer2 got stream with right tracks')
-    peer1.removeTrack(stream1.getTracks()[0])
+    peer1.removeTrack(stream1.getTracks()[0], stream1)
   })
   peer2.on('track', function (track) {
     t.pass('peer2 got track event')

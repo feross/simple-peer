@@ -137,8 +137,8 @@ test('removeTrack immediately', function (t) {
   peer1.addTrack(stream1.getTracks()[0], stream1)
   peer2.addTrack(stream2.getTracks()[0], stream2)
 
-  peer1.removeTrack(stream1.getTracks()[0])
-  peer2.removeTrack(stream2.getTracks()[0])
+  peer1.removeTrack(stream1.getTracks()[0], stream1)
+  peer2.removeTrack(stream2.getTracks()[0], stream2)
 
   peer1.on('track', function (track) {
     t.fail('peer1 did not get track event')

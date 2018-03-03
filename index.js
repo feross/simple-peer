@@ -254,6 +254,7 @@ Peer.prototype.addStream = function (stream) {
 /**
  * Add a MediaStreamTrack to the connection.
  * @param {MediaStreamTrack} track
+ * @param {MediaStream} stream
  */
 Peer.prototype.addTrack = function (track, stream) {
   var self = this
@@ -261,20 +262,27 @@ Peer.prototype.addTrack = function (track, stream) {
   self._debug('addTrack()')
 
   var sender = self._pc.addTrack(track, stream)
-  self._senderMap.set(track, sender)
+  var submap = self._senderMap.get(track) || new WeakMap() // nested WeakMaps map [track, stream] to sender
+  submap.set(stream, sender)
+  self._senderMap.set(track, submap)
   self._needsNegotiation()
 }
 
 /**
  * Remove a MediaStreamTrack from the connection.
- * @param {MediaStreamTrack} sender
+ * @param {MediaStreamTrack} track
+ * @param {MediaStream} stream
  */
-Peer.prototype.removeTrack = function (track) {
+Peer.prototype.removeTrack = function (track, stream) {
   var self = this
 
   self._debug('removeSender()')
 
-  var sender = self._senderMap.get(track)
+  var submap = self._senderMap.get(track)
+  var sender = submap ? submap.get(stream) : null
+  if (!sender) {
+    self.destroy(new Error('Cannot remove track that was never added.'))
+  }
   try {
     self._pc.removeTrack(sender)
   } catch (err) {
@@ -296,7 +304,7 @@ Peer.prototype.removeStream = function (stream) {
   self._debug('removeSenders()')
 
   stream.getTracks().forEach(function (track) {
-    self.removeTrack(track)
+    self.removeTrack(track, stream)
   })
 }
 
