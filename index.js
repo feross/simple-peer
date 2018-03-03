@@ -73,9 +73,9 @@ function Peer (opts) {
   self._channel = null
   self._pendingCandidates = []
 
-  self._isNegotiating = false       // is this peer waiting for negotiation to complete?
-  self._batchedNegotiation = false  // batch synchronous negotiations
-  self._queuedNegotiation = false   // is there a queued negotiation request?
+  self._isNegotiating = false // is this peer waiting for negotiation to complete?
+  self._batchedNegotiation = false // batch synchronous negotiations
+  self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
 
