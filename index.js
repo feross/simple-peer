@@ -190,7 +190,7 @@ Peer.prototype.signal = function (data) {
 
   if (data.renegotiate) {
     self._debug('got request to renegotiate')
-    self.negotiate()
+    self._needsNegotiation()
   }
   if (data.candidate) {
     if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
@@ -200,7 +200,7 @@ Peer.prototype.signal = function (data) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
 
-      self._checkForRemovals(data.sdp)
+      self._checkForMediaRemovals(data.sdp)
 
       self._pendingCandidates.forEach(function (candidate) {
         self._addIceCandidate(candidate)
@@ -316,6 +316,7 @@ Peer.prototype._needsNegotiation = function () {
   self._batchedNegotiation = true
   setTimeout(function () {
     self._batchedNegotiation = false
+    self._debug('starting batched negotiation')
     self.negotiate()
   }, 0)
 }
@@ -667,7 +668,7 @@ Peer.prototype._maybeReady = function () {
 
       items.forEach(function (item) {
         // Spec-compliant
-        if (item.type === 'transport') {
+        if (item.type === 'transport' && item.selectedCandidatePairId) {
           setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
         }
 
@@ -852,11 +853,15 @@ Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
 
-  self._remoteTracks.push(event.track)
-  self._debug('on track')
-  self.emit('track', event.track)
-
   event.streams.forEach(function (eventStream) {
+    self._debug('on track')
+    self.emit('track', event.track, eventStream)
+
+    self._remoteTracks.push({
+      track: event.track,
+      stream: eventStream
+    })
+
     if (self._remoteStreams.some(function (remoteStream) {
       return remoteStream.id === eventStream.id
     })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
@@ -879,34 +884,38 @@ Peer.prototype._debug = function () {
 // Firefox and Safari won't emit removetrack event, or marked tracks as removed
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1347578
 // https://bugs.webkit.org/show_bug.cgi?id=183308
-Peer.prototype._checkForRemovals = function (sdp) {
+Peer.prototype._checkForMediaRemovals = function (sdp) {
   var self = this
 
   var newMsids = self._parseMsids(sdp)
-  self._remoteTracks = self._remoteTracks.filter(function (track) {
-    if (!newMsids.some(function (msid) {
-      var trackId = track.id[0] === '{' ? track.id.slice(1, -1) : track.id // slice brackets off of Firefox msids
-      return msid.trackId === trackId
-    })) {
+  self._remoteTracks = self._remoteTracks.filter(function (obj) {
+    var track = obj.track
+    var stream = obj.stream
+
+    var found = newMsids.some(function (msid) {
+      var trackId = normalizeMsid(track.id)
+      var streamId = normalizeMsid(stream.id)
+      return msid.trackId === trackId && msid.streamId === streamId
+    })
+
+    if (!found) {
       self._debug('removetrack')
-      self.emit('removetrack', track)
-      return false
-    } else {
-      return true
+      self.emit('removetrack', track, stream)
     }
+    return found
   })
 
   self._remoteStreams = self._remoteStreams.filter(function (stream) {
-    if (!newMsids.some(function (msid) {
-      var streamId = stream.id[0] === '{' ? stream.id.slice(1, -1) : stream.id // slice brackets off of Firefox msids
+    var found = newMsids.some(function (msid) {
+      var streamId = normalizeMsid(stream.id)
       return msid.streamId === streamId
-    })) {
+    })
+
+    if (!found) {
       self._debug('removestream')
       self.emit('removestream', stream)
-      return false
-    } else {
-      return true
     }
+    return found
   })
 }
 
@@ -935,6 +944,11 @@ Peer.prototype._parseMsids = function (sdp) {
   })
 
   return [].concat(chromium, firefox)
+}
+
+// slice brackets off of Firefox msids
+function normalizeMsid (msid) {
+  return msid[0] === '{' ? msid.slice(1, -1) : msid
 }
 
 // Transform constraints objects into the new format (unless Chromium)

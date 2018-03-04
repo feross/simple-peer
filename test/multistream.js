@@ -1,6 +1,7 @@
 var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
+var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -117,6 +118,52 @@ test('incremental multistream', function (t) {
   })
 })
 
+test('track and stream ids are correct', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  if (bowser.safari || bowser.ios) {
+    // Note: WebKit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=174519
+    t.pass('Skipping test, track ids are randomized in Safari')
+    t.end()
+    return
+  }
+  t.plan(6)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  stream1.removeTrack(stream1.getTracks()[1]) // single-track mediastream
+  stream2.removeTrack(stream2.getTracks()[1])
+
+  peer1.addTrack(stream1.getTracks()[0], stream1)
+  peer2.addTrack(stream2.getTracks()[0], stream2)
+
+  peer1.on('track', function (track, stream) {
+    t.equal(track.id, stream2.getTracks()[0].id, 'track id is correct')
+    t.equal(stream.id, stream2.id, 'stream id is correct')
+  })
+  peer2.on('track', function (track, stream) {
+    t.equal(track.id, stream1.getTracks()[0].id, 'track id is correct')
+    t.equal(stream.id, stream1.id, 'stream id is correct')
+  })
+
+  peer1.on('stream', function (stream) {
+    t.equal(stream.id, stream2.id, 'stream id is correct')
+  })
+  peer2.on('stream', function (stream) {
+    t.equal(stream.id, stream1.id, 'stream id is correct')
+  })
+})
+
 test('removeTrack immediately', function (t) {
   if (common.wrtc) {
     t.pass('Skipping test, no MediaStream support on wrtc')
@@ -140,17 +187,17 @@ test('removeTrack immediately', function (t) {
   peer1.removeTrack(stream1.getTracks()[0], stream1)
   peer2.removeTrack(stream2.getTracks()[0], stream2)
 
-  peer1.on('track', function (track) {
+  peer1.on('track', function (track, stream) {
     t.fail('peer1 did not get track event')
   })
-  peer1.on('removetrack', function (track) {
+  peer1.on('removetrack', function (track, stream) {
     t.fail('remote removetrack not received')
   })
 
-  peer2.on('track', function (track) {
+  peer2.on('track', function (track, stream) {
     t.fail('peer2 did not get track event')
   })
-  peer2.on('removetrack', function (track) {
+  peer2.on('removetrack', function (track, stream) {
     t.fail('remote removetrack not received')
   })
 

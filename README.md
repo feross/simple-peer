@@ -353,7 +353,7 @@ peer.on('stream', function (stream) {
 })
 ```
 
-### `peer.on('track', function (track) {})`
+### `peer.on('track', function (track, stream) {})`
 
 Received a remote audio/video track. Streams may contain multiple tracks.
 
@@ -361,7 +361,7 @@ Received a remote audio/video track. Streams may contain multiple tracks.
 
 Fired when the remote peer removes all of a video stream's tracks from the connection.
 
-### `peer.on('removetrack', function (track) {})`
+### `peer.on('removetrack', function (track, stream) {})`
 
 Fired when the remote peer removes a audio/video track from the connection.
 
