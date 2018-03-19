@@ -271,6 +271,16 @@ Peer.prototype._destroy = function (err, cb) {
   if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
   self._onFinishBound = null
 
+  if (self._channel) {
+    try {
+      self._channel.close()
+    } catch (err) {}
+
+    self._channel.onmessage = null
+    self._channel.onopen = null
+    self._channel.onclose = null
+    self._channel.onerror = null
+  }
   if (self._pc) {
     try {
       self._pc.close()
@@ -287,17 +297,6 @@ Peer.prototype._destroy = function (err, cb) {
     }
     self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
-  }
-
-  if (self._channel) {
-    try {
-      self._channel.close()
-    } catch (err) {}
-
-    self._channel.onmessage = null
-    self._channel.onopen = null
-    self._channel.onclose = null
-    self._channel.onerror = null
   }
   self._pc = null
   self._channel = null
