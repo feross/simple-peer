@@ -7,7 +7,9 @@ var test = require('tape')
 test('cleanup', function (t) {
   // Shut down the electron-webrtc daemon
   if (process.env.WRTC === 'electron-webrtc') {
-    common.wrtc.close()
+    try {
+      common.wrtc.close()
+    } catch (e) {}
   }
   t.end()
 })
