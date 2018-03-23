@@ -347,17 +347,18 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 ## error codes
 
-To make debugging and logging errors easier, `Error` objects have an attached error code. The `err.code` property will indicate the origin of the failure and `err.message` will share further details on what went wrong.
+Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure. 
 
-- `ERR_WEBRTC_SUPPORT` - The failure occurred in the webRTC support check
-- `ERR_CREATE_OFFER` - The failure occurred in the createOffer function
-- `ERR_CREATE_ANSWER` - The failure occurred in the createAnswer function
-- `ERR_SET_LOCAL_DESCRIPTION` - The failure occurred in the setLocalDescription function
-- `ERR_SET_REMOTE_DESCRIPTION` - The failure occurred in the setRemoteDescription function
-- `ERR_ADD_ICE_CANDIDATE` - The failure occurred in the addIceCandidate function
-- `ERR_ICE_CONNECTION_FAILURE` - There was a failure in the ice connection
-- `ERR_SIGNALING` - There was a signaling failure
-- `ERR_DATA_CHANNEL` - There was a failure establishing or sending on a data channel
+Possible error codes:
+- `ERR_WEBRTC_SUPPORT`
+- `ERR_CREATE_OFFER` 
+- `ERR_CREATE_ANSWER`
+- `ERR_SET_LOCAL_DESCRIPTION`
+- `ERR_SET_REMOTE_DESCRIPTION`
+- `ERR_ADD_ICE_CANDIDATE`
+- `ERR_ICE_CONNECTION_FAILURE`
+- `ERR_SIGNALING`
+- `ERR_DATA_CHANNEL`
 
 
 ## connecting more than 2 peers?
