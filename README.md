@@ -218,6 +218,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
+  streams: [],
   trickle: true,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
   objectMode: false
@@ -236,6 +237,7 @@ The options do the following:
 - `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
+- `streams` - an array of MediaStreams returned from `getUserMedia`
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
@@ -258,6 +260,22 @@ etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
 Note: If this method is called before the `peer.on('connect')` event has fired, then data
 will be buffered.
+
+### `peer.addStream(stream)`
+
+Add a `MediaStream` to the connection.
+
+### `peer.removeStream(stream)`
+
+Remove a `MediaStream` from the connection.
+
+### `peer.addTrack(track, stream)`
+
+Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you want to attach it to.
+
+### `peer.removeTrack(track, stream)`
+
+Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
 ### `peer.destroy([err])`
 
@@ -333,6 +351,18 @@ peer.on('stream', function (stream) {
   video.play()
 })
 ```
+
+### `peer.on('track', function (track, stream) {})`
+
+Received a remote audio/video track. Streams may contain multiple tracks.
+
+### `peer.on('removestream', function (stream) {})`
+
+Fired when the remote peer removes all of a video stream's tracks from the connection.
+
+### `peer.on('removetrack', function (track, stream) {})`
+
+Fired when the remote peer removes a audio/video track from the connection.
 
 ### `peer.on('close', function () {})`
 
