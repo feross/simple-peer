@@ -43,7 +43,7 @@ function Peer (opts) {
   self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
-  self.stream = opts.stream || false
+  self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
 
   self.destroyed = false
@@ -72,7 +72,15 @@ function Peer (opts) {
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._channel = null
   self._pendingCandidates = []
-  self._previousStreams = []
+
+  self._isNegotiating = false // is this peer waiting for negotiation to complete?
+  self._batchedNegotiation = false // batch synchronous negotiations
+  self._queuedNegotiation = false // is there a queued negotiation request?
+  self._sendersAwaitingStable = []
+  self._senderMap = new WeakMap()
+
+  self._remoteTracks = []
+  self._remoteStreams = []
 
   self._chunk = null
   self._cb = null
@@ -103,14 +111,9 @@ function Peer (opts) {
   // - onconnectionstatechange
   // - onicecandidateerror
   // - onfingerprintfailure
+  // - onnegotiationneeded
 
   if (self.initiator) {
-    var createdOffer = false
-    self._pc.onnegotiationneeded = function () {
-      if (!createdOffer) self._createOffer()
-      createdOffer = true
-    }
-
     self._setupData({
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
@@ -121,26 +124,18 @@ function Peer (opts) {
   }
 
   if ('addTrack' in self._pc) {
-    // WebRTC Spec, Firefox
-    if (self.stream) {
-      self.stream.getTracks().forEach(function (track) {
-        self._pc.addTrack(track, self.stream)
+    if (self.streams) {
+      self.streams.forEach(function (stream) {
+        self.addStream(stream)
       })
     }
     self._pc.ontrack = function (event) {
       self._onTrack(event)
     }
-  } else {
-    // Chrome, etc. This can be removed once all browsers support `ontrack`
-    if (self.stream) self._pc.addStream(self.stream)
-    self._pc.onaddstream = function (event) {
-      self._onAddStream(event)
-    }
   }
 
-  // HACK: wrtc doesn't fire the 'negotionneeded' event
-  if (self.initiator && self._isWrtc) {
-    self._pc.onnegotiationneeded()
+  if (self.initiator) {
+    self._needsNegotiation()
   }
 
   self._onFinishBound = function () {
@@ -193,6 +188,10 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
+  if (data.renegotiate) {
+    self._debug('got request to renegotiate')
+    self._needsNegotiation()
+  }
   if (data.candidate) {
     if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
     else self._pendingCandidates.push(data.candidate)
@@ -200,6 +199,8 @@ Peer.prototype.signal = function (data) {
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
+
+      self._checkForMediaRemovals(data.sdp)
 
       self._pendingCandidates.forEach(function (candidate) {
         self._addIceCandidate(candidate)
@@ -209,7 +210,7 @@ Peer.prototype.signal = function (data) {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }, function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
   }
-  if (!data.sdp && !data.candidate) {
+  if (!data.sdp && !data.candidate && !data.renegotiate) {
     self.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
   }
 }
@@ -229,11 +230,115 @@ Peer.prototype._addIceCandidate = function (candidate) {
 
 /**
  * Send text/binary data to the remote peer.
- * @param {TypedArrayView|ArrayBuffer|Buffer|string|Blob|Object} chunk
+ * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
  */
 Peer.prototype.send = function (chunk) {
   var self = this
   self._channel.send(chunk)
+}
+
+/**
+ * Add a MediaStream to the connection.
+ * @param {MediaStream} stream
+ */
+Peer.prototype.addStream = function (stream) {
+  var self = this
+
+  self._debug('addStream()')
+
+  stream.getTracks().forEach(function (track) {
+    self.addTrack(track, stream)
+  })
+}
+
+/**
+ * Add a MediaStreamTrack to the connection.
+ * @param {MediaStreamTrack} track
+ * @param {MediaStream} stream
+ */
+Peer.prototype.addTrack = function (track, stream) {
+  var self = this
+
+  self._debug('addTrack()')
+
+  var sender = self._pc.addTrack(track, stream)
+  var submap = self._senderMap.get(track) || new WeakMap() // nested WeakMaps map [track, stream] to sender
+  submap.set(stream, sender)
+  self._senderMap.set(track, submap)
+  self._needsNegotiation()
+}
+
+/**
+ * Remove a MediaStreamTrack from the connection.
+ * @param {MediaStreamTrack} track
+ * @param {MediaStream} stream
+ */
+Peer.prototype.removeTrack = function (track, stream) {
+  var self = this
+
+  self._debug('removeSender()')
+
+  var submap = self._senderMap.get(track)
+  var sender = submap ? submap.get(stream) : null
+  if (!sender) {
+    self.destroy(new Error('Cannot remove track that was never added.'))
+  }
+  try {
+    self._pc.removeTrack(sender)
+  } catch (err) {
+    if (err.name === 'NS_ERROR_UNEXPECTED') {
+      self._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
+    } else {
+      self.destroy(err)
+    }
+  }
+}
+
+/**
+ * Remove a MediaStream from the connection.
+ * @param {MediaStream} stream
+ */
+Peer.prototype.removeStream = function (stream) {
+  var self = this
+
+  self._debug('removeSenders()')
+
+  stream.getTracks().forEach(function (track) {
+    self.removeTrack(track, stream)
+  })
+}
+
+Peer.prototype._needsNegotiation = function () {
+  var self = this
+
+  self._debug('_needsNegotiation')
+  if (self._batchedNegotiation) return // batch synchronous renegotiations
+  self._batchedNegotiation = true
+  setTimeout(function () {
+    self._batchedNegotiation = false
+    self._debug('starting batched negotiation')
+    self.negotiate()
+  }, 0)
+}
+
+Peer.prototype.negotiate = function () {
+  var self = this
+
+  if (self.initiator) {
+    if (self._isNegotiating) {
+      self._queuedNegotiation = true
+      self._debug('already negotiating, queueing')
+    } else {
+      self._debug('start negotiation')
+      self._createOffer()
+    }
+  } else {
+    self._debug('requesting negotiation from initiator')
+    self.emit('signal', JSON.stringify({ // request initiator to renegotiate
+      renegotiate: true
+    }))
+  }
+  self._isNegotiating = true
 }
 
 // TODO: Delete this method once readable-stream is updated to contain a default
@@ -259,7 +364,9 @@ Peer.prototype._destroy = function (err, cb) {
   self.connected = false
   self._pcReady = false
   self._channelReady = false
-  self._previousStreams = null
+  self._remoteTracks = null
+  self._remoteStreams = null
+  self._senderMap = null
 
   clearInterval(self._interval)
   clearTimeout(self._reconnectTimeout)
@@ -271,6 +378,16 @@ Peer.prototype._destroy = function (err, cb) {
   if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
   self._onFinishBound = null
 
+  if (self._channel) {
+    try {
+      self._channel.close()
+    } catch (err) {}
+
+    self._channel.onmessage = null
+    self._channel.onopen = null
+    self._channel.onclose = null
+    self._channel.onerror = null
+  }
   if (self._pc) {
     try {
       self._pc.close()
@@ -282,22 +399,8 @@ Peer.prototype._destroy = function (err, cb) {
     self._pc.onicecandidate = null
     if ('addTrack' in self._pc) {
       self._pc.ontrack = null
-    } else {
-      self._pc.onaddstream = null
     }
-    self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
-  }
-
-  if (self._channel) {
-    try {
-      self._channel.close()
-    } catch (err) {}
-
-    self._channel.onmessage = null
-    self._channel.onopen = null
-    self._channel.onclose = null
-    self._channel.onerror = null
   }
   self._pc = null
   self._channel = null
@@ -398,6 +501,7 @@ Peer.prototype._createOffer = function () {
     self._pc.setLocalDescription(offer, onSuccess, onError)
 
     function onSuccess () {
+      self._debug('createOffer success')
       if (self.destroyed) return
       if (self.trickle || self._iceComplete) sendOffer()
       else self.once('_iceComplete', sendOffer) // wait for candidates
@@ -466,22 +570,11 @@ Peer.prototype._onIceStateChange = function () {
     self._pcReady = true
     self._maybeReady()
   }
-  if (iceConnectionState === 'disconnected') {
-    if (self.reconnectTimer) {
-      // If user has set `opt.reconnectTimer`, allow time for ICE to attempt a reconnect
-      clearTimeout(self._reconnectTimeout)
-      self._reconnectTimeout = setTimeout(function () {
-        self.destroy()
-      }, self.reconnectTimer)
-    } else {
-      self.destroy()
-    }
-  }
   if (iceConnectionState === 'failed') {
     self.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
   }
   if (iceConnectionState === 'closed') {
-    self.destroy()
+    self.destroy(new Error('Ice connection closed.'))
   }
 }
 
@@ -573,7 +666,7 @@ Peer.prototype._maybeReady = function () {
 
       items.forEach(function (item) {
         // Spec-compliant
-        if (item.type === 'transport') {
+        if (item.type === 'transport' && item.selectedCandidatePairId) {
           setSelectedCandidatePair(candidatePairs[item.selectedCandidatePairId])
         }
 
@@ -679,6 +772,28 @@ Peer.prototype._onInterval = function () {
 Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
+
+  if (self._pc.signalingState === 'stable') {
+    self._isNegotiating = false
+
+    // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
+    self._debug('flushing sender queue', self._sendersAwaitingStable)
+    self._sendersAwaitingStable.forEach(function (sender) {
+      self.removeTrack(sender)
+      self._queuedNegotiation = true
+    })
+    self._sendersAwaitingStable = []
+
+    if (self._queuedNegotiation) {
+      self._debug('flushing negotiation queue')
+      self._queuedNegotiation = false
+      self._needsNegotiation() // negotiate again
+    }
+
+    self._debug('negotiate')
+    self.emit('negotiate')
+  }
+
   self._debug('signalingStateChange %s', self._pc.signalingState)
   self.emit('signalingStateChange', self._pc.signalingState)
 }
@@ -732,21 +847,28 @@ Peer.prototype._onChannelClose = function () {
   self.destroy()
 }
 
-Peer.prototype._onAddStream = function (event) {
-  var self = this
-  if (self.destroyed) return
-  self._debug('on add stream')
-  self.emit('stream', event.stream)
-}
-
 Peer.prototype._onTrack = function (event) {
   var self = this
   if (self.destroyed) return
-  self._debug('on track')
-  var id = event.streams[0].id
-  if (self._previousStreams.indexOf(id) !== -1) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
-  self._previousStreams.push(id)
-  self.emit('stream', event.streams[0])
+
+  event.streams.forEach(function (eventStream) {
+    self._debug('on track')
+    self.emit('track', event.track, eventStream)
+
+    self._remoteTracks.push({
+      track: event.track,
+      stream: eventStream
+    })
+
+    if (self._remoteStreams.some(function (remoteStream) {
+      return remoteStream.id === eventStream.id
+    })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
+
+    self._remoteStreams.push(eventStream)
+    setTimeout(function () {
+      self.emit('stream', eventStream) // ensure all tracks have been added
+    }, 0)
+  })
 }
 
 Peer.prototype._debug = function () {
@@ -754,6 +876,77 @@ Peer.prototype._debug = function () {
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+// HACK: Check for removed tracks and streams in the SDP
+// Firefox and Safari won't emit removetrack event, or marked tracks as removed
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1347578
+// https://bugs.webkit.org/show_bug.cgi?id=183308
+Peer.prototype._checkForMediaRemovals = function (sdp) {
+  var self = this
+
+  var newMsids = self._parseMsids(sdp)
+  self._remoteTracks = self._remoteTracks.filter(function (obj) {
+    var track = obj.track
+    var stream = obj.stream
+
+    var found = newMsids.some(function (msid) {
+      var trackId = normalizeMsid(track.id)
+      var streamId = normalizeMsid(stream.id)
+      return msid.trackId === trackId && msid.streamId === streamId
+    })
+
+    if (!found) {
+      self._debug('removetrack')
+      self.emit('removetrack', track, stream)
+    }
+    return found
+  })
+
+  self._remoteStreams = self._remoteStreams.filter(function (stream) {
+    var found = newMsids.some(function (msid) {
+      var streamId = normalizeMsid(stream.id)
+      return msid.streamId === streamId
+    })
+
+    if (!found) {
+      self._debug('removestream')
+      self.emit('removestream', stream)
+    }
+    return found
+  })
+}
+
+// parse ssrc msids out of an SDP remote description
+Peer.prototype._parseMsids = function (sdp) {
+  // Chromium's a=ssrc format
+  var chromium = sdp.split('\n').filter(function (line) {
+    return (line.indexOf('a=ssrc:') === 0) && (line.indexOf(' msid:') !== -1)
+  }).map(function (line) {
+    var ids = line.slice(line.indexOf(' msid:') + ' msid:'.length, -1).split(' ')
+    return {
+      streamId: ids[0],
+      trackId: ids[1]
+    }
+  })
+
+  // Firefox/Safari's a=msid format
+  var firefox = sdp.split('\n').filter(function (line) {
+    return (line.indexOf('a=msid:{') === 0)
+  }).map(function (line) {
+    var ids = line.slice(line.indexOf('a=msid:{') + 'a=msid:{'.length, -2).split('} {')
+    return {
+      streamId: ids[0],
+      trackId: ids[1]
+    }
+  })
+
+  return [].concat(chromium, firefox)
+}
+
+// slice brackets off of Firefox msids
+function normalizeMsid (msid) {
+  return msid[0] === '{' ? msid.slice(1, -1) : msid
 }
 
 // Transform constraints objects into the new format (unless Chromium)

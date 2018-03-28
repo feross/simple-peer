@@ -18,10 +18,9 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
-    "airtap": "0.0.1",
+    "airtap": "0.0.2",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
-    "concat-stream": "^1.4.6",
     "electron-webrtc": "^0.3.0",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^2.0.0",
@@ -32,7 +31,7 @@
     "thunky": "^1.0.1",
     "uglify-js": "^3.3.11",
     "wrtc": "0.0.67",
-    "ws": "^4.0.0"
+    "ws": "^5.0.0"
   },
   "keywords": [
     "data",
