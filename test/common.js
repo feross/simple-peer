@@ -29,3 +29,22 @@ if (process.env.WRTC === 'wrtc') {
     }
   })
 }
+
+// create a test MediaStream with two tracks
+var audioContext
+exports.getMediaStream = function () {
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)()
+  var oscillator = audioContext.createOscillator()
+  var dst = audioContext.createMediaStreamDestination()
+  oscillator.connect(dst)
+  oscillator.start()
+
+  var oscillator2 = audioContext.createOscillator()
+  var dst2 = audioContext.createMediaStreamDestination()
+  oscillator2.connect(dst2)
+  oscillator2.start()
+
+  var track = dst2.stream.getTracks()[0]
+  dst.stream.addTrack(track)
+  return dst.stream
+}
