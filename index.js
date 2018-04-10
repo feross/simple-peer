@@ -334,9 +334,9 @@ Peer.prototype.negotiate = function () {
     }
   } else {
     self._debug('requesting negotiation from initiator')
-    self.emit('signal', JSON.stringify({ // request initiator to renegotiate
+    self.emit('signal', { // request initiator to renegotiate
       renegotiate: true
-    }))
+    })
   }
   self._isNegotiating = true
 }
