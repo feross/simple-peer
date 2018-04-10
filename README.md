@@ -374,6 +374,22 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 `err` is an `Error` object.
 
+## error codes
+
+Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure. 
+
+Possible error codes:
+- `ERR_WEBRTC_SUPPORT`
+- `ERR_CREATE_OFFER` 
+- `ERR_CREATE_ANSWER`
+- `ERR_SET_LOCAL_DESCRIPTION`
+- `ERR_SET_REMOTE_DESCRIPTION`
+- `ERR_ADD_ICE_CANDIDATE`
+- `ERR_ICE_CONNECTION_FAILURE`
+- `ERR_SIGNALING`
+- `ERR_DATA_CHANNEL`
+
+
 ## connecting more than 2 peers?
 
 The simplest way to do that is to create a full-mesh topology. That means that every peer

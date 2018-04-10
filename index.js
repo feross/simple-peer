@@ -61,9 +61,9 @@ function Peer (opts) {
 
   if (!self._wrtc) {
     if (typeof window === 'undefined') {
-      throw new Error('No WebRTC support: Specify `opts.wrtc` option in this environment')
+      throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
     } else {
-      throw new Error('No WebRTC support: Not a supported browser')
+      throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
     }
   }
 
@@ -178,7 +178,7 @@ Peer.prototype.address = function () {
 
 Peer.prototype.signal = function (data) {
   var self = this
-  if (self.destroyed) throw new Error('cannot signal after peer is destroyed')
+  if (self.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING')
   if (typeof data === 'string') {
     try {
       data = JSON.parse(data)
@@ -208,10 +208,10 @@ Peer.prototype.signal = function (data) {
       self._pendingCandidates = []
 
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
-    }, function (err) { self.destroy(err) })
+    }, function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
   }
   if (!data.sdp && !data.candidate && !data.renegotiate) {
-    self.destroy(new Error('signal() called with invalid signal data'))
+    self.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
   }
 }
 
@@ -221,10 +221,10 @@ Peer.prototype._addIceCandidate = function (candidate) {
     self._pc.addIceCandidate(
       new self._wrtc.RTCIceCandidate(candidate),
       noop,
-      function (err) { self.destroy(err) }
+      function (err) { self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE')) }
     )
   } catch (err) {
-    self.destroy(new Error('error adding candidate: ' + err.message))
+    self.destroy(makeError('error adding candidate: ' + err.message, 'ERR_ADD_ICE_CANDIDATE'))
   }
 }
 
@@ -416,7 +416,7 @@ Peer.prototype._setupData = function (event) {
     // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
     // which is invalid behavior. Handle it gracefully.
     // See: https://github.com/feross/simple-peer/issues/163
-    return self.destroy(new Error('Data channel event is missing `channel` property'))
+    return self.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'))
   }
 
   self._channel = event.channel
@@ -441,7 +441,7 @@ Peer.prototype._setupData = function (event) {
     self._onChannelClose()
   }
   self._channel.onerror = function (err) {
-    self.destroy(err)
+    self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
   }
 }
 
@@ -449,13 +449,13 @@ Peer.prototype._read = function () {}
 
 Peer.prototype._write = function (chunk, encoding, cb) {
   var self = this
-  if (self.destroyed) return cb(new Error('cannot write after peer is destroyed'))
+  if (self.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
 
   if (self.connected) {
     try {
       self.send(chunk)
     } catch (err) {
-      return self.destroy(err)
+      return self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
     }
     if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
       self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
@@ -508,8 +508,7 @@ Peer.prototype._createOffer = function () {
     }
 
     function onError (err) {
-      self._debug('createOffer error')
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
     }
 
     function sendOffer () {
@@ -520,7 +519,7 @@ Peer.prototype._createOffer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self.destroy(err) }, self.offerConstraints)
+  }, function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) }, self.offerConstraints)
 }
 
 Peer.prototype._createAnswer = function () {
@@ -539,7 +538,7 @@ Peer.prototype._createAnswer = function () {
     }
 
     function onError (err) {
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
     }
 
     function sendAnswer () {
@@ -550,7 +549,7 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self.destroy(err) }, self.answerConstraints)
+  }, function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) }, self.answerConstraints)
 }
 
 Peer.prototype._onIceStateChange = function () {
@@ -572,7 +571,7 @@ Peer.prototype._onIceStateChange = function () {
     self._maybeReady()
   }
   if (iceConnectionState === 'failed') {
-    self.destroy(new Error('Ice connection failed.'))
+    self.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
   }
   if (iceConnectionState === 'closed') {
     self.destroy(new Error('Ice connection closed.'))
@@ -738,7 +737,7 @@ Peer.prototype._maybeReady = function () {
         try {
           self.send(self._chunk)
         } catch (err) {
-          return self.destroy(err)
+          return self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
         }
         self._chunk = null
         self._debug('sent chunk from "write before connect"')
@@ -997,6 +996,12 @@ Peer.prototype._transformConstraints = function (constraints) {
   }
 
   return constraints
+}
+
+function makeError (message, code) {
+  var err = new Error(message)
+  err.code = code
+  return err
 }
 
 function noop () {}
