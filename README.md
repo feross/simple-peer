@@ -194,6 +194,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
 - [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
 - [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
+- [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
 - *Your app here! - send a PR!*
 
 ## api
