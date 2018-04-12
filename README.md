@@ -195,6 +195,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
 - [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
 - [Stealthy](https://www.stealthy.im) - Stealthy is a decentralized, end-to-end encrypted, p2p chat application.
+- [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
 - *Your app here! - send a PR!*
 
 ## api
@@ -374,6 +375,22 @@ Called when the peer connection has closed.
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
 
 `err` is an `Error` object.
+
+## error codes
+
+Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure. 
+
+Possible error codes:
+- `ERR_WEBRTC_SUPPORT`
+- `ERR_CREATE_OFFER` 
+- `ERR_CREATE_ANSWER`
+- `ERR_SET_LOCAL_DESCRIPTION`
+- `ERR_SET_REMOTE_DESCRIPTION`
+- `ERR_ADD_ICE_CANDIDATE`
+- `ERR_ICE_CONNECTION_FAILURE`
+- `ERR_SIGNALING`
+- `ERR_DATA_CHANNEL`
+
 
 ## connecting more than 2 peers?
 
