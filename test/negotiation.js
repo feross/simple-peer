@@ -229,3 +229,28 @@ test('renegotiation after removeTrack', function (t) {
     t.pass('remote removetrack received')
   })
 })
+
+test('renegotiation from non-initiator', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(1)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer2.on('connect', function () {
+    var stream = common.getMediaStream()
+    peer2.addTrack(stream.getTracks()[0], stream)
+  })
+
+  peer1.on('track', function () {
+    t.pass('remote track received')
+    t.end()
+  })
+})
