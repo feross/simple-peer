@@ -1,7 +1,6 @@
 var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
-var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
