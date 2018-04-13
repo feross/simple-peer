@@ -230,7 +230,7 @@ test('renegotiation after removeTrack', function (t) {
   })
 })
 
-test('renegotiation from non-intiator', function (t) {
+test('renegotiation from non-initiator', function (t) {
   if (common.wrtc) {
     t.pass('Skipping test, no MediaStream support on wrtc')
     t.end()
