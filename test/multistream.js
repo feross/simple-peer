@@ -124,7 +124,7 @@ test('track and stream ids are correct', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios) {
+  if (bowser.safari || bowser.ios || bowser.firefox) {
     // Note: WebKit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=174519
     t.pass('Skipping test, track ids are randomized in Safari')
     t.end()
