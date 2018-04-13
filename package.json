@@ -18,7 +18,7 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
-    "airtap": "0.0.2",
+    "airtap": "0.0.4",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "electron-webrtc": "^0.3.0",
