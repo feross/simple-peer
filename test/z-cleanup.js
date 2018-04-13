@@ -5,11 +5,9 @@ var common = require('./common')
 var test = require('tape')
 
 test('cleanup', function (t) {
-  // Shut down the electron-webrtc daemon
-  if (process.env.WRTC === 'electron-webrtc') {
-    try {
-      common.wrtc.close()
-    } catch (e) {}
-  }
+  // Shut down the process and any daemons
   t.end()
+  if (process && process.exit) {
+    process.exit(0)
+  }
 })
