@@ -91,7 +91,6 @@ function Peer (opts) {
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
-  self._isWrtc = Array.isArray(self._pc.RTCIceConnectionStates)
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
 
   self._pc.oniceconnectionstatechange = function () {
