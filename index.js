@@ -45,7 +45,6 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
-  self.allowRenegotiation = opts.allowRenegotiation !== undefined ? opts.allowRenegotiation : false
 
   self.destroyed = false
   self.connected = false
@@ -77,7 +76,6 @@ function Peer (opts) {
   self._isNegotiating = false // is this peer waiting for negotiation to complete?
   self._batchedNegotiation = false // batch synchronous negotiations
   self._queuedNegotiation = false // is there a queued negotiation request?
-  self._allowRenegotiation = opts.allowRenegotiation // Allow renegotiate signal event
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
 
@@ -336,11 +334,9 @@ Peer.prototype.negotiate = function () {
     }
   } else {
     self._debug('requesting negotiation from initiator')
-    if (self._allowRenegotiation) {
-      self.emit('signal', { // request initiator to renegotiate
-        renegotiate: true
-      })
-    }
+    self.emit('signal', { // request initiator to renegotiate
+      renegotiate: true
+    })
   }
   self._isNegotiating = true
 }
