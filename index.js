@@ -199,8 +199,6 @@ Peer.prototype.signal = function (data) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
       if (self.destroyed) return
 
-      self._checkForMediaRemovals(data.sdp)
-
       self._pendingCandidates.forEach(function (candidate) {
         self._addIceCandidate(candidate)
       })
@@ -875,77 +873,6 @@ Peer.prototype._debug = function () {
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
-}
-
-// HACK: Check for removed tracks and streams in the SDP
-// Firefox and Safari won't emit removetrack event, or marked tracks as removed
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1347578
-// https://bugs.webkit.org/show_bug.cgi?id=183308
-Peer.prototype._checkForMediaRemovals = function (sdp) {
-  var self = this
-
-  var newMsids = self._parseMsids(sdp)
-  self._remoteTracks = self._remoteTracks.filter(function (obj) {
-    var track = obj.track
-    var stream = obj.stream
-
-    var found = newMsids.some(function (msid) {
-      var trackId = normalizeMsid(track.id)
-      var streamId = normalizeMsid(stream.id)
-      return msid.trackId === trackId && msid.streamId === streamId
-    })
-
-    if (!found) {
-      self._debug('removetrack')
-      self.emit('removetrack', track, stream)
-    }
-    return found
-  })
-
-  self._remoteStreams = self._remoteStreams.filter(function (stream) {
-    var found = newMsids.some(function (msid) {
-      var streamId = normalizeMsid(stream.id)
-      return msid.streamId === streamId
-    })
-
-    if (!found) {
-      self._debug('removestream')
-      self.emit('removestream', stream)
-    }
-    return found
-  })
-}
-
-// parse ssrc msids out of an SDP remote description
-Peer.prototype._parseMsids = function (sdp) {
-  // Chromium's a=ssrc format
-  var chromium = sdp.split('\n').filter(function (line) {
-    return (line.indexOf('a=ssrc:') === 0) && (line.indexOf(' msid:') !== -1)
-  }).map(function (line) {
-    var ids = line.slice(line.indexOf(' msid:') + ' msid:'.length, -1).split(' ')
-    return {
-      streamId: ids[0],
-      trackId: ids[1]
-    }
-  })
-
-  // Firefox/Safari's a=msid format
-  var firefox = sdp.split('\n').filter(function (line) {
-    return (line.indexOf('a=msid:{') === 0)
-  }).map(function (line) {
-    var ids = line.slice(line.indexOf('a=msid:{') + 'a=msid:{'.length, -2).split('} {')
-    return {
-      streamId: ids[0],
-      trackId: ids[1]
-    }
-  })
-
-  return [].concat(chromium, firefox)
-}
-
-// slice brackets off of Firefox msids
-function normalizeMsid (msid) {
-  return msid[0] === '{' ? msid.slice(1, -1) : msid
 }
 
 // Transform constraints objects into the new format (unless Chromium)

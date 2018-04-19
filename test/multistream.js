@@ -143,15 +143,8 @@ test('removeTrack immediately', function (t) {
   peer1.on('track', function (track, stream) {
     t.fail('peer1 did not get track event')
   })
-  peer1.on('removetrack', function (track, stream) {
-    t.fail('remote removetrack not received')
-  })
-
   peer2.on('track', function (track, stream) {
     t.fail('peer2 did not get track event')
-  })
-  peer2.on('removetrack', function (track, stream) {
-    t.fail('remote removetrack not received')
   })
 
   peer1.on('connect', function () {
