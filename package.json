@@ -23,7 +23,7 @@
     "browserify": "^16.1.0",
     "electron-webrtc": "^0.3.0",
     "prettier-bytes": "^1.0.3",
-    "simple-get": "^2.0.0",
+    "simple-get": "^3.0.0",
     "speedometer": "^1.0.0",
     "standard": "*",
     "string-to-stream": "^1.0.0",
