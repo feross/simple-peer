@@ -1,2 +1,5 @@
+.airtap.yml
+.travis.yml
 img/
 perf/
+test/
