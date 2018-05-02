@@ -143,3 +143,37 @@ test('renegotiation after addStream', function (t) {
     t.pass('peer2 got stream')
   })
 })
+
+test('upgrade constraints from non-initiator', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(3)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connect')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connect')
+    peer1.setOfferConstraints({ // would be initiated via signaling channel
+      offerToReceiveVideo: true,
+      offerToReceiveAudio: true,
+    })
+    peer2.setAnswerConstraints({
+      offerToReceiveVideo: false,
+      offerToReceiveAudio: false,
+    })
+    peer2.addStream(common.getMediaStream())
+  })
+  peer1.on('stream', function () {
+    t.pass('peer1 got stream')
+  })
+})

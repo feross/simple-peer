@@ -868,6 +868,21 @@ Peer.prototype._onTrack = function (event) {
   })
 }
 
+Peer.prototype.setOfferConstraints = function (constraints) {
+  var self = this
+  self.offerConstraints = self._transformConstraints(constraints)
+}
+
+Peer.prototype.setAnswerConstraints = function (constraints) {
+  var self = this
+  self.answerConstraints = self._transformConstraints(constraints)
+}
+
+Peer.prototype.setConstraints = function (constraints) {
+  var self = this
+  self.constraints = self._transformConstraints(constraints)
+}
+
 Peer.prototype._debug = function () {
   var self = this
   var args = [].slice.call(arguments)
