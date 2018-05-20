@@ -41,7 +41,6 @@ function Peer (opts) {
   self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
   self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
   self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
-  self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
@@ -85,7 +84,6 @@ function Peer (opts) {
   self._chunk = null
   self._cb = null
   self._interval = null
-  self._reconnectTimeout = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
 
@@ -368,9 +366,7 @@ Peer.prototype._destroy = function (err, cb) {
   self._senderMap = null
 
   clearInterval(self._interval)
-  clearTimeout(self._reconnectTimeout)
   self._interval = null
-  self._reconnectTimeout = null
   self._chunk = null
   self._cb = null
 
@@ -565,7 +561,6 @@ Peer.prototype._onIceStateChange = function () {
   self.emit('iceStateChange', iceConnectionState, iceGatheringState)
 
   if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
-    clearTimeout(self._reconnectTimeout)
     self._pcReady = true
     self._maybeReady()
   }

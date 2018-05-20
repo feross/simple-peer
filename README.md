@@ -217,7 +217,6 @@ If `opts` is specified, then the default options (shown below) will be overridde
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
-  reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   streams: [],
@@ -236,7 +235,6 @@ The options do the following:
 - `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
 - `offerConstraints` - custom offer constraints (used by `createOffer` method)
 - `answerConstraints` - custom answer constraints (used by `createAnswer` method)
-- `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `streams` - an array of MediaStreams returned from `getUserMedia`
