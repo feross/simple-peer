@@ -811,7 +811,7 @@ Peer.prototype._onChannelMessage = function (event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
-  if (data instanceof ArrayBuffer) data = Buffer.from(data)
+  if (data instanceof ArrayBuffer) data = new Uint8Array(data)
   self.push(data)
 }
 

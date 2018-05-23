@@ -66,12 +66,12 @@ test('data send/receive Buffer {objectMode: true}', function (t) {
 
     peer1.send(Buffer.from('this is a Buffer'))
     peer2.on('data', function (data) {
-      t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+      t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
       t.deepEqual(data, Buffer.from('this is a Buffer'), 'got correct message')
 
       peer2.send(Buffer.from('this is another Buffer'))
       peer1.on('data', function (data) {
-        t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+        t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
         t.deepEqual(data, Buffer.from('this is another Buffer'), 'got correct message')
 
         peer1.on('close', function () { t.pass('peer1 destroyed') })
@@ -102,14 +102,14 @@ test('data send/receive Uint8Array {objectMode: true}', function (t) {
 
     peer1.send(new Uint8Array([0, 1, 2]))
     peer2.on('data', function (data) {
-      // binary types always get converted to Buffer
+      // binary types always get converted to Uint8Array
       // See: https://github.com/feross/simple-peer/issues/138#issuecomment-278240571
-      t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+      t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       peer2.send(new Uint8Array([1, 2, 3]))
       peer1.on('data', function (data) {
-        t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+        t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
         t.deepEqual(data, Buffer.from([1, 2, 3]), 'got correct message')
 
         peer1.on('close', function () { t.pass('peer1 destroyed') })
@@ -140,12 +140,12 @@ test('data send/receive ArrayBuffer {objectMode: true}', function (t) {
 
     peer1.send(new Uint8Array([0, 1, 2]).buffer)
     peer2.on('data', function (data) {
-      t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+      t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       peer2.send(new Uint8Array([1, 2, 3]).buffer)
       peer1.on('data', function (data) {
-        t.ok(Buffer.isBuffer(data), 'data is a Buffer')
+        t.ok(data instanceof Uint8Array, 'data is a Uint8Array')
         t.deepEqual(data, Buffer.from([1, 2, 3]), 'got correct message')
 
         peer1.on('close', function () { t.pass('peer1 destroyed') })
