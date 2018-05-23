@@ -3,12 +3,24 @@ module.exports = Peer
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var inherits = require('inherits')
-var randombytes = require('randombytes')
+var randombytes = require('./lib/randombytes')
 var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 
 inherits(Peer, stream.Duplex)
+
+/**
+ * @param {Uint8Array} array
+ * @return {string}
+ */
+function array2hex (array) {
+  var string = ''
+  for (var i = 0; i < array.length; ++i) {
+    string += array[i].toString(16).padStart(2, '0')
+  }
+  return string
+}
 
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
@@ -19,7 +31,7 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
-  self._id = randombytes(4).toString('hex').slice(0, 7)
+  self._id = array2hex(randombytes(4)).slice(0, 7)
   self._debug('new peer %o', opts)
 
   opts = Object.assign({
@@ -29,7 +41,7 @@ function Peer (opts) {
   stream.Duplex.call(self, opts)
 
   self.channelName = opts.initiator
-    ? opts.channelName || randombytes(20).toString('hex')
+    ? opts.channelName || array2hex(randombytes(20))
     : null
 
   // Needed by _transformConstraints, so set this early
