@@ -214,7 +214,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] },
+  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
@@ -336,7 +336,7 @@ Fired when the peer connection and data channel are ready to use.
 
 ### `peer.on('data', function (data) {})`
 
-Received a message from the remote peer (via the data channel). 
+Received a message from the remote peer (via the data channel).
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
@@ -369,11 +369,11 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 ## error codes
 
-Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure. 
+Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure.
 
 Possible error codes:
 - `ERR_WEBRTC_SUPPORT`
-- `ERR_CREATE_OFFER` 
+- `ERR_CREATE_OFFER`
 - `ERR_CREATE_ANSWER`
 - `ERR_SET_LOCAL_DESCRIPTION`
 - `ERR_SET_REMOTE_DESCRIPTION`
