@@ -196,6 +196,9 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
 - [Stealthy](https://www.stealthy.im) - Stealthy is a decentralized, end-to-end encrypted, p2p chat application.
 - [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
+- [TalktoMe](https://talktome.space) - Skype alternative for audio/video conferencing based on WebRTC, but without the loss of packets.
+- [CDNBye](https://github.com/cdnbye/hlsjs-p2p-engine) - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol
+- [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
 - *Your app here! - send a PR!*
 
 ## api
@@ -213,11 +216,10 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] },
+  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
   constraints: {},
   offerConstraints: {},
   answerConstraints: {},
-  reconnectTimer: false,
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   streams: [],
@@ -236,7 +238,6 @@ The options do the following:
 - `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
 - `offerConstraints` - custom offer constraints (used by `createOffer` method)
 - `answerConstraints` - custom answer constraints (used by `createAnswer` method)
-- `reconnectTimer` - wait __ milliseconds after ICE 'disconnect' for reconnect attempt before emitting 'close'
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `streams` - an array of MediaStreams returned from `getUserMedia`
@@ -349,7 +350,7 @@ Fired when the peer connection and data channel are ready to use.
 
 ### `peer.on('data', function (data) {})`
 
-Received a message from the remote peer (via the data channel). 
+Received a message from the remote peer (via the data channel).
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
@@ -382,11 +383,11 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 ## error codes
 
-Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure. 
+Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure.
 
 Possible error codes:
 - `ERR_WEBRTC_SUPPORT`
-- `ERR_CREATE_OFFER` 
+- `ERR_CREATE_OFFER`
 - `ERR_CREATE_ANSWER`
 - `ERR_SET_LOCAL_DESCRIPTION`
 - `ERR_SET_REMOTE_DESCRIPTION`

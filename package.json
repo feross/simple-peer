@@ -1,7 +1,7 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "9.1.1",
+  "version": "9.1.2",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
@@ -18,7 +18,8 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
-    "airtap": "0.0.4",
+    "airtap": "0.0.7",
+    "babel-minify": "^0.4.3",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "electron-webrtc": "^0.3.0",
@@ -29,7 +30,6 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "uglify-js": "^3.3.11",
     "wrtc": "^0.1.1",
     "ws": "^5.0.0"
   },
@@ -55,7 +55,7 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "build": "browserify -s SimplePeer -r ./ | uglifyjs -m > simplepeer.min.js",
+    "build": "browserify -s SimplePeer -r ./ | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap -- test/*.js",
