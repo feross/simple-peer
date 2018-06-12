@@ -121,7 +121,7 @@ test('renegotiation after addStream', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios) {
+  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
     t.pass('Skip on Safari and iOS which do not support this reliably')
     t.end()
     return
@@ -156,7 +156,7 @@ test('add stream on non-initiator only', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios) {
+  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
     t.pass('Skip on Safari and iOS which do not support this reliably')
     t.end()
     return
@@ -198,7 +198,7 @@ test('upgrade constraints from non-initiator', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios) {
+  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
     t.pass('Skip on Safari and iOS which do not support this reliably')
     t.end()
     return
