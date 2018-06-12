@@ -173,7 +173,7 @@ test('add stream on non-initiator only', function (t) {
   var peer2 = new Peer({ config: config,
     wrtc: common.wrtc,
     stream: common.getMediaStream(),
-    offerConstraints: {
+    answerConstraints: {
       offerToReceiveVideo: false,
       offerToReceiveAudio: false
     }})
