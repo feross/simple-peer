@@ -216,11 +216,11 @@ test('upgrade constraints from non-initiator', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connect')
-    peer1.setOfferConstraints({ // would be initiated via signaling channel
+    peer1.setConstraints({ // would be initiated via signaling channel
       offerToReceiveVideo: true,
       offerToReceiveAudio: true
     })
-    peer2.setAnswerConstraints({
+    peer2.setConstraints({
       offerToReceiveVideo: false,
       offerToReceiveAudio: false
     })
