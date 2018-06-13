@@ -4,11 +4,9 @@ var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var inherits = require('inherits')
 var randombytes = require('randombytes')
-var stream = require('readable-stream')
+var DataChannel = require('./datachannel')
 
-var MAX_BUFFERED_AMOUNT = 64 * 1024
-
-inherits(Peer, stream.Duplex)
+inherits(Peer, DataChannel)
 
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
@@ -19,14 +17,12 @@ function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
 
+  opts = opts || {}
+
   self._id = randombytes(4).toString('hex').slice(0, 7)
   self._debug('new peer %o', opts)
 
-  opts = Object.assign({
-    allowHalfOpen: false
-  }, opts)
-
-  stream.Duplex.call(self, opts)
+  DataChannel.call(self, self, opts) // the Peer is a DataChannel
 
   self.channelName = opts.initiator
     ? opts.channelName || randombytes(20).toString('hex')
@@ -67,9 +63,7 @@ function Peer (opts) {
   }
 
   self._pcReady = false
-  self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
-  self._channel = null
   self._pendingCandidates = []
 
   self._isNegotiating = !self.initiator // is this peer waiting for negotiation to complete?
@@ -81,9 +75,7 @@ function Peer (opts) {
   self._remoteTracks = []
   self._remoteStreams = []
 
-  self._chunk = null
-  self._cb = null
-  self._interval = null
+  self._channels = []
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
 
@@ -110,13 +102,13 @@ function Peer (opts) {
   // - onfingerprintfailure
   // - onnegotiationneeded
 
+  self._channels.push(self) // the peer is a datachannel
   if (self.initiator) {
-    self._setupData({
-      channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
-    })
+    var channel = self._pc.createDataChannel(self.channelName, self.channelConfig)
+    self.setDataChannel(channel)
   } else {
     self._pc.ondatachannel = function (event) {
-      self._setupData(event)
+      self.setDataChannel(event.channel)
     }
   }
 
@@ -160,13 +152,6 @@ Peer.config = {
 }
 Peer.constraints = {}
 Peer.channelConfig = {}
-
-Object.defineProperty(Peer.prototype, 'bufferSize', {
-  get: function () {
-    var self = this
-    return (self._channel && self._channel.bufferedAmount) || 0
-  }
-})
 
 Peer.prototype.address = function () {
   var self = this
@@ -223,13 +208,12 @@ Peer.prototype._addIceCandidate = function (candidate) {
   }
 }
 
-/**
- * Send text/binary data to the remote peer.
- * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
- */
-Peer.prototype.send = function (chunk) {
+Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   var self = this
-  self._channel.send(chunk)
+  var channel = new DataChannel(self, opts)
+  channel.setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
+  self._channels.push(channel)
+  return channel
 }
 
 /**
@@ -360,29 +344,18 @@ Peer.prototype._destroy = function (err, cb) {
   self.destroyed = true
   self.connected = false
   self._pcReady = false
-  self._channelReady = false
   self._remoteTracks = null
   self._remoteStreams = null
   self._senderMap = null
 
-  clearInterval(self._interval)
-  self._interval = null
-  self._chunk = null
-  self._cb = null
-
   if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
   self._onFinishBound = null
 
-  if (self._channel) {
-    try {
-      self._channel.close()
-    } catch (err) {}
+  self._channels.forEach(function (channel) {
+    DataChannel.prototype.destroy.call(channel, err)
+  })
+  self._channels = null
 
-    self._channel.onmessage = null
-    self._channel.onopen = null
-    self._channel.onclose = null
-    self._channel.onerror = null
-  }
   if (self._pc) {
     try {
       self._pc.close()
@@ -398,92 +371,10 @@ Peer.prototype._destroy = function (err, cb) {
     self._pc.ondatachannel = null
   }
   self._pc = null
-  self._channel = null
 
   if (err) self.emit('error', err)
   self.emit('close')
   cb()
-}
-
-Peer.prototype._setupData = function (event) {
-  var self = this
-  if (!event.channel) {
-    // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
-    // which is invalid behavior. Handle it gracefully.
-    // See: https://github.com/feross/simple-peer/issues/163
-    return self.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'))
-  }
-
-  self._channel = event.channel
-  self._channel.binaryType = 'arraybuffer'
-
-  if (typeof self._channel.bufferedAmountLowThreshold === 'number') {
-    self._channel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT
-  }
-
-  self.channelName = self._channel.label
-
-  self._channel.onmessage = function (event) {
-    self._onChannelMessage(event)
-  }
-  self._channel.onbufferedamountlow = function () {
-    self._onChannelBufferedAmountLow()
-  }
-  self._channel.onopen = function () {
-    self._onChannelOpen()
-  }
-  self._channel.onclose = function () {
-    self._onChannelClose()
-  }
-  self._channel.onerror = function (err) {
-    self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-  }
-}
-
-Peer.prototype._read = function () {}
-
-Peer.prototype._write = function (chunk, encoding, cb) {
-  var self = this
-  if (self.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
-
-  if (self.connected) {
-    try {
-      self.send(chunk)
-    } catch (err) {
-      return self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-    }
-    if (self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-      self._debug('start backpressure: bufferedAmount %d', self._channel.bufferedAmount)
-      self._cb = cb
-    } else {
-      cb(null)
-    }
-  } else {
-    self._debug('write before connect')
-    self._chunk = chunk
-    self._cb = cb
-  }
-}
-
-// When stream finishes writing, close socket. Half open connections are not
-// supported.
-Peer.prototype._onFinish = function () {
-  var self = this
-  if (self.destroyed) return
-
-  if (self.connected) {
-    destroySoon()
-  } else {
-    self.once('connect', destroySoon)
-  }
-
-  // Wait a bit before destroying so the socket flushes.
-  // TODO: is there a more reliable way to accomplish this?
-  function destroySoon () {
-    setTimeout(function () {
-      self.destroy()
-    }, 1000)
-  }
 }
 
 Peer.prototype._createOffer = function () {
@@ -727,40 +618,15 @@ Peer.prototype._maybeReady = function () {
         self.connected = true
       }
 
-      if (self._chunk) {
-        try {
-          self.send(self._chunk)
-        } catch (err) {
-          return self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-        }
-        self._chunk = null
-        self._debug('sent chunk from "write before connect"')
-
-        var cb = self._cb
-        self._cb = null
-        cb(null)
-      }
-
-      // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
-      // fallback to using setInterval to implement backpressure.
-      if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
-        self._interval = setInterval(function () { self._onInterval() }, 150)
-        if (self._interval.unref) self._interval.unref()
-      }
+      self._channels.forEach(function (channel) {
+        channel._flushChunk()
+      })
 
       self._debug('connect')
       self.emit('connect')
     })
   }
   findCandidatePair()
-}
-
-Peer.prototype._onInterval = function () {
-  var self = this
-  if (!self._cb || !self._channel || self._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-    return
-  }
-  self._onChannelBufferedAmountLow()
 }
 
 Peer.prototype._onSignalingStateChange = function () {
@@ -807,38 +673,6 @@ Peer.prototype._onIceCandidate = function (event) {
     self._iceComplete = true
     self.emit('_iceComplete')
   }
-}
-
-Peer.prototype._onChannelMessage = function (event) {
-  var self = this
-  if (self.destroyed) return
-  var data = event.data
-  if (data instanceof ArrayBuffer) data = Buffer.from(data)
-  self.push(data)
-}
-
-Peer.prototype._onChannelBufferedAmountLow = function () {
-  var self = this
-  if (self.destroyed || !self._cb) return
-  self._debug('ending backpressure: bufferedAmount %d', self._channel.bufferedAmount)
-  var cb = self._cb
-  self._cb = null
-  cb(null)
-}
-
-Peer.prototype._onChannelOpen = function () {
-  var self = this
-  if (self.connected || self.destroyed) return
-  self._debug('on channel open')
-  self._channelReady = true
-  self._maybeReady()
-}
-
-Peer.prototype._onChannelClose = function () {
-  var self = this
-  if (self.destroyed) return
-  self._debug('on channel close')
-  self.destroy()
 }
 
 Peer.prototype._onTrack = function (event) {
