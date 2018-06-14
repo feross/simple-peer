@@ -280,6 +280,10 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
+### `peer.setConstraints(constraints)`
+
+Used to change the `offerConstraints`, and `answerConstraints` options before renegotiation.
+
 ### `peer.destroy([err])`
 
 Destroy and cleanup this peer connection.

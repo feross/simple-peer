@@ -72,7 +72,7 @@ function Peer (opts) {
   self._channel = null
   self._pendingCandidates = []
 
-  self._isNegotiating = false // is this peer waiting for negotiation to complete?
+  self._isNegotiating = !self.initiator // is this peer waiting for negotiation to complete?
   self._batchedNegotiation = false // batch synchronous negotiations
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
@@ -328,10 +328,12 @@ Peer.prototype.negotiate = function () {
       self._createOffer()
     }
   } else {
-    self._debug('requesting negotiation from initiator')
-    self.emit('signal', { // request initiator to renegotiate
-      renegotiate: true
-    })
+    if (!self._isNegotiating) {
+      self._debug('requesting negotiation from initiator')
+      self.emit('signal', { // request initiator to renegotiate
+        renegotiate: true
+      })
+    }
   }
   self._isNegotiating = true
 }
@@ -861,6 +863,15 @@ Peer.prototype._onTrack = function (event) {
       self.emit('stream', eventStream) // ensure all tracks have been added
     }, 0)
   })
+}
+
+Peer.prototype.setConstraints = function (constraints) {
+  var self = this
+  if (self.initiator) {
+    self.offerConstraints = self._transformConstraints(constraints)
+  } else {
+    self.answerConstraints = self._transformConstraints(constraints)
+  }
 }
 
 Peer.prototype._debug = function () {
