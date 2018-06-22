@@ -24,10 +24,6 @@ function Peer (opts) {
 
   DataChannel.call(self, self, opts) // the Peer is a DataChannel
 
-  self.channelName = opts.initiator
-    ? opts.channelName || randombytes(20).toString('hex')
-    : null
-
   // Needed by _transformConstraints, so set this early
   self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
 
@@ -102,15 +98,26 @@ function Peer (opts) {
   // - onfingerprintfailure
   // - onnegotiationneeded
 
-  self._channels.push(self) // the peer is a datachannel
   if (self.initiator) {
-    var channel = self._pc.createDataChannel(self.channelName, self.channelConfig)
-    self.setDataChannel(channel)
-  } else {
-    self._pc.ondatachannel = function (event) {
-      self.setDataChannel(event.channel)
+    var channel = self._pc.createDataChannel('default', self.channelConfig) // use label 'default' for datachannel correlation
+    self._setDataChannel(channel)
+  }
+  self._pc.ondatachannel = function (event) {
+    self._debug('ondatachannel', event.channel.label)
+    if (event.channel.label === 'default') {
+      self._setDataChannel(event.channel)
+    } else {
+      var channel = new DataChannel(self, opts)
+      channel._setDataChannel(event.channel)
+      self._channels.push(channel)
+      self.emit('datachannel', channel)
     }
   }
+  self._channels.push(self)
+
+  self.on('open', function () {
+    self._maybeReady()
+  })
 
   if ('addTrack' in self._pc) {
     if (self.streams) {
@@ -126,11 +133,6 @@ function Peer (opts) {
   if (self.initiator) {
     self._needsNegotiation()
   }
-
-  self._onFinishBound = function () {
-    self._onFinish()
-  }
-  self.once('finish', self._onFinishBound)
 }
 
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
@@ -210,8 +212,9 @@ Peer.prototype._addIceCandidate = function (candidate) {
 
 Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   var self = this
+  if (channelName === 'default') throw makeError('channelName "default" is a reserved value', 'ERR_DATACHANNEL_NAME')
   var channel = new DataChannel(self, opts)
-  channel.setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
+  channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
   return channel
 }
@@ -327,19 +330,13 @@ Peer.prototype.negotiate = function () {
 // See: https://github.com/nodejs/readable-stream/issues/283
 Peer.prototype.destroy = function (err) {
   var self = this
-  self._destroy(err, function () {})
-}
-
-Peer.prototype._destroy = function (err, cb) {
-  var self = this
-  if (self.destroyed) return
 
   self._debug('destroy (error: %s)', err && (err.message || err))
 
-  self.readable = self.writable = false
-
-  if (!self._readableState.ended) self.push(null)
-  if (!self._writableState.finished) self.end()
+  self._channels.forEach(function (channel) {
+    DataChannel.prototype.destroy.apply(channel, err)
+  })
+  self._channels = null
 
   self.destroyed = true
   self.connected = false
@@ -347,14 +344,6 @@ Peer.prototype._destroy = function (err, cb) {
   self._remoteTracks = null
   self._remoteStreams = null
   self._senderMap = null
-
-  if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
-  self._onFinishBound = null
-
-  self._channels.forEach(function (channel) {
-    DataChannel.prototype.destroy.call(channel, err)
-  })
-  self._channels = null
 
   if (self._pc) {
     try {
@@ -371,10 +360,6 @@ Peer.prototype._destroy = function (err, cb) {
     self._pc.ondatachannel = null
   }
   self._pc = null
-
-  if (err) self.emit('error', err)
-  self.emit('close')
-  cb()
 }
 
 Peer.prototype._createOffer = function () {
@@ -619,7 +604,7 @@ Peer.prototype._maybeReady = function () {
       }
 
       self._channels.forEach(function (channel) {
-        channel._flushChunk()
+        channel._sendChunk()
       })
 
       self._debug('connect')
@@ -662,6 +647,7 @@ Peer.prototype._onIceCandidate = function (event) {
   var self = this
   if (self.destroyed) return
   if (event.candidate && self.trickle) {
+    self._debug('iceCandidate')
     self.emit('signal', {
       candidate: {
         candidate: event.candidate.candidate,
@@ -670,6 +656,7 @@ Peer.prototype._onIceCandidate = function (event) {
       }
     })
   } else if (!event.candidate) {
+    self._debug('iceComplete')
     self._iceComplete = true
     self.emit('_iceComplete')
   }

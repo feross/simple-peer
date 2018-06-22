@@ -22,9 +22,11 @@ function DataChannel (peer, opts) {
   self._chunk = null
   self._cb = null
   self._interval = null
+
+  self.channelName = null
 }
 
-DataChannel.prototype.setDataChannel = function (channel) {
+DataChannel.prototype._setDataChannel = function (channel) {
   var self = this
 
   self._channel = channel
@@ -53,8 +55,13 @@ DataChannel.prototype.setDataChannel = function (channel) {
   }
 
   if (self.peer.connected) {
-    self._flushChunk()
+    self._sendChunk()
   }
+
+  self._onFinishBound = function () {
+    self._onFinish()
+  }
+  self.once('finish', self._onFinishBound)
 }
 
 DataChannel.prototype._read = function () {}
@@ -130,21 +137,21 @@ DataChannel.prototype._onChannelBufferedAmountLow = function () {
 
 DataChannel.prototype._onChannelOpen = function () {
   var self = this
-  if (self.peer.connected || self.destroyed) return
-  self._debug('on channel open')
+  self._debug('on channel open', self.channelName)
   self._channelReady = true
-  self._maybeReady()
+  self.emit('open')
 }
 
 DataChannel.prototype._onChannelClose = function () {
   var self = this
-  if (self.destroyed) return
   self._debug('on channel close')
   self.destroy()
 }
 
-DataChannel.prototype._flushChunk = function () { // called when peer connects or self._channel set
+DataChannel.prototype._sendChunk = function () { // called when peer connects or self._channel set
   var self = this
+  if (self.destroyed) return
+
   if (self._chunk) {
     try {
       self.send(self._chunk)
@@ -180,6 +187,10 @@ Object.defineProperty(DataChannel.prototype, 'bufferSize', {
  */
 DataChannel.prototype.send = function (chunk) {
   var self = this
+  if (!self._channel) {
+    if (self.destroyed) return self.destroy(makeError('cannot send after channel is destroyed', 'ERR_DATA_CHANNEL'))
+    else return self.destroy(makeError('cannot send before channel is created - use write() to buffer', 'ERR_DATA_CHANNEL'))
+  }
   self._channel.send(chunk)
 }
 
@@ -191,17 +202,26 @@ DataChannel.prototype.destroy = function (err) {
   self._destroy(err, function () {})
 }
 
-DataChannel.prototype._destroy = function () {
+DataChannel.prototype._destroy = function (err, cb) {
   var self = this
+  if (self.destroyed) return
 
   try {
     self._channel.close()
   } catch (err) {}
 
-  self._channel.onmessage = null
-  self._channel.onopen = null
-  self._channel.onclose = null
-  self._channel.onerror = null
+  if (self._channel) {
+    self._channel.onmessage = null
+    self._channel.onopen = null
+    self._channel.onclose = null
+    self._channel.onerror = null
+  }
+  self._channel = null
+
+  self.readable = self.writable = false
+
+  if (!self._readableState.ended) self.push(null)
+  if (!self._writableState.finished) self.end()
 
   self.destroyed = true
 
@@ -209,6 +229,15 @@ DataChannel.prototype._destroy = function () {
   self._interval = null
   self._chunk = null
   self._cb = null
+
+  self.channelName = null
+
+  if (self._onFinishBound) self.removeListener('finish', self._onFinishBound)
+  self._onFinishBound = null
+
+  if (err) self.emit('error', err)
+  self.emit('close')
+  cb()
 }
 
 function makeError (message, code) {
