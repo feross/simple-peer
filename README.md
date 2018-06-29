@@ -278,17 +278,9 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
-### `peer.setOfferConstraints(constraints)`
-
-Used to change the `offerConstraints` option before renegotiation.
-
-### `peer.setAnswerConstraints(constraints)`
-
-Used to change the `answerConstraints` option before renegotiation.
-
 ### `peer.setConstraints(constraints)`
 
-Used to change the `constraints` option before renegotiation.
+Used to change the `offerConstraints`, and `answerConstraints` options before renegotiation.
 
 ### `var datachannel = peer.createDataChannel(channelName, channelConfig)`
 
