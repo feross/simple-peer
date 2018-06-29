@@ -330,6 +330,7 @@ Peer.prototype.negotiate = function () {
 // See: https://github.com/nodejs/readable-stream/issues/283
 Peer.prototype.destroy = function (err) {
   var self = this
+  if (self.destroyed) return
 
   self._debug('destroy (error: %s)', err && (err.message || err))
 
