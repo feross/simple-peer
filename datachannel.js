@@ -54,10 +54,6 @@ DataChannel.prototype._setDataChannel = function (channel) {
     self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
   }
 
-  if (self.peer.connected) {
-    self._sendChunk()
-  }
-
   self._onFinishBound = function () {
     self._onFinish()
   }
@@ -70,7 +66,7 @@ DataChannel.prototype._write = function (chunk, encoding, cb) {
   var self = this
   if (self.destroyed) return cb(makeError('cannot write after channel is destroyed', 'ERR_DATA_CHANNEL'))
 
-  if (self.peer.connected && self._channel) {
+  if (self._channel && self._channel.readyState === 'open') {
     try {
       self.send(chunk)
     } catch (err) {
@@ -95,7 +91,7 @@ DataChannel.prototype._onFinish = function () {
   var self = this
   if (self.destroyed) return
 
-  if (self.peer.connected) {
+  if (!self._channel || self._channel.readyState === 'open') {
     destroySoon()
   } else {
     self.once('connect', destroySoon)
@@ -139,6 +135,7 @@ DataChannel.prototype._onChannelOpen = function () {
   var self = this
   self._debug('on channel open', self.channelName)
   self.emit('open')
+  self._sendChunk()
 }
 
 DataChannel.prototype._onChannelClose = function () {

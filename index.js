@@ -606,10 +606,6 @@ Peer.prototype._maybeReady = function () {
         self.connected = true
       }
 
-      self._channels.forEach(function (channel) {
-        channel._sendChunk()
-      })
-
       self._debug('connect')
       self.emit('connect')
     })
