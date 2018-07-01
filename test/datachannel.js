@@ -3,7 +3,6 @@ var Peer = require('../')
 var DataChannel = require('../datachannel')
 var str = require('string-to-stream')
 var test = require('tape')
-var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -15,7 +14,7 @@ test('get config', function (t) {
 })
 
 test('create multiple DataChannels', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
     t.end()
     return
@@ -50,7 +49,7 @@ test('create multiple DataChannels', function (t) {
 })
 
 test('datachannel event', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
     t.end()
     return
@@ -84,7 +83,7 @@ test('datachannel event', function (t) {
 })
 
 test('data sends on seperate channels', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
     t.end()
     return
@@ -146,13 +145,8 @@ test('data sends on seperate channels', function (t) {
 })
 
 test('closing channels from creator side', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios || bowser.chrome) {
-    t.pass('Skipping test, no support on Chromium or Safari')
     t.end()
     return
   }
@@ -202,7 +196,7 @@ test('closing channels from creator side', function (t) {
 })
 
 test('closing channels from non-creator side', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
     t.end()
     return
@@ -250,13 +244,8 @@ test('closing channels from non-creator side', function (t) {
 })
 
 test('reusing channelNames of closed channels', function (t) {
-  if (process.env.WRTC) {
+  if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios) {
-    t.pass('Skip on Safari and iOS which do not support this')
     t.end()
     return
   }
