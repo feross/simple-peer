@@ -223,3 +223,37 @@ test('ensure remote address and port are available right after connection', func
     })
   })
 })
+
+test('pre-negotiated default channel', function (t) {
+  t.plan(6)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, channelConfig: {negotiated: true, id: 123} })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc, channelConfig: {negotiated: true, id: 123} })
+
+  peer1.on('signal', function (data) {
+    peer2.signal(data)
+  })
+
+  peer2.on('signal', function (data) {
+    peer1.signal(data)
+  })
+
+  peer1.on('connect', function () {
+    peer1.send('sup peer2')
+    peer2.on('data', function (data) {
+      t.ok(Buffer.isBuffer(data), 'data is Buffer')
+      t.equal(data.toString(), 'sup peer2', 'got correct message')
+
+      peer2.send('sup peer1')
+      peer1.on('data', function (data) {
+        t.ok(Buffer.isBuffer(data), 'data is Buffer')
+        t.equal(data.toString(), 'sup peer1', 'got correct message')
+
+        peer1.on('close', function () { t.pass('peer1 destroyed') })
+        peer1.destroy()
+        peer2.on('close', function () { t.pass('peer2 destroyed') })
+        peer2.destroy()
+      })
+    })
+  })
+})
