@@ -138,7 +138,6 @@ DataChannel.prototype._onChannelBufferedAmountLow = function () {
 DataChannel.prototype._onChannelOpen = function () {
   var self = this
   self._debug('on channel open', self.channelName)
-  self._channelReady = true
   self.emit('open')
 }
 
