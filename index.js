@@ -99,7 +99,7 @@ function Peer (opts) {
   // - onfingerprintfailure
   // - onnegotiationneeded
 
-  if (self.initiator) {
+  if (self.initiator || self.channelConfig.negotiated) {
     var channel = self._pc.createDataChannel('default', self.channelConfig) // use label 'default' for datachannel correlation
     self._setDataChannel(channel)
   }
