@@ -280,6 +280,8 @@ test('reusing channelNames of closed channels', function (t) {
     })
     dc.on('open', function () {
       dc.destroy()
+    })
+    dc.on('close', function () {
       dc2 = peer2.createDataChannel('2')
       dc2.write('123')
     })
@@ -301,6 +303,8 @@ test('reusing channelNames of closed channels', function (t) {
     })
     dc.on('open', function () {
       dc.destroy()
+    })
+    dc.on('close', function () {
       dc1 = peer1.createDataChannel('1')
       dc1.write('456')
     })
