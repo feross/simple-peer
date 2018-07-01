@@ -105,7 +105,8 @@ function Peer (opts) {
   }
   self._pc.ondatachannel = function (event) {
     self._debug('ondatachannel', event.channel.label)
-    if (event.channel.label === 'default') {
+    // The first channel is "default" even if it is not called "default" on the other side (compatibility with older versions and alternative implementations)
+    if (!self._channels.length) {
       self._setDataChannel(event.channel)
     } else {
       var channel = new DataChannel(self, opts)
