@@ -1,5 +1,6 @@
 module.exports = DataChannel
 
+var debug = require('debug')('simple-peer')
 var inherits = require('inherits')
 var stream = require('readable-stream')
 
@@ -7,7 +8,7 @@ var MAX_BUFFERED_AMOUNT = 64 * 1024
 
 inherits(DataChannel, stream.Duplex)
 
-function DataChannel (peer, opts) {
+function DataChannel (opts) {
   var self = this
 
   opts = Object.assign({
@@ -16,12 +17,10 @@ function DataChannel (peer, opts) {
 
   stream.Duplex.call(self, opts)
 
-  self.peer = peer
-  self._debug = self.peer._debug
-
   self._chunk = null
   self._cb = null
   self._interval = null
+  self._channel = null
 
   self.channelName = null
 }
@@ -202,17 +201,17 @@ DataChannel.prototype._destroy = function (err, cb) {
   var self = this
   if (self.destroyed) return
 
-  try {
-    self._channel.close()
-  } catch (err) {}
-
   if (self._channel) {
+    try {
+      self._channel.close()
+    } catch (err) {}
+
     self._channel.onmessage = null
     self._channel.onopen = null
     self._channel.onclose = null
     self._channel.onerror = null
+    self._channel = null
   }
-  self._channel = null
 
   self.readable = self.writable = false
 
@@ -234,6 +233,13 @@ DataChannel.prototype._destroy = function (err, cb) {
   if (err) self.emit('error', err)
   self.emit('close')
   cb()
+}
+
+DataChannel.prototype._debug = function () {
+  var self = this
+  var args = [].slice.call(arguments)
+  args[0] = '[' + self._id + '] ' + args[0]
+  debug.apply(null, args)
 }
 
 function makeError (message, code) {

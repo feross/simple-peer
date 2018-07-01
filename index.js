@@ -106,10 +106,10 @@ function Peer (opts) {
   self._pc.ondatachannel = function (event) {
     self._debug('ondatachannel', event.channel.label)
     // The first channel is "default" even if it is not called "default" on the other side (compatibility with older versions and alternative implementations)
-    if (!self._channels.length) {
+    if (!self._channels[0]._channel) {
       self._setDataChannel(event.channel)
     } else {
-      var channel = new DataChannel(self, opts)
+      var channel = new DataChannel(opts)
       channel._setDataChannel(event.channel)
       self._channels.push(channel)
       self.emit('datachannel', channel)
@@ -216,7 +216,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
 Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   var self = this
   if (channelName === 'default') throw makeError('channelName "default" is a reserved value', 'ERR_DATACHANNEL_NAME')
-  var channel = new DataChannel(self, opts)
+  var channel = new DataChannel(opts)
   channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
   return channel
