@@ -151,7 +151,7 @@ test('closing channels from creator side', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios || bowser.chromium) {
+  if (bowser.safari || bowser.ios || bowser.chrome) {
     t.pass('Skipping test, no support on Chromium or Safari')
     t.end()
     return

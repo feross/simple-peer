@@ -215,6 +215,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
 {
   initiator: false,
   channelConfig: {},
+  channelName: 'default',
   config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
   constraints: {},
   offerConstraints: {},
@@ -232,6 +233,7 @@ The options do the following:
 
 - `initiator` - set to `true` if this is the initiating peer
 - `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
+- `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
 - `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
 - `offerConstraints` - custom offer constraints (used by `createOffer` method)

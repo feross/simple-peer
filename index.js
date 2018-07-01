@@ -22,7 +22,9 @@ function Peer (opts) {
   self._id = randombytes(4).toString('hex').slice(0, 7)
   self._debug('new peer %o', opts)
 
-  DataChannel.call(self, self, opts) // the Peer is a DataChannel
+  DataChannel.call(self, opts) // the Peer is a DataChannel
+
+  self.channelName = opts.channelName
 
   // Needed by _transformConstraints, so set this early
   self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
@@ -100,7 +102,7 @@ function Peer (opts) {
   // - onnegotiationneeded
 
   if (self.initiator || self.channelConfig.negotiated) {
-    var channel = self._pc.createDataChannel('default', self.channelConfig) // use label 'default' for datachannel correlation
+    var channel = self._pc.createDataChannel('default' || self.channelName, self.channelConfig) // use label 'default' for datachannel correlation
     self._setDataChannel(channel)
   }
   self._pc.ondatachannel = function (event) {
@@ -215,7 +217,6 @@ Peer.prototype._addIceCandidate = function (candidate) {
 
 Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   var self = this
-  if (channelName === 'default') throw makeError('channelName "default" is a reserved value', 'ERR_DATACHANNEL_NAME')
   var channel = new DataChannel(opts)
   channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
