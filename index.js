@@ -59,6 +59,7 @@ function Peer (opts) {
   }
 
   self._pcReady = false
+  self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
   self._pendingCandidates = []
 
@@ -116,6 +117,7 @@ function Peer (opts) {
   self._channels.push(self)
 
   self.on('open', function () {
+    self._channelReady = true
     self._maybeReady()
   })
 
