@@ -258,50 +258,50 @@ test('reusing channelNames of closed channels', function (t) {
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
   var dc1 = peer1.createDataChannel('1')
+  dc1.on('close', function () {
+    dc1 = peer1.createDataChannel('1')
+    dc1.write('456')
+  })
   var dc2 = peer2.createDataChannel('2')
+  dc2.on('close', function () {
+    dc2 = peer2.createDataChannel('2')
+    dc2.write('123')
+  })
 
   peer1.once('datachannel', function (dc) {
-    dc.on('close', function (data) {
-      t.pass('first channel instance closed')
+    dc.on('close', function () {
+      t.pass('first channel instance closed #1')
     })
-    dc.on('data', function (data) {
-      t.fail('received data on closed channel')
+    dc.on('data', function () {
+      t.fail('received data on closed channel #1')
     })
     dc.on('open', function () {
       dc.destroy()
     })
-    dc.on('close', function () {
-      dc2 = peer2.createDataChannel('2')
-      dc2.write('123')
-    })
 
     peer1.once('datachannel', function (dc) {
-      t.equals(dc.channelName, '2', 'second channel has same channelName')
+      t.equals(dc.channelName, '2', 'second channel has same channelName #1')
       dc.on('data', function (data) {
-        t.equal(data.toString(), '123', 'received correct message on second channel')
+        t.equal(data.toString(), '123', 'received correct message on second channel #1')
       })
     })
   })
 
   peer2.once('datachannel', function (dc) {
-    dc.on('close', function (data) {
-      t.pass('first channel instance closed')
+    dc.on('close', function () {
+      t.pass('first channel instance closed #2')
     })
-    dc.on('data', function (data) {
-      t.fail('received data on closed channel')
+    dc.on('data', function () {
+      t.fail('received data on closed channel #2')
     })
     dc.on('open', function () {
       dc.destroy()
     })
-    dc.on('close', function () {
-      dc1 = peer1.createDataChannel('1')
-      dc1.write('456')
-    })
 
     peer2.once('datachannel', function (dc) {
-      t.equals(dc.channelName, '1', 'second channel has same channelName')
+      t.equals(dc.channelName, '1', 'second channel has same channelName #2')
       dc.on('data', function (data) {
-        t.equal(data.toString(), '456', 'received correct message on second channel')
+        t.equal(data.toString(), '456', 'received correct message on second channel #2')
       })
     })
   })
