@@ -23,6 +23,17 @@ function DataChannel (opts) {
   self._channel = null
 
   self.channelName = null
+
+  // HACK: Chrome will sometimes get stuck in readyState "closing", let's check for this condition
+  var isClosing = false
+  self._closingInterval = setInterval(function () { // No "onclosing" event
+    if (self._channel && self._channel.readyState === 'closing') {
+      if (isClosing) self._onChannelClose() // Equivalent to onclose firing. 
+      isClosing = true
+    } else {
+      isClosing = false
+    }
+  }, 3000)
 }
 
 DataChannel.prototype._setDataChannel = function (channel) {
@@ -220,6 +231,9 @@ DataChannel.prototype._destroy = function (err, cb) {
 
   self.destroyed = true
 
+  clearInterval(self._closingInterval)
+  self._closingInterval = null
+  
   clearInterval(self._interval)
   self._interval = null
   self._chunk = null
