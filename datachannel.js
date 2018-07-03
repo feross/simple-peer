@@ -28,7 +28,7 @@ function DataChannel (opts) {
   var isClosing = false
   self._closingInterval = setInterval(function () { // No "onclosing" event
     if (self._channel && self._channel.readyState === 'closing') {
-      if (isClosing) self._onChannelClose() // Equivalent to onclose firing. 
+      if (isClosing) self._onChannelClose() // Equivalent to onclose firing.
       isClosing = true
     } else {
       isClosing = false
@@ -233,7 +233,7 @@ DataChannel.prototype._destroy = function (err, cb) {
 
   clearInterval(self._closingInterval)
   self._closingInterval = null
-  
+
   clearInterval(self._interval)
   self._interval = null
   self._chunk = null
