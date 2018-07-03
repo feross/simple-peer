@@ -86,6 +86,9 @@ function Peer (opts) {
   self._interval = null
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  if (self._isChromium || opts.wrtc) {
+    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
+  }
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
@@ -928,6 +931,30 @@ Peer.prototype._transformConstraints = function (constraints) {
   }
 
   return constraints
+}
+
+// HACK: Minimal shim to force Chrome and WRTC to use their more reliable callback API
+function shimPromiseAPI (RTCPeerConnection, pc) {
+  pc.createOffer = function (constraints) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.createOffer.call(this, resolve, reject, constraints)
+    })
+  }
+  pc.createAnswer = function (constraints) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.createAnswer.call(this, resolve, reject, constraints)
+    })
+  }
+  pc.setLocalDescription = function (description) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.setLocalDescription.call(this, description, resolve, reject)
+    })
+  }
+  pc.setRemoteDescription = function (description) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
+    })
+  }
 }
 
 function makeError (message, code) {
