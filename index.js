@@ -1,40 +1,55 @@
-module.exports = Peer
+//module.exports = Peer
 
-var debug = require('debug')('simple-peer')
-var getBrowserRTC = require('get-browser-rtc')
-var inherits = require('inherits')
-var randombytes = require('randombytes')
-//var stream = require('readable-stream')// remove this line, uneccessary
+// var debug = require('debug')('simple-peer')
+var getBrowserRTC = function () {
+  if (typeof window === 'undefined') return null
+  var wrtc = {
+    RTCPeerConnection: window.RTCPeerConnection || window.mozRTCPeerConnection ||
+      window.webkitRTCPeerConnection,
+    RTCSessionDescription: window.RTCSessionDescription ||
+      window.mozRTCSessionDescription || window.webkitRTCSessionDescription,
+    RTCIceCandidate: window.RTCIceCandidate || window.mozRTCIceCandidate ||
+      window.webkitRTCIceCandidate
+  }
+  if (!wrtc.RTCPeerConnection) return null
+  return wrtc
+}
+// var inherits = require('inherits')
+// var randombytes = require('randombytes')
+// var stream = require('readable-stream')
 
+/////////////////////////////////
+//////////////////////////////////
+/////////////////////////////////
+/////////////////////////////////
+////////////////////////////////
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 
-inherits(Peer)
-//removed inherits stream
+
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
  * Duplex stream.
  * @param {Object} opts
  */
 function Peer (opts) {
-  var self = this
-  if (!(self instanceof Peer)) return new Peer(opts)
+  var self = this;
+  if (!(self instanceof Peer)) {return new Peer(opts);}
 
-  self._id = randombytes(4).toString('hex').slice(0, 7)
-  self._debug('new peer %o', opts)
+  self._id = "Peer-" + Math.floor(Math.random()*100);
+  //self._debug('new peer %o', opts);
 
-  opts = Object.assign({
-    allowHalfOpen: false
-  }, opts)
+  // opts = Object.assign({
+  //   allowHalfOpen: false
+  // }, opts)
 
-  //remove this line, uneccessary 
   //stream.Duplex.call(self, opts)
 
   self.channelName = opts.initiator
-    ? opts.channelName || randombytes(20).toString('hex')
-    : null
+    ? opts.channelName || "Channel-" + Math.floor(Math.random()*100)
+    : null;
 
   // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
+  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection;
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
@@ -817,8 +832,8 @@ Peer.prototype._onChannelMessage = function (event) {
   var self = this
   if (self.destroyed) return
   var data = event.data
-  if (data instanceof ArrayBuffer) data = Buffer.from(data)
-  self.push(data)
+  if (data instanceof Uint8Array) {data = new Uint8Array(data);}
+  self.push(data);
 }
 
 Peer.prototype._onChannelBufferedAmountLow = function () {
