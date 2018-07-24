@@ -4,12 +4,12 @@ var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var inherits = require('inherits')
 var randombytes = require('randombytes')
-var stream = require('readable-stream')
+//var stream = require('readable-stream')// remove this line, uneccessary
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 
-inherits(Peer, stream.Duplex)
-
+inherits(Peer)
+//removed inherits stream
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
  * Duplex stream.
@@ -26,7 +26,8 @@ function Peer (opts) {
     allowHalfOpen: false
   }, opts)
 
-  stream.Duplex.call(self, opts)
+  //remove this line, uneccessary 
+  //stream.Duplex.call(self, opts)
 
   self.channelName = opts.initiator
     ? opts.channelName || randombytes(20).toString('hex')
