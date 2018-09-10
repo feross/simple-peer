@@ -776,7 +776,7 @@ Peer.prototype._onSignalingStateChange = function () {
     // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
     self._debug('flushing sender queue', self._sendersAwaitingStable)
     self._sendersAwaitingStable.forEach(function (sender) {
-      self.removeTrack(sender)
+      self._pc.removeTrack(sender)
       self._queuedNegotiation = true
     })
     self._sendersAwaitingStable = []
