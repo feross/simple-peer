@@ -287,7 +287,7 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
   if (sender.replaceTrack != null) {
     await sender.replaceTrack(newTrack)
   } else {
-    throw makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK')
+    self.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
   }
 }
 
