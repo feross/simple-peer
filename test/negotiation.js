@@ -169,14 +169,14 @@ test('add stream on non-initiator only', function (t) {
     offerConstraints: {
       offerToReceiveVideo: true,
       offerToReceiveAudio: true
-    }})
+    } })
   var peer2 = new Peer({ config: config,
     wrtc: common.wrtc,
     stream: common.getMediaStream(),
     answerConstraints: {
       offerToReceiveVideo: false,
       offerToReceiveAudio: false
-    }})
+    } })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
