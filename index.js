@@ -188,7 +188,7 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
-  if (data.renegotiate) {
+  if (data.renegotiate && self.initiator) {
     self._debug('got request to renegotiate')
     self._needsNegotiation()
   }
