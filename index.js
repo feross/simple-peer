@@ -77,6 +77,7 @@ function Peer (opts) {
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
+  self._firstStable = true
 
   self._remoteTracks = []
   self._remoteStreams = []
@@ -770,7 +771,7 @@ Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
 
-  if (self._pc.signalingState === 'stable') {
+  if (self._pc.signalingState === 'stable' && !self._firstStable) {
     self._isNegotiating = false
 
     // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -790,6 +791,7 @@ Peer.prototype._onSignalingStateChange = function () {
     self._debug('negotiate')
     self.emit('negotiate')
   }
+  self._firstStable = false
 
   self._debug('signalingStateChange %s', self._pc.signalingState)
   self.emit('signalingStateChange', self._pc.signalingState)
