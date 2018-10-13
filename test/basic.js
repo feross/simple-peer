@@ -68,7 +68,7 @@ test('signal event does not get emitted by non-initiator with stream', function 
     peer.on('close', function () { t.pass('peer destroyed') })
     peer.destroy()
   })
-  
+
   setTimeout(() => {
     t.pass('did not get signal after 1000ms')
     t.end()
