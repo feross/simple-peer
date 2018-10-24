@@ -7,6 +7,7 @@ var randombytes = require('randombytes')
 var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
+var ICECOMPLETE_TIMEOUT = 5 * 1000
 
 inherits(Peer, stream.Duplex)
 
@@ -44,6 +45,7 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
+  self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
   self.connected = false
@@ -69,6 +71,7 @@ function Peer (opts) {
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
+  self._iceCompleteTimer = null // send an offer/answer anyway after some timeout
   self._channel = null
   self._pendingCandidates = []
 
@@ -490,6 +493,20 @@ Peer.prototype._onFinish = function () {
   }
 }
 
+Peer.prototype._startIceCompleteTimeout = function () {
+  debug('started iceComplete timeout')
+  var self = this
+  if (self.destroyed) return
+  if (self._iceCompleteTimer) return
+  self._iceCompleteTimer = setTimeout(function () {
+    if (!self._iceComplete) {
+      self._iceComplete = true
+      self.emit('iceTimeout')
+      self.emit('_iceComplete')
+    }
+  }, this.iceCompleteTimeout)
+}
+
 Peer.prototype._createOffer = function () {
   var self = this
   if (self.destroyed) return
@@ -808,9 +825,13 @@ Peer.prototype._onIceCandidate = function (event) {
         sdpMid: event.candidate.sdpMid
       }
     })
-  } else if (!event.candidate) {
+  } else if (!event.candidate && !self._iceComplete) {
     self._iceComplete = true
     self.emit('_iceComplete')
+  }
+  // as soon as we've received one valid candidate start timeout
+  if (event.candidate) {
+    self._startIceCompleteTimeout()
   }
 }
 
