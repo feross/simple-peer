@@ -8,6 +8,7 @@ var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
+var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
 inherits(Peer, stream.Duplex)
 
@@ -81,6 +82,7 @@ function Peer (opts) {
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
   self._firstStable = true
+  self._closingInterval = null
 
   self._remoteTracks = []
   self._remoteStreams = []
@@ -397,6 +399,9 @@ Peer.prototype._destroy = function (err, cb) {
   self._remoteStreams = null
   self._senderMap = null
 
+  clearInterval(self._closingInterval)
+  self._closingInterval = null
+
   clearInterval(self._interval)
   self._interval = null
   self._chunk = null
@@ -470,6 +475,18 @@ Peer.prototype._setupData = function (event) {
   self._channel.onerror = function (err) {
     self.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
   }
+
+  // HACK: Chrome will sometimes get stuck in readyState "closing", let's check for this condition
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
+  var isClosing = false
+  self._closingInterval = setInterval(function () { // No "onclosing" event
+    if (self._channel && self._channel.readyState === 'closing') {
+      if (isClosing) self._onChannelClose() // closing timed out: equivalent to onclose firing
+      isClosing = true
+    } else {
+      isClosing = false
+    }
+  }, CHANNEL_CLOSING_TIMEOUT)
 }
 
 Peer.prototype._read = function () {}
