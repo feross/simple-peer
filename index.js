@@ -45,7 +45,7 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
-  self.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.trickle : false
+  self.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
   self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
@@ -983,6 +983,7 @@ function shimPromiseAPI (RTCPeerConnection, pc) {
   }
 }
 
+// HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
   return sdp.replace(new RegExp('a=ice-options:trickle\\s\\n', 'g'), '')
 }
