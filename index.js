@@ -985,7 +985,7 @@ function shimPromiseAPI (RTCPeerConnection, pc) {
 
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
-  return sdp.replace(new RegExp('a=ice-options:trickle\\s\\n', 'g'), '')
+  return sdp.replace(/a=ice-options:trickle\s\n/g, '')
 }
 
 function makeError (message, code) {
