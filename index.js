@@ -45,6 +45,7 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
+  self.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.trickle : false
   self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
@@ -513,6 +514,7 @@ Peer.prototype._createOffer = function () {
 
   self._pc.createOffer(self.offerConstraints).then(function (offer) {
     if (self.destroyed) return
+    if (!self.trickle && !self.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp)
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer).then(onSuccess).catch(onError)
 
@@ -544,6 +546,7 @@ Peer.prototype._createAnswer = function () {
 
   self._pc.createAnswer(self.answerConstraints).then(function (answer) {
     if (self.destroyed) return
+    if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
 
@@ -978,6 +981,10 @@ function shimPromiseAPI (RTCPeerConnection, pc) {
       RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
     })
   }
+}
+
+function filterTrickle (sdp) {
+  return sdp.replace(new RegExp('a=ice-options:trickle\\s\\n', 'g'), '')
 }
 
 function makeError (message, code) {
