@@ -6,6 +6,9 @@ var inherits = require('inherits')
 var randombytes = require('randombytes')
 var DataChannel = require('./datachannel')
 
+var MAX_BUFFERED_AMOUNT = 64 * 1024
+var ICECOMPLETE_TIMEOUT = 5 * 1000
+
 inherits(Peer, DataChannel)
 
 /**
@@ -38,6 +41,7 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
+  self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
   self.connected = false
@@ -63,6 +67,7 @@ function Peer (opts) {
   self._pcReady = false
   self._channelReady = false
   self._iceComplete = false // ice candidate trickle done (got null candidate)
+  self._iceCompleteTimer = null // send an offer/answer anyway after some timeout
   self._pendingCandidates = []
 
   self._isNegotiating = !self.initiator // is this peer waiting for negotiation to complete?
@@ -70,6 +75,7 @@ function Peer (opts) {
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
+  self._firstStable = true
 
   self._remoteTracks = []
   self._remoteStreams = []
@@ -77,6 +83,9 @@ function Peer (opts) {
   self._channels = []
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
+    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
+  }
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
@@ -177,7 +186,7 @@ Peer.prototype.signal = function (data) {
   }
   self._debug('signal()')
 
-  if (data.renegotiate) {
+  if (data.renegotiate && self.initiator) {
     self._debug('got request to renegotiate')
     self._needsNegotiation()
   }
@@ -186,7 +195,7 @@ Peer.prototype.signal = function (data) {
     else self._pendingCandidates.push(data.candidate)
   }
   if (data.sdp) {
-    self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data), function () {
+    self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data)).then(function () {
       if (self.destroyed) return
 
       self._pendingCandidates.forEach(function (candidate) {
@@ -195,7 +204,7 @@ Peer.prototype.signal = function (data) {
       self._pendingCandidates = []
 
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
-    }, function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
+    }).catch(function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
   }
   if (!data.sdp && !data.candidate && !data.renegotiate) {
     self.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
@@ -252,6 +261,31 @@ Peer.prototype.addTrack = function (track, stream) {
   submap.set(stream, sender)
   self._senderMap.set(track, submap)
   self._needsNegotiation()
+}
+
+/**
+ * Replace a MediaStreamTrack by another in the connection.
+ * @param {MediaStreamTrack} oldTrack
+ * @param {MediaStreamTrack} newTrack
+ * @param {MediaStream} stream
+ */
+Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
+  var self = this
+
+  self._debug('replaceTrack()')
+
+  var submap = self._senderMap.get(oldTrack)
+  var sender = submap ? submap.get(stream) : null
+  if (!sender) {
+    self.destroy(new Error('Cannot replace track that was never added.'))
+  }
+  if (newTrack) self._senderMap.set(newTrack, submap)
+
+  if (sender.replaceTrack != null) {
+    await sender.replaceTrack(newTrack)
+  } else {
+    self.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
+  }
 }
 
 /**
@@ -367,14 +401,28 @@ Peer.prototype.destroy = function (err) {
   self._pc = null
 }
 
+Peer.prototype._startIceCompleteTimeout = function () {
+  debug('started iceComplete timeout')
+  var self = this
+  if (self.destroyed) return
+  if (self._iceCompleteTimer) return
+  self._iceCompleteTimer = setTimeout(function () {
+    if (!self._iceComplete) {
+      self._iceComplete = true
+      self.emit('iceTimeout')
+      self.emit('_iceComplete')
+    }
+  }, this.iceCompleteTimeout)
+}
+
 Peer.prototype._createOffer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createOffer(function (offer) {
+  self._pc.createOffer(self.offerConstraints).then(function (offer) {
     if (self.destroyed) return
     offer.sdp = self.sdpTransform(offer.sdp)
-    self._pc.setLocalDescription(offer, onSuccess, onError)
+    self._pc.setLocalDescription(offer).then(onSuccess).catch(onError)
 
     function onSuccess () {
       self._debug('createOffer success')
@@ -395,17 +443,17 @@ Peer.prototype._createOffer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) }, self.offerConstraints)
+  }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) })
 }
 
 Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createAnswer(function (answer) {
+  self._pc.createAnswer(self.answerConstraints).then(function (answer) {
     if (self.destroyed) return
     answer.sdp = self.sdpTransform(answer.sdp)
-    self._pc.setLocalDescription(answer, onSuccess, onError)
+    self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
 
     function onSuccess () {
       if (self.destroyed) return
@@ -425,7 +473,7 @@ Peer.prototype._createAnswer = function () {
         sdp: signal.sdp
       })
     }
-  }, function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) }, self.answerConstraints)
+  }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) })
 }
 
 Peer.prototype._onIceStateChange = function () {
@@ -619,13 +667,13 @@ Peer.prototype._onSignalingStateChange = function () {
   var self = this
   if (self.destroyed) return
 
-  if (self._pc.signalingState === 'stable') {
+  if (self._pc.signalingState === 'stable' && !self._firstStable) {
     self._isNegotiating = false
 
     // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
     self._debug('flushing sender queue', self._sendersAwaitingStable)
     self._sendersAwaitingStable.forEach(function (sender) {
-      self.removeTrack(sender)
+      self._pc.removeTrack(sender)
       self._queuedNegotiation = true
     })
     self._sendersAwaitingStable = []
@@ -639,6 +687,7 @@ Peer.prototype._onSignalingStateChange = function () {
     self._debug('negotiate')
     self.emit('negotiate')
   }
+  self._firstStable = false
 
   self._debug('signalingStateChange %s', self._pc.signalingState)
   self.emit('signalingStateChange', self._pc.signalingState)
@@ -656,10 +705,13 @@ Peer.prototype._onIceCandidate = function (event) {
         sdpMid: event.candidate.sdpMid
       }
     })
-  } else if (!event.candidate) {
-    self._debug('iceComplete')
+  } else if (!event.candidate && !self._iceComplete) {
     self._iceComplete = true
     self.emit('_iceComplete')
+  }
+  // as soon as we've received one valid candidate start timeout
+  if (event.candidate) {
+    self._startIceCompleteTimeout()
   }
 }
 
@@ -750,6 +802,30 @@ Peer.prototype._transformConstraints = function (constraints) {
   }
 
   return constraints
+}
+
+// HACK: Minimal shim to force Chrome and WRTC to use their more reliable callback API
+function shimPromiseAPI (RTCPeerConnection, pc) {
+  pc.createOffer = function (constraints) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.createOffer.call(this, resolve, reject, constraints)
+    })
+  }
+  pc.createAnswer = function (constraints) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.createAnswer.call(this, resolve, reject, constraints)
+    })
+  }
+  pc.setLocalDescription = function (description) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.setLocalDescription.call(this, description, resolve, reject)
+    })
+  }
+  pc.setRemoteDescription = function (description) {
+    return new Promise((resolve, reject) => {
+      RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
+    })
+  }
 }
 
 function makeError (message, code) {

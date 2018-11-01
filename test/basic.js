@@ -42,6 +42,45 @@ test('signal event gets emitted', function (t) {
   })
 })
 
+test('signal event does not get emitted by non-initiator', function (t) {
+  var peer = new Peer({ config: config, initiator: false, wrtc: common.wrtc })
+  peer.once('signal', function () {
+    t.fail('got signal event')
+    peer.on('close', function () { t.pass('peer destroyed') })
+    peer.destroy()
+  })
+
+  setTimeout(() => {
+    t.pass('did not get signal after 1000ms')
+    t.end()
+  }, 1000)
+})
+
+test('signal event does not get emitted by non-initiator with stream', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+
+  var peer = new Peer({
+    config: config,
+    stream: common.getMediaStream(),
+    initiator: false,
+    wrtc: common.wrtc
+  })
+  peer.once('signal', function () {
+    t.fail('got signal event')
+    peer.on('close', function () { t.pass('peer destroyed') })
+    peer.destroy()
+  })
+
+  setTimeout(() => {
+    t.pass('did not get signal after 1000ms')
+    t.end()
+  }, 1000)
+})
+
 test('data send/receive text', function (t) {
   t.plan(10)
 
