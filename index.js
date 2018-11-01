@@ -282,7 +282,7 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
   if (!sender) {
     self.destroy(new Error('Cannot replace track that was never added.'))
   }
-  self._senderMap.set(newTrack, submap)
+  if (newTrack) self._senderMap.set(newTrack, submap)
 
   if (sender.replaceTrack != null) {
     await sender.replaceTrack(newTrack)
