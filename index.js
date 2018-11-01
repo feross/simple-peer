@@ -8,7 +8,7 @@ var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
-var CHANNEL_CLOSING_TIMEOUT = 3 * 1000
+var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
 inherits(Peer, stream.Duplex)
 
