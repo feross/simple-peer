@@ -6,7 +6,6 @@ var inherits = require('inherits')
 var randombytes = require('randombytes')
 var DataChannel = require('./datachannel')
 
-var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
 
 inherits(Peer, DataChannel)
