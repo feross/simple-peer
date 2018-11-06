@@ -8,7 +8,7 @@ var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
-var CHANNEL_CLOSING_TIMEOUT = 3 * 1000
+var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
 inherits(Peer, stream.Duplex)
 
@@ -46,6 +46,7 @@ function Peer (opts) {
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
+  self.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
   self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
@@ -270,6 +271,31 @@ Peer.prototype.addTrack = function (track, stream) {
   submap.set(stream, sender)
   self._senderMap.set(track, submap)
   self._needsNegotiation()
+}
+
+/**
+ * Replace a MediaStreamTrack by another in the connection.
+ * @param {MediaStreamTrack} oldTrack
+ * @param {MediaStreamTrack} newTrack
+ * @param {MediaStream} stream
+ */
+Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
+  var self = this
+
+  self._debug('replaceTrack()')
+
+  var submap = self._senderMap.get(oldTrack)
+  var sender = submap ? submap.get(stream) : null
+  if (!sender) {
+    self.destroy(new Error('Cannot replace track that was never added.'))
+  }
+  if (newTrack) self._senderMap.set(newTrack, submap)
+
+  if (sender.replaceTrack != null) {
+    await sender.replaceTrack(newTrack)
+  } else {
+    self.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
+  }
 }
 
 /**
@@ -530,6 +556,7 @@ Peer.prototype._createOffer = function () {
 
   self._pc.createOffer(self.offerConstraints).then(function (offer) {
     if (self.destroyed) return
+    if (!self.trickle && !self.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp)
     offer.sdp = self.sdpTransform(offer.sdp)
     self._pc.setLocalDescription(offer).then(onSuccess).catch(onError)
 
@@ -561,6 +588,7 @@ Peer.prototype._createAnswer = function () {
 
   self._pc.createAnswer(self.answerConstraints).then(function (answer) {
     if (self.destroyed) return
+    if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
 
@@ -995,6 +1023,11 @@ function shimPromiseAPI (RTCPeerConnection, pc) {
       RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
     })
   }
+}
+
+// HACK: Filter trickle lines when trickle is disabled #354
+function filterTrickle (sdp) {
+  return sdp.replace(/a=ice-options:trickle\s\n/g, '')
 }
 
 function makeError (message, code) {
