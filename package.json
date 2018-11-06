@@ -11,7 +11,7 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
-    "debug": "^3.1.0",
+    "debug": "^4.0.1",
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "airtap": "0.1.0",
-    "babel-minify": "^0.4.3",
+    "babel-minify": "^0.5.0",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "electron-webrtc": "^0.3.0",
@@ -31,7 +31,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "wrtc": "^0.1.1",
+    "wrtc": "^0.2.0",
     "ws": "^6.0.0"
   },
   "keywords": [
