@@ -154,3 +154,43 @@ test('removeTrack immediately', function (t) {
     t.pass('peer2 connected')
   })
 })
+
+test('replaceTrack', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(4)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  peer1.addTrack(stream1.getTracks()[0], stream1)
+  peer2.addTrack(stream2.getTracks()[0], stream2)
+
+  peer1.replaceTrack(stream1.getTracks()[0], stream2.getTracks()[0], stream1)
+  peer2.replaceTrack(stream2.getTracks()[0], stream1.getTracks()[0], stream2)
+
+  peer1.on('track', function (track, stream) {
+    t.pass('peer1 got track event')
+    peer2.replaceTrack(stream2.getTracks()[0], null, stream2)
+  })
+  peer2.on('track', function (track, stream) {
+    t.pass('peer2 did got track event')
+    peer1.replaceTrack(stream1.getTracks()[0], null, stream1)
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connected')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connected')
+  })
+})
