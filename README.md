@@ -224,6 +224,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   stream: false,
   streams: [],
   trickle: true,
+  allowHalfTrickle: false,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
   objectMode: false
 }

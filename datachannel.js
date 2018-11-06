@@ -5,6 +5,7 @@ var inherits = require('inherits')
 var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
+var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
 inherits(DataChannel, stream.Duplex)
 
@@ -33,7 +34,7 @@ function DataChannel (opts) {
     } else {
       isClosing = false
     }
-  }, 3000)
+  }, CHANNEL_CLOSING_TIMEOUT)
 }
 
 DataChannel.prototype._setDataChannel = function (channel) {
