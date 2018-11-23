@@ -200,6 +200,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [CDNBye](https://github.com/cdnbye/hlsjs-p2p-engine) - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol
 - [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
 - [Metastream](https://github.com/samuelmaddock/metastream) - Watch streaming media with friends.
+- [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
 - *Your app here! - send a PR!*
 
 ## api
