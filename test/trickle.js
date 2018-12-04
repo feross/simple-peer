@@ -170,3 +170,37 @@ test('disable trickle (only receiver)', function (t) {
     })
   }
 })
+
+test('ice candidates received before description', function (t) {
+  t.plan(3)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  var signalQueue1 = []
+  peer1.on('signal', function (data) {
+    signalQueue1.push(data)
+    if (data.candidate) {
+      while (signalQueue1[0]) peer2.signal(signalQueue1.pop())
+    }
+  })
+
+  var signalQueue2 = []
+  peer2.on('signal', function (data) {
+    signalQueue2.push(data)
+    if (data.candidate) {
+      while (signalQueue2[0]) peer1.signal(signalQueue2.pop())
+    }
+  })
+
+  peer1.on('connect', function () {
+    t.pass('peers connected')
+
+    peer2.on('connect', function () {
+      peer1.on('close', function () { t.pass('peer1 destroyed') })
+      peer1.destroy()
+      peer2.on('close', function () { t.pass('peer2 destroyed') })
+      peer2.destroy()
+    })
+  })
+})

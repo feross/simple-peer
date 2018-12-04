@@ -11,7 +11,7 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
-    "debug": "^3.1.0",
+    "debug": "^4.0.1",
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
@@ -19,10 +19,11 @@
   },
   "devDependencies": {
     "airtap": "0.1.0",
-    "babel-minify": "^0.4.3",
+    "babel-minify": "^0.5.0",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
     "electron-webrtc": "^0.3.0",
+    "nyc": "^13.1.0",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
@@ -30,7 +31,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "wrtc": "^0.1.1",
+    "wrtc": "^0.2.0",
     "ws": "^6.0.0"
   },
   "keywords": [
@@ -58,10 +59,11 @@
     "build": "browserify -s SimplePeer -r ./ | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
-    "test-browser": "airtap -- test/*.js",
-    "test-browser-local": "airtap --local -- test/*.js",
+    "test-browser": "airtap --coverage -- test/*.js",
+    "test-browser-local": "airtap --coverage --local -- test/*.js",
     "test-node": "npm run test-node-electron-webrtc && npm run test-node-wrtc",
     "test-node-electron-webrtc": "WRTC=electron-webrtc tape test/*.js",
-    "test-node-wrtc": "WRTC=wrtc tape test/*.js"
+    "test-node-wrtc": "WRTC=wrtc tape test/*.js",
+    "test-coverage": "nyc report --reporter=html"
   }
 }
