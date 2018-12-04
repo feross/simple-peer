@@ -6,6 +6,7 @@ var stream = require('readable-stream')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
+var CHANNEL_CLOSE_DELAY = 3 * 1000
 
 inherits(DataChannel, stream.Duplex)
 
@@ -22,6 +23,7 @@ function DataChannel (opts) {
   self._cb = null
   self._interval = null
   self._channel = null
+  self._fresh = true
 
   self.channelName = null
 
@@ -47,7 +49,7 @@ DataChannel.prototype._setDataChannel = function (channel) {
     self._channel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT
   }
 
-  self.channelName = self._channel.label
+  self.channelName = self._channel.label.split('@')[0]
 
   self._channel.onmessage = function (event) {
     self._onChannelMessage(event)
@@ -147,6 +149,10 @@ DataChannel.prototype._onChannelOpen = function () {
   self._debug('on channel open', self.channelName)
   self.emit('open')
   self._sendChunk()
+
+  setTimeout(function () {
+    self._fresh = false
+  }, CHANNEL_CLOSE_DELAY)
 }
 
 DataChannel.prototype._onChannelClose = function () {
@@ -209,14 +215,22 @@ DataChannel.prototype.destroy = function (err) {
   self._destroy(err, function () {})
 }
 
+function closeChannel (channel) {
+  try {
+    channel.close()
+  } catch (err) {}
+}
+
 DataChannel.prototype._destroy = function (err, cb) {
   var self = this
   if (self.destroyed) return
 
   if (self._channel) {
-    try {
-      self._channel.close()
-    } catch (err) {}
+    if (self._fresh) { // HACK: Safari sometimes cannot close channels immediately after opening them
+      setTimeout(closeChannel.bind(this, self._channel), CHANNEL_CLOSE_DELAY)
+    } else {
+      closeChannel(self._channel)
+    }
 
     self._channel.onmessage = null
     self._channel.onopen = null

@@ -266,8 +266,8 @@ test('ensure remote address and port are available right after connection', func
 test('pre-negotiated default channel', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, channelConfig: {negotiated: true, id: 123} })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, channelConfig: {negotiated: true, id: 123} })
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, channelConfig: { negotiated: true, id: 123 } })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc, channelConfig: { negotiated: true, id: 123 } })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)

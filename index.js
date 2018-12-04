@@ -76,12 +76,12 @@ function Peer (opts) {
   self._sendersAwaitingStable = []
   self._senderMap = new WeakMap()
   self._firstStable = true
-  self._closingInterval = null
 
   self._remoteTracks = []
   self._remoteStreams = []
 
   self._channels = []
+  self._channelNameCounter = 0
 
   self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
   if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
@@ -112,12 +112,13 @@ function Peer (opts) {
   // - onnegotiationneeded
 
   if (self.initiator || self.channelConfig.negotiated) {
-    var channel = self._pc.createDataChannel('default' || self.channelName, self.channelConfig) // use label 'default' for datachannel correlation
+    var channelName = self._makeUniqueChannelName(self.channelName || 'default')
+    var channel = self._pc.createDataChannel(channelName, self.channelConfig) // use label 'default' for datachannel correlation
     self._setDataChannel(channel)
   }
   self._pc.ondatachannel = function (event) {
     self._debug('ondatachannel', event.channel.label)
-    // The first channel is "default" even if it is not called "default" on the other side (compatibility with older versions and alternative implementations)
+
     if (!self._channels[0]._channel) {
       self._setDataChannel(event.channel)
     } else {
@@ -228,6 +229,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
 Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   var self = this
   var channel = new DataChannel(opts)
+  channelName = self._makeUniqueChannelName(channelName)
   channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
   return channel
@@ -377,6 +379,7 @@ Peer.prototype.destroy = function (err) {
     DataChannel.prototype.destroy.apply(channel, err)
   })
   self._channels = null
+  self._channelNameCounter = null
 
   self.destroyed = true
   self.connected = false
@@ -756,6 +759,15 @@ Peer.prototype._debug = function () {
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
+}
+
+// HACK: We cannot reuse channel names, so we use the peer ID and a counter
+Peer.prototype._makeUniqueChannelName = function (channelName) {
+  var self = this
+  if (channelName.indexOf('@') !== -1) {
+    return self.destroy(makeError('channelName cannot include "@" character', 'INVALID_CHANNEL_NAME'))
+  }
+  return channelName + '@' + self._id + (self._channelNameCounter++)
 }
 
 // Transform constraints objects into the new format (unless Chromium)

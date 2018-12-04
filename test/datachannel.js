@@ -88,7 +88,7 @@ test('data sends on seperate channels', function (t) {
     t.end()
     return
   }
-  t.plan(15)
+  t.plan(32)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -99,48 +99,100 @@ test('data sends on seperate channels', function (t) {
   var dc1 = peer1.createDataChannel('1')
   var dc2 = peer2.createDataChannel('2')
 
-  str('123').pipe(peer2)
-  peer2.on('datachannel', function (dc) {
-    str('456').pipe(dc)
-  })
-  peer1.on('datachannel', function (dc) {
-    str('789').pipe(dc)
+  var ended = 0
+  function assertChannel (channel, label, testData) {
+    str(testData).pipe(channel)
+
+    channel.on('data', function (chunk) {
+      t.equal(chunk.toString(), testData, label + ' got correct message')
+    })
+    channel.on('finish', function () {
+      t.pass(label + ' got "finish"')
+      t.ok(channel._writableState.finished)
+    })
+    channel.on('end', function () {
+      t.pass(label + ' got "end"')
+      t.ok(channel._readableState.ended)
+      ended++
+      if (ended === 6) {
+        peer1.destroy()
+        peer2.destroy()
+        t.end()
+      }
+    })
+  }
+
+  assertChannel(dc1, 'channel 1, creator side', '123')
+  peer2.on('datachannel', function (dc1) {
+    t.pass('got "datachannel" event on peer2')
+    assertChannel(dc1, 'channel 1, receiver side', '123')
   })
 
-  peer1.on('data', function (chunk) {
-    t.equal(chunk.toString(), '123', 'got correct message')
-  })
-  peer1.on('finish', function () {
-    t.pass('got peer2 "finish"')
-    t.ok(peer1._writableState.finished)
-  })
-  peer1.on('end', function () {
-    t.pass('got peer2 "end"')
-    t.ok(peer1._readableState.ended)
+  assertChannel(dc2, 'channel 2, creator side', '456')
+  peer1.on('datachannel', function (dc2) {
+    t.pass('got "datachannel" event on peer1')
+    assertChannel(dc2, 'channel 2, receiver side', '456')
   })
 
-  dc1.on('data', function (chunk) {
-    t.equal(chunk.toString(), '456', 'got correct message')
-  })
-  dc1.on('finish', function () {
-    t.pass('got dc1 "finish"')
-    t.ok(dc1._writableState.finished)
-  })
-  dc1.on('end', function () {
-    t.pass('got dc1 "end"')
-    t.ok(dc1._readableState.ended)
-  })
+  assertChannel(peer1, 'default, initiator', 'abc')
+  assertChannel(peer2, 'default, non-initiator', 'abc')
+})
 
-  dc2.on('data', function (chunk) {
-    t.equal(chunk.toString(), '789', 'got correct message')
-  })
-  dc2.on('finish', function () {
-    t.pass('got dc2 "finish"')
-    t.ok(dc2._writableState.finished)
-  })
-  dc2.on('end', function () {
-    t.pass('got dc2 "end"')
-    t.ok(dc2._readableState.ended)
+test('data sends on seperate channels, async creation', function (t) {
+  if (process.env.WRTC === 'electron-webrtc') {
+    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
+    t.end()
+    return
+  }
+  t.plan(32)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.on('connect', function () {
+    var dc1 = peer1.createDataChannel('1')
+    var dc2 = peer2.createDataChannel('2')
+
+    var ended = 0
+    function assertChannel (channel, label, testData) {
+      str(testData).pipe(channel)
+
+      channel.on('data', function (chunk) {
+        t.equal(chunk.toString(), testData, label + ' got correct message')
+      })
+      channel.on('finish', function () {
+        t.pass(label + ' got "finish"')
+        t.ok(channel._writableState.finished)
+      })
+      channel.on('end', function () {
+        t.pass(label + ' got "end"')
+        t.ok(channel._readableState.ended)
+        ended++
+        if (ended === 6) {
+          peer1.destroy()
+          peer2.destroy()
+          t.end()
+        }
+      })
+    }
+
+    assertChannel(dc1, 'channel 1, creator side', '123')
+    peer2.on('datachannel', function (dc1) {
+      t.pass('got "datachannel" event on peer2')
+      assertChannel(dc1, 'channel 1, receiver side', '123')
+    })
+
+    assertChannel(dc2, 'channel 2, creator side', '456')
+    peer1.on('datachannel', function (dc2) {
+      t.pass('got "datachannel" event on peer1')
+      assertChannel(dc2, 'channel 2, receiver side', '456')
+    })
+
+    assertChannel(peer1, 'default, initiator', 'abc')
+    assertChannel(peer2, 'default, non-initiator', 'abc')
   })
 })
 
@@ -243,6 +295,74 @@ test('closing channels from non-creator side', function (t) {
   })
 })
 
+test('open new channel after closing one', function (t) {
+  if (process.env.WRTC === 'electron-webrtc') {
+    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
+    t.end()
+    return
+  }
+  t.plan(8)
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var dc1 = peer1.createDataChannel('1')
+  dc1.on('close', function () {
+    dc1 = peer1.createDataChannel('3')
+    str('456').pipe(dc1)
+  })
+  var dc2 = peer2.createDataChannel('2')
+  dc2.on('close', function () {
+    dc2 = peer2.createDataChannel('4')
+    str('123').pipe(dc2)
+  })
+
+  peer1.once('datachannel', function (dc) {
+    t.pass('got #2 datachannel')
+
+    dc.on('close', function () {
+      t.pass('#2 channel instance closed')
+    })
+    dc.on('data', function () {
+      t.fail('received data on closed #2 channel')
+    })
+    dc.on('open', function () {
+      dc.destroy()
+    })
+
+    peer1.once('datachannel', function (dc) {
+      t.equals(dc.channelName, '4', '#4 channel has correct name')
+      dc.on('data', function (data) {
+        t.equal(data.toString(), '123', 'received correct message on #4 channel')
+      })
+    })
+  })
+
+  peer2.once('datachannel', function (dc) {
+    t.pass('got #1 datachannel')
+
+    dc.on('close', function () {
+      t.pass('#1 channel instance closed')
+    })
+    dc.on('data', function () {
+      t.fail('received data on #1 closed channel')
+    })
+    dc.on('open', function () {
+      dc.destroy()
+    })
+
+    peer2.once('datachannel', function (dc) {
+      t.equals(dc.channelName, '3', '#3 channel has same channelName')
+      dc.on('data', function (data) {
+        t.equal(data.toString(), '456', 'received correct message on #3 channel')
+      })
+    })
+  })
+})
+
 test('reusing channelNames of closed channels', function (t) {
   if (process.env.WRTC === 'electron-webrtc') {
     t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
@@ -282,7 +402,7 @@ test('reusing channelNames of closed channels', function (t) {
     peer1.once('datachannel', function (dc) {
       t.equals(dc.channelName, '2', 'second channel has same channelName #1')
       dc.on('data', function (data) {
-        t.equal(data.toString(), '123', 'received correct message on second channel #1')
+        t.equal(data.toString(), '123', 'received correct message on channel #1')
       })
     })
   })
