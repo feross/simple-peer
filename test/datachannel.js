@@ -3,6 +3,7 @@ var Peer = require('../')
 var DataChannel = require('../datachannel')
 var str = require('string-to-stream')
 var test = require('tape')
+var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -144,6 +145,11 @@ test('data sends on seperate channels, async creation', function (t) {
     t.end()
     return
   }
+  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=192566
+    t.pass('Skip on Safari and iOS which do not support this reliably')
+    t.end()
+    return
+  }
   t.plan(32)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -152,7 +158,7 @@ test('data sends on seperate channels, async creation', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  peer1.on('connect', function () {
+  setTimeout(function () {
     var dc1 = peer1.createDataChannel('1')
     var dc2 = peer2.createDataChannel('2')
 
@@ -193,7 +199,7 @@ test('data sends on seperate channels, async creation', function (t) {
 
     assertChannel(peer1, 'default, initiator', 'abc')
     assertChannel(peer2, 'default, non-initiator', 'abc')
-  })
+  }, 2000)
 })
 
 test('closing channels from creator side', function (t) {
@@ -301,7 +307,14 @@ test('open new channel after closing one', function (t) {
     t.end()
     return
   }
-  t.plan(8)
+  if (bowser.safari || bowser.ios || bowser.firefox) { 
+    // https://bugs.webkit.org/show_bug.cgi?id=192566
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
+    t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')
+    t.end()
+    return
+  }
+  t.plan(10)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -309,15 +322,19 @@ test('open new channel after closing one', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var dc1 = peer1.createDataChannel('1')
+  var count = 0
+
+  const dc1 = peer1.createDataChannel('1')
   dc1.on('close', function () {
-    dc1 = peer1.createDataChannel('3')
-    str('456').pipe(dc1)
+    t.pass('created channel #3')
+    const dc12 = peer1.createDataChannel('3')
+    str('456').pipe(dc12)
   })
   var dc2 = peer2.createDataChannel('2')
   dc2.on('close', function () {
-    dc2 = peer2.createDataChannel('4')
-    str('123').pipe(dc2)
+    t.pass('created channel #4')
+    const dc22 = peer2.createDataChannel('4')
+    str('123').pipe(dc22)
   })
 
   peer1.once('datachannel', function (dc) {
@@ -337,6 +354,12 @@ test('open new channel after closing one', function (t) {
       t.equals(dc.channelName, '4', '#4 channel has correct name')
       dc.on('data', function (data) {
         t.equal(data.toString(), '123', 'received correct message on #4 channel')
+        count++
+        if (count === 2) {
+          peer1.destroy()
+          peer2.destroy()
+          t.end()
+        }
       })
     })
   })
@@ -358,6 +381,12 @@ test('open new channel after closing one', function (t) {
       t.equals(dc.channelName, '3', '#3 channel has same channelName')
       dc.on('data', function (data) {
         t.equal(data.toString(), '456', 'received correct message on #3 channel')
+        count++
+        if (count === 2) {
+          peer1.destroy()
+          peer2.destroy()
+          t.end()
+        }
       })
     })
   })
@@ -369,7 +398,14 @@ test('reusing channelNames of closed channels', function (t) {
     t.end()
     return
   }
-  t.plan(6)
+  if (bowser.safari || bowser.ios || bowser.firefox) { 
+    // https://bugs.webkit.org/show_bug.cgi?id=192566
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
+    t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')
+    t.end()
+    return
+  }
+  t.plan(10)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -377,51 +413,69 @@ test('reusing channelNames of closed channels', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var dc1 = peer1.createDataChannel('1')
+  var count = 0
+
+  const dc1 = peer1.createDataChannel('1')
   dc1.on('close', function () {
-    dc1 = peer1.createDataChannel('1')
-    dc1.write('456')
+    t.pass('dc1 closed')
+    const dc12 = peer1.createDataChannel('1')
+    dc12.write('456')
   })
-  var dc2 = peer2.createDataChannel('2')
+  const dc2 = peer2.createDataChannel('2')
   dc2.on('close', function () {
-    dc2 = peer2.createDataChannel('2')
-    dc2.write('123')
+    t.pass('dc2 closed')
+    const dc22 = peer2.createDataChannel('2')
+    dc22.write('123')
   })
 
   peer1.once('datachannel', function (dc) {
+    dc.on('open', function () {
+      t.pass('first channel instance closed #1')
+      dc.destroy()
+    })
     dc.on('close', function () {
       t.pass('first channel instance closed #1')
     })
     dc.on('data', function () {
       t.fail('received data on closed channel #1')
     })
-    dc.on('open', function () {
-      dc.destroy()
-    })
 
     peer1.once('datachannel', function (dc) {
       t.equals(dc.channelName, '2', 'second channel has same channelName #1')
       dc.on('data', function (data) {
         t.equal(data.toString(), '123', 'received correct message on channel #1')
+        count++
+        if (count === 2) {
+          peer1.destroy()
+          peer2.destroy()
+          t.end()
+        }
       })
     })
   })
 
   peer2.once('datachannel', function (dc) {
+    dc.on('open', function () {
+      t.pass('first channel instance closed #2')
+      dc.destroy()
+    })
     dc.on('close', function () {
       t.pass('first channel instance closed #2')
     })
     dc.on('data', function () {
       t.fail('received data on closed channel #2')
     })
-    dc.on('open', function () {
-      dc.destroy()
-    })
 
     peer2.once('datachannel', function (dc) {
       t.equals(dc.channelName, '1', 'second channel has same channelName #2')
       dc.on('data', function (data) {
         t.equal(data.toString(), '456', 'received correct message on second channel #2')
+        count++
+        if (count === 2) {
+          peer1.destroy()
+          peer2.destroy()
+          t.end()
+        }
       })
     })
   })

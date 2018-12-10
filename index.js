@@ -125,7 +125,7 @@ function Peer (opts) {
       var channel = new DataChannel(opts)
       channel._setDataChannel(event.channel)
       self._channels.push(channel)
-      self.emit('datachannel', channel)
+      self.emit('datachannel', channel, channel.channelName)
     }
   }
   self._channels.push(self)
@@ -764,6 +764,7 @@ Peer.prototype._debug = function () {
 // HACK: We cannot reuse channel names, so we use the peer ID and a counter
 Peer.prototype._makeUniqueChannelName = function (channelName) {
   var self = this
+  channelName = channelName || ''
   if (channelName.indexOf('@') !== -1) {
     return self.destroy(makeError('channelName cannot include "@" character', 'INVALID_CHANNEL_NAME'))
   }

@@ -370,7 +370,7 @@ peer.on('stream', function (stream) {
 
 Received a remote audio/video track. Streams may contain multiple tracks.
 
-### `peer.on('datachannel', function (datachannel) {})`
+### `peer.on('datachannel', function (datachannel, channelName) {})`
 
 Received an additional DataChannel. This fires after the remote peer calls `peer.createDataChannel()`.
 
