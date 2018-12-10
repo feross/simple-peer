@@ -307,7 +307,7 @@ test('open new channel after closing one', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios || bowser.firefox) { 
+  if (bowser.safari || bowser.ios || bowser.firefox) {
     // https://bugs.webkit.org/show_bug.cgi?id=192566
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
     t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')
@@ -398,7 +398,7 @@ test('reusing channelNames of closed channels', function (t) {
     t.end()
     return
   }
-  if (bowser.safari || bowser.ios || bowser.firefox) { 
+  if (bowser.safari || bowser.ios || bowser.firefox) {
     // https://bugs.webkit.org/show_bug.cgi?id=192566
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
     t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')

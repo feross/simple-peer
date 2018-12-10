@@ -89,8 +89,8 @@ test('two way piping works with 2 sub-streams', function (t) {
   stream1.pipe(collect())
   stream2.pipe(collect())
 
-  stream1.write(new Buffer('hello'))
-  stream2.write(new Buffer('world'))
+  stream1.write(Buffer.from('hello'))
+  stream2.write(Buffer.from('world'))
 
   var pending = 2
   var results = []
@@ -132,7 +132,7 @@ test('channelName should be exposed as channel.channelName', function (t) {
     peer2.destroy()
   })
 
-  stream1.write(new Buffer('hello'))
+  stream1.write(Buffer.from('hello'))
   stream1.end()
 })
 
@@ -157,7 +157,7 @@ test('channelName can be a long string', function (t) {
     peer2.destroy()
   })
 
-  stream1.write(new Buffer('hello'))
+  stream1.write(Buffer.from('hello'))
   stream1.end()
 })
 
@@ -182,7 +182,7 @@ test('destroy', function (t) {
     peer2.destroy()
   })
 
-  stream1.write(new Buffer('hello'))
+  stream1.write(Buffer.from('hello'))
   stream1.destroy(new Error('0 had an error'))
 })
 
@@ -246,7 +246,7 @@ test('quick message', function (t) {
   setTimeout(function () {
     var stream = peer2.createDataChannel()
     stream.on('data', function (data) {
-      t.same(data, new Buffer('hello world'))
+      t.same(data, Buffer.from('hello world'))
       t.end()
 
       peer1.destroy()
