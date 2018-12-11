@@ -441,6 +441,7 @@ Peer.prototype._createOffer = function () {
     }
 
     function sendOffer () {
+      if (self.destroyed) return
       var signal = self._pc.localDescription || offer
       self._debug('signal')
       self.emit('signal', {
@@ -472,6 +473,7 @@ Peer.prototype._createAnswer = function () {
     }
 
     function sendAnswer () {
+      if (self.destroyed) return
       var signal = self._pc.localDescription || answer
       self._debug('signal')
       self.emit('signal', {
