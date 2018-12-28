@@ -1,7 +1,7 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "9.1.2",
+  "version": "9.2.0",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
@@ -31,7 +31,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "wrtc": "^0.2.0",
+    "wrtc": "^0.3.1",
     "ws": "^6.0.0"
   },
   "keywords": [
