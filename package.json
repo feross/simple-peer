@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "debug": "^4.0.1",
-    "get-browser-rtc": "^1.0.0",
+    "get-browser-rtc": "^1.0.2",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
     "readable-stream": "^2.3.4"
