@@ -21,14 +21,6 @@ exports.getConfig = thunky(function (cb) {
 // For testing on node, we must provide a WebRTC implementation
 if (process.env.WRTC === 'wrtc') {
   exports.wrtc = require('wrtc')
-} else if (process.env.WRTC === 'electron-webrtc') {
-  exports.wrtc = require('electron-webrtc')()
-
-  exports.wrtc.on('error', function (err, source) {
-    if (err.message !== 'Daemon already closed') {
-      console.error(err, source)
-    }
-  })
 }
 
 // create a test MediaStream with two tracks
