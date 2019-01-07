@@ -81,7 +81,7 @@ function Peer (opts) {
   self._batchedNegotiation = false // batch synchronous negotiations
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
-  self._senderMap = {}
+  self._senderMap = new Map()
   self._firstStable = true
   self._closingInterval = null
 
@@ -267,9 +267,9 @@ Peer.prototype.addTrack = function (track, stream) {
   self._debug('addTrack()')
 
   var sender = self._pc.addTrack(track, stream)
-  var submap = self._senderMap[track] || {} // nested objects map [track, stream] to sender
-  submap[stream] = sender
-  self._senderMap[track] = submap
+  var submap = self._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
+  submap.set(stream, sender)
+  self._senderMap.set(track, submap)
   self._needsNegotiation()
 }
 
@@ -284,12 +284,12 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
 
   self._debug('replaceTrack()')
 
-  var submap = self._senderMap[oldTrack]
-  var sender = submap ? submap[stream] : null
+  var submap = self._senderMap.get(oldTrack)
+  var sender = submap ? submap.get(stream) : null
   if (!sender) {
     self.destroy(new Error('Cannot replace track that was never added.'))
   }
-  if (newTrack) self._senderMap[newTrack] = submap
+  if (newTrack) self._senderMap.set(newTrack, submap)
 
   if (sender.replaceTrack != null) {
     await sender.replaceTrack(newTrack)
@@ -308,8 +308,8 @@ Peer.prototype.removeTrack = function (track, stream) {
 
   self._debug('removeSender()')
 
-  var submap = self._senderMap[track]
-  var sender = submap ? submap[stream] : null
+  var submap = self._senderMap.get(track)
+  var sender = submap ? submap.get(stream) : null
   if (!sender) {
     self.destroy(new Error('Cannot remove track that was never added.'))
   }
