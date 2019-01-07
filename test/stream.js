@@ -120,7 +120,10 @@ test('backpressure (large files)', function (t) {
     peer2.on('data', function (chunk) {
       count++
       t.equal(chunk.toString(), largeMessage, 'got correct message' + count + '/' + 10)
-      if (count === 10) peer1.end()
+      if (count === 10) {
+        peer1.destroy()
+        peer2.destroy()
+      }
     })
     peer2.on('finish', function () {
       t.pass('got peer2 "finish"')
