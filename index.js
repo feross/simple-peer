@@ -81,7 +81,7 @@ function Peer (opts) {
   self._batchedNegotiation = false // batch synchronous negotiations
   self._queuedNegotiation = false // is there a queued negotiation request?
   self._sendersAwaitingStable = []
-  self._senderMap = new WeakMap()
+  self._senderMap = new Map()
   self._firstStable = true
   self._closingInterval = null
 
@@ -267,7 +267,7 @@ Peer.prototype.addTrack = function (track, stream) {
   self._debug('addTrack()')
 
   var sender = self._pc.addTrack(track, stream)
-  var submap = self._senderMap.get(track) || new WeakMap() // nested WeakMaps map [track, stream] to sender
+  var submap = self._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
   submap.set(stream, sender)
   self._senderMap.set(track, submap)
   self._needsNegotiation()
