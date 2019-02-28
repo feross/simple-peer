@@ -97,7 +97,7 @@ function Peer (opts) {
   } catch (err) {
     self.destroy(err)
   }
-  
+
   if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
     shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
   }
