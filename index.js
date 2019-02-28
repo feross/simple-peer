@@ -761,7 +761,7 @@ Peer.prototype._maybeReady = function () {
           self.localAddress = local[0]
           self.localPort = Number(local[1])
         }
-        self.localFamily = self.localAddress.indexOf(':') === -1 ? 'IPv4' : 'IPv6'
+        self.localFamily = self.localAddress.includes(':') ? 'IPv4' : 'IPv6'
 
         var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
 
@@ -779,7 +779,7 @@ Peer.prototype._maybeReady = function () {
           self.remoteAddress = remote[0]
           self.remotePort = Number(remote[1])
         }
-        self.remoteFamily = self.remoteAddress.indexOf(':') === -1 ? 'IPv4' : 'IPv6'
+        self.remoteFamily = self.remoteAddress.includes(':') ? 'IPv4' : 'IPv6'
 
         self._debug(
           'connect local: %s:%s remote: %s:%s',
