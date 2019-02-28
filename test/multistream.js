@@ -52,6 +52,11 @@ test('multistream', function (t) {
       receivedIds[stream.id] = true
     }
   })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
 })
 
 test('incremental multistream', function (t) {
@@ -115,6 +120,68 @@ test('incremental multistream', function (t) {
       peer2.addStream(common.getMediaStream())
     }
   })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('incremental multistream on non-initiator only', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(7)
+
+  var peer1 = new Peer({
+    config: config,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+  var peer2 = new Peer({
+    config: config,
+    wrtc: common.wrtc,
+    streams: []
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connected')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connected')
+    peer2.addTransceiver('video')
+    peer2.addTransceiver('video')
+    peer2.addStream(common.getMediaStream())
+  })
+
+  var receivedIds = {}
+
+  var count = 0
+  peer1.on('stream', function (stream) {
+    t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
+    count++
+    if (count < 5) {
+      peer2.addTransceiver('video')
+      peer2.addTransceiver('video')
+      peer2.addStream(common.getMediaStream())
+    }
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
 })
 
 test('removeTrack immediately', function (t) {
@@ -152,6 +219,11 @@ test('removeTrack immediately', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
   })
 })
 
@@ -192,5 +264,10 @@ test('replaceTrack', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
   })
 })

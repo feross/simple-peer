@@ -23,7 +23,8 @@
   - node.js [duplex stream](http://nodejs.org/api/stream.html) interface
 - supports advanced options like:
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
-  - manually set config and constraints options
+  - manually set config options
+  - transceivers and renegotiation
 
 This module works in the browser with [browserify](http://browserify.org/).
 
@@ -219,9 +220,8 @@ If `opts` is specified, then the default options (shown below) will be overridde
   channelConfig: {},
   channelName: '<random string>',
   config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
-  constraints: {},
-  offerConstraints: {},
-  answerConstraints: {},
+  offerOptions: {},
+  answerOptions: {},
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   streams: [],
@@ -238,9 +238,8 @@ The options do the following:
 - `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
 - `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
-- `constraints` - custom webrtc video/voice constraints (used by `RTCPeerConnection` constructor)
-- `offerConstraints` - custom offer constraints (used by `createOffer` method)
-- `answerConstraints` - custom answer constraints (used by `createAnswer` method)
+- `offerOptions` - custom offer options (used by `createOffer` method)
+- `answerOptions` - custom answer options (used by `createAnswer` method)
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
 - `streams` - an array of MediaStreams returned from `getUserMedia`
@@ -283,9 +282,13 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
-### `peer.setConstraints(constraints)`
+### `peer.addTransceiver(kind, [init])`
 
-Used to change the `offerConstraints`, and `answerConstraints` options before renegotiation.
+Adds a media `Transceiver` to the connection. Must be called to allow the non-initiator to send more media tracks than it received.
+
+`kind` is a string specifying the media kind (`'audio'` or `'video'`).
+
+`init` is a `RTCRtpTransceiverInit` dictionary.
 
 ### `peer.destroy([err])`
 

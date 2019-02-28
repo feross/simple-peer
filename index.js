@@ -34,15 +34,11 @@ function Peer (opts) {
     ? opts.channelName || randombytes(20).toString('hex')
     : null
 
-  // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
-
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = Object.assign({}, Peer.config, opts.config)
-  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
-  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
-  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
+  self.offerOptions = opts.offerOptions || {}
+  self.answerOptions = opts.answerOptions || {}
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
@@ -92,10 +88,7 @@ function Peer (opts) {
   self._cb = null
   self._interval = null
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
-  if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
-    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
-  }
+  self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
@@ -154,8 +147,8 @@ function Peer (opts) {
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 
 /**
- * Expose config, constraints, and data channel config for overriding all Peer
- * instances. Otherwise, just set opts.config, opts.constraints, or opts.channelConfig
+ * Expose peer and data channel config for overriding all Peer
+ * instances. Otherwise, just set opts.config or opts.channelConfig
  * when constructing a Peer.
  */
 Peer.config = {
@@ -166,9 +159,9 @@ Peer.config = {
     {
       urls: 'stun:global.stun.twilio.com:3478?transport=udp'
     }
-  ]
+  ],
+  sdpSemantics: 'unified-plan'
 }
-Peer.constraints = {}
 Peer.channelConfig = {}
 
 Object.defineProperty(Peer.prototype, 'bufferSize', {
@@ -199,9 +192,16 @@ Peer.prototype.signal = function (data) {
     self._debug('got request to renegotiate')
     self._needsNegotiation()
   }
+  if (data.transceiverRequest && self.initiator) {
+    self._debug('got request for transceiver')
+    self.addTransceiver(data.transceiverRequest.kind, data.transceiverRequest.init)
+  }
   if (data.candidate) {
-    if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
-    else self._pendingCandidates.push(data.candidate)
+    if (self._pc.localDescription && self._pc.localDescription.type && self._pc.remoteDescription && self._pc.remoteDescription.type) {
+      self._addIceCandidate(data.candidate)
+    } else {
+      self._pendingCandidates.push(data.candidate)
+    }
   }
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data)).then(function () {
@@ -215,7 +215,7 @@ Peer.prototype.signal = function (data) {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }).catch(function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
   }
-  if (!data.sdp && !data.candidate && !data.renegotiate) {
+  if (!data.sdp && !data.candidate && !data.renegotiate && !data.transceiverRequest) {
     self.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
   }
 }
@@ -240,6 +240,30 @@ Peer.prototype._addIceCandidate = function (candidate) {
 Peer.prototype.send = function (chunk) {
   var self = this
   self._channel.send(chunk)
+}
+
+/**
+ * Add a Transceiver to the connection.
+ * @param {String} kind
+ * @param {Object} init
+ */
+Peer.prototype.addTransceiver = function (kind, init) {
+  var self = this
+
+  self._debug('addTransceiver()')
+
+  if (self.initiator) {
+    try {
+      self._pc.addTransceiver(kind, init)
+      self._needsNegotiation()
+    } catch (err) {
+      self.destroy(err)
+    }
+  } else {
+    self.emit('signal', { // request initiator to renegotiate
+      transceiverRequest: { kind, init }
+    })
+  }
 }
 
 /**
@@ -287,7 +311,7 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
   var submap = self._senderMap.get(oldTrack)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(new Error('Cannot replace track that was never added.'))
+    self.destroy(makeError('Cannot replace track that was never added.'), 'ERR_TRACK_NOT_ADDED')
   }
   if (newTrack) self._senderMap.set(newTrack, submap)
 
@@ -311,7 +335,7 @@ Peer.prototype.removeTrack = function (track, stream) {
   var submap = self._senderMap.get(track)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(new Error('Cannot remove track that was never added.'))
+    self.destroy(makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
   }
   try {
     self._pc.removeTrack(sender)
@@ -554,7 +578,7 @@ Peer.prototype._createOffer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createOffer(self.offerConstraints).then(function (offer) {
+  self._pc.createOffer(self.offerOptions).then(function (offer) {
     if (self.destroyed) return
     if (!self.trickle && !self.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp)
     offer.sdp = self.sdpTransform(offer.sdp)
@@ -587,7 +611,7 @@ Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createAnswer(self.answerConstraints).then(function (answer) {
+  self._pc.createAnswer(self.answerOptions).then(function (answer) {
     if (self.destroyed) return
     if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
@@ -636,7 +660,7 @@ Peer.prototype._onIceStateChange = function () {
     self.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
   }
   if (iceConnectionState === 'closed') {
-    self.destroy(new Error('Ice connection closed.'))
+    self.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
   }
 }
 
@@ -938,93 +962,11 @@ Peer.prototype._onTrack = function (event) {
   })
 }
 
-Peer.prototype.setConstraints = function (constraints) {
-  var self = this
-  if (self.initiator) {
-    self.offerConstraints = self._transformConstraints(constraints)
-  } else {
-    self.answerConstraints = self._transformConstraints(constraints)
-  }
-}
-
 Peer.prototype._debug = function () {
   var self = this
   var args = [].slice.call(arguments)
   args[0] = '[' + self._id + '] ' + args[0]
   debug.apply(null, args)
-}
-
-// Transform constraints objects into the new format (unless Chromium)
-// TODO: This can be removed when Chromium supports the new format
-Peer.prototype._transformConstraints = function (constraints) {
-  var self = this
-
-  if (Object.keys(constraints).length === 0) {
-    return constraints
-  }
-
-  if ((constraints.mandatory || constraints.optional) && !self._isChromium) {
-    // convert to new format
-
-    // Merge mandatory and optional objects, prioritizing mandatory
-    var newConstraints = Object.assign({}, constraints.optional, constraints.mandatory)
-
-    // fix casing
-    if (newConstraints.OfferToReceiveVideo !== undefined) {
-      newConstraints.offerToReceiveVideo = newConstraints.OfferToReceiveVideo
-      delete newConstraints['OfferToReceiveVideo']
-    }
-
-    if (newConstraints.OfferToReceiveAudio !== undefined) {
-      newConstraints.offerToReceiveAudio = newConstraints.OfferToReceiveAudio
-      delete newConstraints['OfferToReceiveAudio']
-    }
-
-    return newConstraints
-  } else if (!constraints.mandatory && !constraints.optional && self._isChromium) {
-    // convert to old format
-
-    // fix casing
-    if (constraints.offerToReceiveVideo !== undefined) {
-      constraints.OfferToReceiveVideo = constraints.offerToReceiveVideo
-      delete constraints['offerToReceiveVideo']
-    }
-
-    if (constraints.offerToReceiveAudio !== undefined) {
-      constraints.OfferToReceiveAudio = constraints.offerToReceiveAudio
-      delete constraints['offerToReceiveAudio']
-    }
-
-    return {
-      mandatory: constraints // NOTE: All constraints are upgraded to mandatory
-    }
-  }
-
-  return constraints
-}
-
-// HACK: Minimal shim to force Chrome and WRTC to use their more reliable callback API
-function shimPromiseAPI (RTCPeerConnection, pc) {
-  pc.createOffer = function (constraints) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.createOffer.call(this, resolve, reject, constraints)
-    })
-  }
-  pc.createAnswer = function (constraints) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.createAnswer.call(this, resolve, reject, constraints)
-    })
-  }
-  pc.setLocalDescription = function (description) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.setLocalDescription.call(this, description, resolve, reject)
-    })
-  }
-  pc.setRemoteDescription = function (description) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
-    })
-  }
 }
 
 // HACK: Filter trickle lines when trickle is disabled #354
