@@ -39,7 +39,7 @@ function Peer (opts) {
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
-  self.config = opts.config || Peer.config
+  self.config = Object.assign({}, Peer.config, opts.config)
   self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
   self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
   self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
@@ -746,9 +746,9 @@ Peer.prototype._maybeReady = function () {
 
         var local = localCandidates[selectedCandidatePair.localCandidateId]
 
-        if (local && local.ip) {
+        if (local && (local.ip || local.address)) {
           // Spec
-          self.localAddress = local.ip
+          self.localAddress = local.ip || local.address
           self.localPort = Number(local.port)
         } else if (local && local.ipAddress) {
           // Firefox
@@ -763,9 +763,9 @@ Peer.prototype._maybeReady = function () {
 
         var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
 
-        if (remote && remote.ip) {
+        if (remote && (remote.ip || remote.address)) {
           // Spec
-          self.remoteAddress = remote.ip
+          self.remoteAddress = remote.ip || remote.address
           self.remotePort = Number(remote.port)
         } else if (remote && remote.ipAddress) {
           // Firefox

@@ -18,7 +18,7 @@
     "readable-stream": "^2.3.4"
   },
   "devDependencies": {
-    "airtap": "0.1.0",
+    "airtap": "1.0.0",
     "babel-minify": "^0.5.0",
     "bowser": "^1.9.2",
     "browserify": "^16.1.0",
