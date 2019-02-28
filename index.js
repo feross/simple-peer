@@ -56,6 +56,7 @@ function Peer (opts) {
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
+  self.localFamily = undefined
   self.localPort = undefined
 
   self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
@@ -185,7 +186,7 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
 
 Peer.prototype.address = function () {
   var self = this
-  return { port: self.localPort, family: 'IPv4', address: self.localAddress }
+  return { port: self.localPort, family: self.localFamily, address: self.localAddress }
 }
 
 Peer.prototype.signal = function (data) {
@@ -765,6 +766,7 @@ Peer.prototype._maybeReady = function () {
           self.localAddress = local[0]
           self.localPort = Number(local[1])
         }
+        self.localFamily = self.localAddress.includes(':') ? 'IPv6' : 'IPv4'
 
         var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
 
@@ -782,7 +784,7 @@ Peer.prototype._maybeReady = function () {
           self.remoteAddress = remote[0]
           self.remotePort = Number(remote[1])
         }
-        self.remoteFamily = 'IPv4'
+        self.remoteFamily = self.remoteAddress.includes(':') ? 'IPv6' : 'IPv4'
 
         self._debug(
           'connect local: %s:%s remote: %s:%s',
