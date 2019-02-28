@@ -92,7 +92,12 @@ function Peer (opts) {
   self._cb = null
   self._interval = null
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  try {
+    self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
+  } catch (err) {
+    self.destroy(err)
+  }
+  
   if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
     shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
   }
