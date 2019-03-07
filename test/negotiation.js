@@ -166,9 +166,6 @@ test('add stream on non-initiator only', function (t) {
   peer1.on('signal', function (data) { console.log(data); if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { console.log(data); if (!peer1.destroyed) peer1.signal(data) })
 
-  peer2.addTransceiver('video')
-  peer2.addTransceiver('video')
-
   peer1.on('connect', function () {
     t.pass('peer1 connect')
   })

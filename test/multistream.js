@@ -155,8 +155,6 @@ test('incremental multistream on non-initiator only', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
-    peer2.addTransceiver('video')
-    peer2.addTransceiver('video')
     peer2.addStream(common.getMediaStream())
   })
 
@@ -172,8 +170,6 @@ test('incremental multistream on non-initiator only', function (t) {
     }
     count++
     if (count < 5) {
-      peer2.addTransceiver('video')
-      peer2.addTransceiver('video')
       peer2.addStream(common.getMediaStream())
     }
   })
@@ -194,6 +190,8 @@ test('removeTrack immediately', function (t) {
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+
+  peer1._debug = peer2._debug = console.log
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })

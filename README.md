@@ -282,14 +282,6 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
-### `peer.addTransceiver(kind, [init])`
-
-Adds a media `Transceiver` to the connection. Must be called to allow the non-initiator to send more media tracks than it received.
-
-`kind` is a string specifying the media kind (`'audio'` or `'video'`).
-
-`init` is a `RTCRtpTransceiverInit` dictionary.
-
 ### `peer.destroy([err])`
 
 Destroy and cleanup this peer connection.

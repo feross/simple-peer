@@ -607,6 +607,26 @@ Peer.prototype._createOffer = function () {
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) })
 }
 
+Peer.prototype._requestMissingTransceivers = function (answer) {
+  var self = this
+
+  ;['audio', 'video'].forEach(kind => {
+    var lines = answer.sdp.split('\n').filter(l => l.slice(0,7) === 'm='+kind)
+    var tracks = []
+    self._senderMap.forEach(trackMap => {
+      trackMap.forEach(sender => {
+        if (sender.track && sender.track.kind === kind) tracks.push(sender.track)
+      })
+    })
+
+    if (lines.length < tracks.length) {
+      for (var i=0; i<(tracks.length-lines.length); i++) {
+        self.addTransceiver(kind)
+      }
+    }
+  })
+}
+
 Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
@@ -616,6 +636,8 @@ Peer.prototype._createAnswer = function () {
     if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
+
+    if (!self.initiator) self._requestMissingTransceivers(answer)
 
     function onSuccess () {
       if (self.destroyed) return
