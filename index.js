@@ -136,15 +136,13 @@ function Peer (opts) {
     }
   }
 
-  if ('addTrack' in self._pc) {
-    if (self.streams) {
-      self.streams.forEach(function (stream) {
-        self.addStream(stream)
-      })
-    }
-    self._pc.ontrack = function (event) {
-      self._onTrack(event)
-    }
+  if (self.streams) {
+    self.streams.forEach(function (stream) {
+      self.addStream(stream)
+    })
+  }
+  self._pc.ontrack = function (event) {
+    self._onTrack(event)
   }
 
   if (self.initiator) {
@@ -271,8 +269,15 @@ Peer.prototype.addTrack = function (track, stream) {
   var self = this
 
   self._debug('addTrack()')
+  var sender = null
+  if ('addTrack' in self._pc) {
+    sender = self._pc.addTrack(track, stream)
+  } else if ('addStream' in self._pc) {
+    sender = self._pc.addStream(stream)
+  } else {
+    self.destroy(new Error('Cannot addStream without webRTC support for addTrack or addStream.'))
+  }
 
-  var sender = self._pc.addTrack(track, stream)
   var submap = self._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
   submap.set(stream, sender)
   self._senderMap.set(track, submap)
