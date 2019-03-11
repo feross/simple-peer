@@ -89,7 +89,7 @@ test('duplex stream: send data one-way', function (t) {
 })
 
 test('backpressure (large files)', function (t) {
-  t.plan(19)
+  t.plan(109)
 
   var MAX_BUFFERED_AMOUNT = 64 * 1024
   var largeMessage = new Array(Math.floor(MAX_BUFFERED_AMOUNT)).fill(0).map(x => 'a').join('')
@@ -119,8 +119,8 @@ test('backpressure (large files)', function (t) {
     var count = 0
     peer2.on('data', function (chunk) {
       count++
-      t.equal(chunk.toString(), largeMessage, 'got correct message' + count + '/' + 10)
-      if (count === 10) {
+      t.equal(chunk.toString(), largeMessage, 'got correct message' + count + '/' + 100)
+      if (count === 100) {
         peer1.destroy()
         peer2.destroy()
       }
@@ -140,7 +140,7 @@ test('backpressure (large files)', function (t) {
       Peer.prototype._onChannelBufferedAmountLow.call(peer1)
     }
 
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 100; i++) {
       peer1.write(largeMessage)
     }
   }
