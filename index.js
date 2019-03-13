@@ -706,7 +706,7 @@ Peer.prototype.getStats = function (cb) {
     self._pc.getStats().then(function (res) {
       var reports = []
       res.forEach(function (report) {
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -716,7 +716,7 @@ Peer.prototype.getStats = function (cb) {
     self._pc.getStats(null, function (res) {
       var reports = []
       res.forEach(function (report) {
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -736,7 +736,7 @@ Peer.prototype.getStats = function (cb) {
         report.id = result.id
         report.type = result.type
         report.timestamp = result.timestamp
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -745,6 +745,16 @@ Peer.prototype.getStats = function (cb) {
   // getStats() they implement.
   } else {
     cb(null, [])
+  }
+
+  // statreports can come with a value array instead of properties
+  function flattenValues (report) {
+    if (Object.prototype.toString.call(report.values) === '[object Array]') {
+      report.values.forEach(function (value) {
+        Object.assign(report, value)
+      })
+    }
+    return report
   }
 }
 
