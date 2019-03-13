@@ -95,10 +95,6 @@ function Peer (opts) {
     self.destroy(err)
   }
 
-  if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
-    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
-  }
-
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
   self._isReactNativeWebrtc = typeof self._pc._peerConnectionId === 'number'
@@ -132,15 +128,13 @@ function Peer (opts) {
     }
   }
 
-  if ('addTrack' in self._pc) {
-    if (self.streams) {
-      self.streams.forEach(function (stream) {
-        self.addStream(stream)
-      })
-    }
-    self._pc.ontrack = function (event) {
-      self._onTrack(event)
-    }
+  if (self.streams) {
+    self.streams.forEach(function (stream) {
+      self.addStream(stream)
+    })
+  }
+  self._pc.ontrack = function (event) {
+    self._onTrack(event)
   }
 
   if (self.initiator) {
@@ -473,9 +467,7 @@ Peer.prototype._destroy = function (err, cb) {
     self._pc.onicegatheringstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    if ('addTrack' in self._pc) {
-      self._pc.ontrack = null
-    }
+    self._pc.ontrack = null
     self._pc.ondatachannel = null
   }
   self._pc = null
@@ -631,7 +623,7 @@ Peer.prototype._requestMissingTransceivers = function () {
   var self = this
 
   ;['audio', 'video'].forEach(kind => {
-    var lines = self._pc.remoteDescription.sdp.split('\n').filter(l => l.slice(0,7) === 'm='+kind)
+    var lines = self._pc.remoteDescription.sdp.split('\n').filter(l => l.slice(0, 7) === 'm=' + kind)
     var tracks = []
     self._senderMap.forEach(trackMap => {
       trackMap.forEach(sender => {
@@ -640,7 +632,7 @@ Peer.prototype._requestMissingTransceivers = function () {
     })
 
     if (lines.length < tracks.length) {
-      for (var i=0; i<(tracks.length-lines.length); i++) {
+      for (var i = 0; i < (tracks.length - lines.length); i++) {
         self._debug('requesting transceiver of kind', kind)
         self.addTransceiver(kind)
       }
@@ -657,7 +649,6 @@ Peer.prototype._createAnswer = function () {
     if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
-
 
     function onSuccess () {
       if (self.destroyed) return
