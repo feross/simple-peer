@@ -13,13 +13,6 @@ test('get config', function (t) {
 })
 
 test('disable trickle', function (t) {
-  if (bowser.safari || bowser.ios) {
-    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
-
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
@@ -66,13 +59,6 @@ test('disable trickle', function (t) {
 })
 
 test('disable trickle (only initiator)', function (t) {
-  if (bowser.safari || bowser.ios) {
-    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
-
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, trickle: false, wrtc: common.wrtc })
@@ -119,13 +105,6 @@ test('disable trickle (only initiator)', function (t) {
 })
 
 test('disable trickle (only receiver)', function (t) {
-  if (bowser.safari || bowser.ios) {
-    // Note: Webkit bug filed here: https://bugs.webkit.org/show_bug.cgi?id=182906
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
-
   t.plan(8)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })

@@ -163,8 +163,8 @@ test('add stream on non-initiator only', function (t) {
     stream: common.getMediaStream()
   })
 
-  peer1.on('signal', function (data) { console.log(data); if (!peer2.destroyed) peer2.signal(data) })
-  peer2.on('signal', function (data) { console.log(data); if (!peer1.destroyed) peer1.signal(data) })
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
   peer1.on('connect', function () {
     t.pass('peer1 connect')

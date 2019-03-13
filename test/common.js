@@ -24,9 +24,13 @@ if (process.env.WRTC === 'wrtc') {
 }
 
 // create a test MediaStream with two tracks
+var canvas
 exports.getMediaStream = function () {
-  const canvas = document.createElement('canvas')
-  canvas.getContext('2d') // initialize canvas
+  if (!canvas) {
+    canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 100
+    canvas.getContext('2d') // initialize canvas
+  }
   const stream = canvas.captureStream(30)
   stream.addTrack(stream.getTracks()[0].clone()) // should have 2 tracks
   return stream

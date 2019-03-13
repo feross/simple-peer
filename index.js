@@ -52,6 +52,7 @@ function Peer (opts) {
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
+  self.localFamily = undefined
   self.localPort = undefined
 
   self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
@@ -88,7 +89,15 @@ function Peer (opts) {
   self._cb = null
   self._interval = null
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
+  try {
+    self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
+  } catch (err) {
+    self.destroy(err)
+  }
+
+  if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
+    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
+  }
 
   // We prefer feature detection whenever possible, but sometimes that's not
   // possible for certain implementations.
@@ -173,7 +182,7 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
 
 Peer.prototype.address = function () {
   var self = this
-  return { port: self.localPort, family: 'IPv4', address: self.localAddress }
+  return { port: self.localPort, family: self.localFamily, address: self.localAddress }
 }
 
 Peer.prototype.signal = function (data) {
@@ -290,11 +299,18 @@ Peer.prototype.addTrack = function (track, stream) {
 
   self._debug('addTrack()')
 
-  var sender = self._pc.addTrack(track, stream)
   var submap = self._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
-  submap.set(stream, sender)
-  self._senderMap.set(track, submap)
-  self._needsNegotiation()
+  var sender = submap.get(stream)
+  if (!sender) {
+    sender = self._pc.addTrack(track, stream)
+    submap.set(stream, sender)
+    self._senderMap.set(track, submap)
+    self._needsNegotiation()
+  } else if (sender.removed) {
+    self.destroy(makeError('Track has been removed. You should enable/disable tracks that you want to re-add.'), 'ERR_SENDER_REMOVED')
+  } else {
+    self.destroy(makeError('Track has already been added to that stream.'), 'ERR_SENDER_ALREADY_ADDED')
+  }
 }
 
 /**
@@ -303,7 +319,7 @@ Peer.prototype.addTrack = function (track, stream) {
  * @param {MediaStreamTrack} newTrack
  * @param {MediaStream} stream
  */
-Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
+Peer.prototype.replaceTrack = function (oldTrack, newTrack, stream) {
   var self = this
 
   self._debug('replaceTrack()')
@@ -316,7 +332,7 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
   if (newTrack) self._senderMap.set(newTrack, submap)
 
   if (sender.replaceTrack != null) {
-    await sender.replaceTrack(newTrack)
+    sender.replaceTrack(newTrack)
   } else {
     self.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
   }
@@ -338,6 +354,7 @@ Peer.prototype.removeTrack = function (track, stream) {
     self.destroy(makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
   }
   try {
+    sender.removed = true
     self._pc.removeTrack(sender)
   } catch (err) {
     if (err.name === 'NS_ERROR_UNEXPECTED') {
@@ -384,7 +401,9 @@ Peer.prototype.negotiate = function () {
       self._debug('already negotiating, queueing')
     } else {
       self._debug('start negotiation')
-      self._createOffer()
+      setTimeout(() => { // HACK: Chrome crashes if we immediately call createOffer
+        self._createOffer()
+      }, 0)
     }
   } else {
     if (!self._isNegotiating) {
@@ -561,17 +580,18 @@ Peer.prototype._onFinish = function () {
 }
 
 Peer.prototype._startIceCompleteTimeout = function () {
-  debug('started iceComplete timeout')
   var self = this
   if (self.destroyed) return
   if (self._iceCompleteTimer) return
+  self._debug('started iceComplete timeout')
   self._iceCompleteTimer = setTimeout(function () {
     if (!self._iceComplete) {
       self._iceComplete = true
+      self._debug('iceComplete timeout completed')
       self.emit('iceTimeout')
       self.emit('_iceComplete')
     }
-  }, this.iceCompleteTimeout)
+  }, self.iceCompleteTimeout)
 }
 
 Peer.prototype._createOffer = function () {
@@ -607,11 +627,11 @@ Peer.prototype._createOffer = function () {
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) })
 }
 
-Peer.prototype._requestMissingTransceivers = function (answer) {
+Peer.prototype._requestMissingTransceivers = function () {
   var self = this
 
   ;['audio', 'video'].forEach(kind => {
-    var lines = answer.sdp.split('\n').filter(l => l.slice(0,7) === 'm='+kind)
+    var lines = self._pc.remoteDescription.sdp.split('\n').filter(l => l.slice(0,7) === 'm='+kind)
     var tracks = []
     self._senderMap.forEach(trackMap => {
       trackMap.forEach(sender => {
@@ -621,6 +641,7 @@ Peer.prototype._requestMissingTransceivers = function (answer) {
 
     if (lines.length < tracks.length) {
       for (var i=0; i<(tracks.length-lines.length); i++) {
+        self._debug('requesting transceiver of kind', kind)
         self.addTransceiver(kind)
       }
     }
@@ -637,7 +658,6 @@ Peer.prototype._createAnswer = function () {
     answer.sdp = self.sdpTransform(answer.sdp)
     self._pc.setLocalDescription(answer).then(onSuccess).catch(onError)
 
-    if (!self.initiator) self._requestMissingTransceivers(answer)
 
     function onSuccess () {
       if (self.destroyed) return
@@ -657,6 +677,7 @@ Peer.prototype._createAnswer = function () {
         type: signal.type,
         sdp: signal.sdp
       })
+      if (!self.initiator) self._requestMissingTransceivers()
     }
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) })
 }
@@ -806,6 +827,7 @@ Peer.prototype._maybeReady = function () {
           self.localAddress = local[0]
           self.localPort = Number(local[1])
         }
+        self.localFamily = self.localAddress.includes(':') ? 'IPv6' : 'IPv4'
 
         var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
 
@@ -823,7 +845,7 @@ Peer.prototype._maybeReady = function () {
           self.remoteAddress = remote[0]
           self.remotePort = Number(remote[1])
         }
-        self.remoteFamily = 'IPv4'
+        self.remoteFamily = self.remoteAddress.includes(':') ? 'IPv6' : 'IPv4'
 
         self._debug(
           'connect local: %s:%s remote: %s:%s',
