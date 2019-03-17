@@ -48,6 +48,7 @@ Let's create an html page that lets you manually connect two peers:
       #outgoing {
         width: 600px;
         word-wrap: break-word;
+        white-space: normal;
       }
     </style>
     <form>
