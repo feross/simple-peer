@@ -59,6 +59,85 @@ test('multistream', function (t) {
   })
 })
 
+test('multistream on non-initiator only', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.plan(10)
+
+  var peer1 = new Peer({
+    config: config,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+  var peer2 = new Peer({
+    config: config,
+    wrtc: common.wrtc,
+    streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var receivedIds = {}
+
+  peer1.on('stream', function (stream) {
+    t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('delayed stream on non-initiator', function (t) {
+  if (common.wrtc) {
+    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.end()
+    return
+  }
+  t.timeoutAfter(15000)
+  t.plan(1)
+
+  var peer1 = new Peer({
+    config: config,
+    trickle: true,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: [common.getMediaStream()]
+  })
+  var peer2 = new Peer({
+    config: config,
+    trickle: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  setTimeout(() => {
+    peer2.addStream(common.getMediaStream())
+  }, 10000)
+  peer1.on('stream', function () {
+    t.pass('peer1 got stream')
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
 test('incremental multistream', function (t) {
   if (common.wrtc) {
     t.pass('Skipping test, no MediaStream support on wrtc')

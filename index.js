@@ -633,7 +633,7 @@ Peer.prototype._requestMissingTransceivers = function () {
 
     if (lines.length < tracks.length) {
       for (var i = 0; i < (tracks.length - lines.length); i++) {
-        self._debug('requesting transceiver of kind', kind)
+        self._debug('requesting transceiver of kind %s', kind)
         self.addTransceiver(kind)
       }
     }
@@ -848,7 +848,7 @@ Peer.prototype._maybeReady = function () {
           self.remoteAddress = remote[0]
           self.remotePort = Number(remote[1])
         }
-        if (self.remoteFamily) {
+        if (self.remoteAddress) {
           self.remoteFamily = self.remoteAddress.includes(':') ? 'IPv6' : 'IPv4'
         }
 
