@@ -623,11 +623,13 @@ Peer.prototype._createOffer = function () {
 Peer.prototype._requestMissingTransceivers = function () {
   var self = this
 
-  self._pc.getTransceivers().forEach(transceiver => {
-    if (!transceiver.mid && transceiver.sender.track) {
-      self.addTransceiver(transceiver.sender.track.kind)
-    }
-  })
+  if (self._pc.getTransceivers) {
+    self._pc.getTransceivers().forEach(transceiver => {
+      if (!transceiver.mid && transceiver.sender.track) {
+        self.addTransceiver(transceiver.sender.track.kind)
+      }
+    })
+  }
 }
 
 Peer.prototype._createAnswer = function () {
