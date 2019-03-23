@@ -622,7 +622,7 @@ Peer.prototype._createOffer = function () {
 Peer.prototype._requestMissingTransceivers = function () {
   var self = this
 
-  ;['audio', 'video'].forEach(kind => {
+  for (const kind of ['audio', 'video']) {
     var lines = self._pc.remoteDescription.sdp.split('\n').filter(l => l.slice(0, 7) === 'm=' + kind)
     var tracks = []
     self._senderMap.forEach(trackMap => {
