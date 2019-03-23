@@ -637,7 +637,7 @@ Peer.prototype._requestMissingTransceivers = function () {
         self.addTransceiver(kind)
       }
     }
-  })
+  }
 }
 
 Peer.prototype._createAnswer = function () {
