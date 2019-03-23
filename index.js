@@ -357,6 +357,7 @@ Peer.prototype.removeTrack = function (track, stream) {
       self.destroy(err)
     }
   }
+  self._needsNegotiation()
 }
 
 /**
@@ -622,22 +623,11 @@ Peer.prototype._createOffer = function () {
 Peer.prototype._requestMissingTransceivers = function () {
   var self = this
 
-  for (const kind of ['audio', 'video']) {
-    var lines = self._pc.remoteDescription.sdp.split('\n').filter(l => l.slice(0, 7) === 'm=' + kind)
-    var tracks = []
-    self._senderMap.forEach(trackMap => {
-      trackMap.forEach(sender => {
-        if (sender.track && sender.track.kind === kind) tracks.push(sender.track)
-      })
-    })
-
-    if (lines.length < tracks.length) {
-      for (var i = 0; i < (tracks.length - lines.length); i++) {
-        self._debug('requesting transceiver of kind %s', kind)
-        self.addTransceiver(kind)
-      }
+  self._pc.getTransceivers().forEach(transceiver => {
+    if (!transceiver.mid && transceiver.sender.track) {
+      self.addTransceiver(transceiver.sender.track.kind)
     }
-  }
+  })
 }
 
 Peer.prototype._createAnswer = function () {
