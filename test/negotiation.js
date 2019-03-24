@@ -12,11 +12,6 @@ test('get config', function (t) {
 })
 
 test('single negotiation', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(10)
 
   var peer1 = new Peer({ config: config, initiator: true, stream: common.getMediaStream(), wrtc: common.wrtc })
@@ -116,7 +111,7 @@ test('repeated manual renegotiation', function (t) {
 
 test('renegotiation after addStream', function (t) {
   if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.pass('Skipping test, wrtc does not support this reliably')
     t.end()
     return
   }
@@ -146,7 +141,7 @@ test('renegotiation after addStream', function (t) {
 
 test('add stream on non-initiator only', function (t) {
   if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.pass('Skipping test, wrtc does not support this reliably')
     t.end()
     return
   }

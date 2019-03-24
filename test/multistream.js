@@ -12,11 +12,6 @@ test('get config', function (t) {
 })
 
 test('multistream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(20)
 
   var peer1 = new Peer({
@@ -60,11 +55,6 @@ test('multistream', function (t) {
 })
 
 test('multistream on non-initiator only', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(10)
 
   var peer1 = new Peer({
@@ -100,11 +90,6 @@ test('multistream on non-initiator only', function (t) {
 })
 
 test('delayed stream on non-initiator', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.timeoutAfter(15000)
   t.plan(1)
 
@@ -140,7 +125,7 @@ test('delayed stream on non-initiator', function (t) {
 
 test('incremental multistream', function (t) {
   if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.pass('Skipping test, wrtc does not support this reliably')
     t.end()
     return
   }
@@ -208,7 +193,7 @@ test('incremental multistream', function (t) {
 
 test('incremental multistream on non-initiator only', function (t) {
   if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.pass('Skipping test, wrtc does not support this reliably')
     t.end()
     return
   }
@@ -261,7 +246,7 @@ test('incremental multistream on non-initiator only', function (t) {
 
 test('addStream after removeStream', function (t) {
   if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
+    t.pass('Skipping test, wrtc does not support this reliably')
     t.end()
     return
   }
@@ -272,8 +257,6 @@ test('addStream after removeStream', function (t) {
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc, streams: [stream1] })
-
-  peer1._debug = peer2._debug = console.log
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -296,11 +279,6 @@ test('addStream after removeStream', function (t) {
 })
 
 test('removeTrack immediately', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(2)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -339,11 +317,6 @@ test('removeTrack immediately', function (t) {
 })
 
 test('replaceTrack', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -366,7 +339,7 @@ test('replaceTrack', function (t) {
     peer2.replaceTrack(stream2.getTracks()[0], null, stream2)
   })
   peer2.on('track', function (track, stream) {
-    t.pass('peer2 did got track event')
+    t.pass('peer2 got track event')
     peer1.replaceTrack(stream1.getTracks()[0], null, stream1)
   })
 
