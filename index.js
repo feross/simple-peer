@@ -26,9 +26,8 @@ function Peer (opts) {
 
   DataChannel.call(self, opts) // the Peer is a DataChannel
 
-  self.channelName = opts.channelName
-
   self.initiator = opts.initiator || false
+  self.channelName = opts.channelName
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = Object.assign({}, Peer.config, opts.config)
   self.offerOptions = opts.offerOptions || {}
@@ -127,6 +126,15 @@ function Peer (opts) {
     }
   }
   self._channels.push(self)
+
+  if (self.streams) {
+    self.streams.forEach(function (stream) {
+      self.addStream(stream)
+    })
+  }
+  self._pc.ontrack = function (event) {
+    self._onTrack(event)
+  }
 
   self.on('open', function () {
     self._channelReady = true
@@ -234,6 +242,30 @@ Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
   return channel
+}
+
+/**
+ * Add a Transceiver to the connection.
+ * @param {String} kind
+ * @param {Object} init
+ */
+Peer.prototype.addTransceiver = function (kind, init) {
+  var self = this
+
+  self._debug('addTransceiver()')
+
+  if (self.initiator) {
+    try {
+      self._pc.addTransceiver(kind, init)
+      self._needsNegotiation()
+    } catch (err) {
+      self.destroy(err)
+    }
+  } else {
+    self.emit('signal', { // request initiator to renegotiate
+      transceiverRequest: { kind, init }
+    })
+  }
 }
 
 /**

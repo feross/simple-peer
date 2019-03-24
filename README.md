@@ -287,7 +287,7 @@ Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream
 
 Add a `RTCRtpTransceiver` to the connection. Can be used to add transceivers before adding tracks. Automatically called as neccesary by `addTrack`.
 
-### `var datachannel = peer.createDataChannel(channelName, channelConfig)`
+### `datachannel = peer.createDataChannel(channelName, channelConfig)`
 
 Used to create additional DataChannel objects. DataChannels are instances of `stream.Duplex`.
 
