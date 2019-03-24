@@ -26,7 +26,7 @@ if (process.env.WRTC === 'wrtc') {
 // create a test MediaStream with two tracks
 var canvas
 exports.getMediaStream = function () {
-  if (exports.wrtc){
+  if (exports.wrtc) {
     const source = new exports.wrtc.nonstandard.RTCVideoSource()
     const tracks = [source.createTrack(), source.createTrack()]
     return new exports.wrtc.MediaStream(tracks)
