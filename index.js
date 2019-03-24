@@ -225,15 +225,13 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
-  try {
-    self._pc.addIceCandidate(
-      new self._wrtc.RTCIceCandidate(candidate),
-      noop,
-      function (err) { self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE')) }
-    )
-  } catch (err) {
-    self.destroy(makeError('error adding candidate: ' + err.message, 'ERR_ADD_ICE_CANDIDATE'))
-  }
+  self._pc.addIceCandidate(new self._wrtc.RTCIceCandidate(candidate)).catch(function (err) {
+    // HACK: node-webrtc throws an incorrect error https://github.com/node-webrtc/node-webrtc/issues/498
+    if (self._pc.signalingState !== 'closed' && err.message === 'Failed to set ICE candidate; RTCPeerConnection is closed.') {
+      return self._debug('ignoring incorrect wrtc error')
+    }
+    self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+  })
 }
 
 /**
@@ -1020,5 +1018,3 @@ function makeError (message, code) {
   err.code = code
   return err
 }
-
-function noop () {}

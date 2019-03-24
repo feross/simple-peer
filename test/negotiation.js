@@ -110,11 +110,6 @@ test('repeated manual renegotiation', function (t) {
 })
 
 test('renegotiation after addStream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, wrtc does not support this reliably')
-    t.end()
-    return
-  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -140,11 +135,6 @@ test('renegotiation after addStream', function (t) {
 })
 
 test('add stream on non-initiator only', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, wrtc does not support this reliably')
-    t.end()
-    return
-  }
   t.plan(3)
 
   var peer1 = new Peer({

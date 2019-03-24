@@ -124,11 +124,6 @@ test('delayed stream on non-initiator', function (t) {
 })
 
 test('incremental multistream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, wrtc does not support this reliably')
-    t.end()
-    return
-  }
   t.plan(12)
 
   var peer1 = new Peer({
@@ -192,11 +187,6 @@ test('incremental multistream', function (t) {
 })
 
 test('incremental multistream on non-initiator only', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, wrtc does not support this reliably')
-    t.end()
-    return
-  }
   t.plan(7)
 
   var peer1 = new Peer({
@@ -245,11 +235,6 @@ test('incremental multistream on non-initiator only', function (t) {
 })
 
 test('addStream after removeStream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, wrtc does not support this reliably')
-    t.end()
-    return
-  }
   t.plan(2)
 
   var stream1 = common.getMediaStream()
