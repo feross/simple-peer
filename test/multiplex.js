@@ -16,18 +16,7 @@ test('get config', function (t) {
   })
 })
 
-function skipElectron (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return true
-  }
-  return false
-}
-
 test('one way piping work with 2 sub-streams', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -66,8 +55,6 @@ test('one way piping work with 2 sub-streams', function (t) {
 })
 
 test('two way piping works with 2 sub-streams', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -112,8 +99,6 @@ test('two way piping works with 2 sub-streams', function (t) {
 })
 
 test('channelName should be exposed as channel.channelName', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -137,8 +122,6 @@ test('channelName should be exposed as channel.channelName', function (t) {
 })
 
 test('channelName can be a long string', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -162,8 +145,6 @@ test('channelName can be a long string', function (t) {
 })
 
 test('destroy', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -197,8 +178,6 @@ test('overflow', function (t) {
 })
 
 test('2 buffers packed into 1 chunk', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 
@@ -231,8 +210,6 @@ test('prefinish + corking', function (t) {
 })
 
 test('quick message', function (t) {
-  if (skipElectron(t)) return
-
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
 

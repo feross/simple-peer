@@ -15,12 +15,6 @@ test('get config', function (t) {
 })
 
 test('create multiple DataChannels', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-
   t.plan(7)
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -50,11 +44,6 @@ test('create multiple DataChannels', function (t) {
 })
 
 test('datachannel event', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
   t.plan(8)
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
   var peer2 = new Peer({ config: config, wrtc: common.wrtc })
@@ -84,11 +73,6 @@ test('datachannel event', function (t) {
 })
 
 test('data sends on seperate channels', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
   t.plan(32)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -140,16 +124,6 @@ test('data sends on seperate channels', function (t) {
 })
 
 test('data sends on seperate channels, async creation', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=192566
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
   t.plan(32)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -203,11 +177,6 @@ test('data sends on seperate channels, async creation', function (t) {
 })
 
 test('closing channels from creator side', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -254,11 +223,6 @@ test('closing channels from creator side', function (t) {
 })
 
 test('closing channels from non-creator side', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
   t.plan(2)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -302,15 +266,9 @@ test('closing channels from non-creator side', function (t) {
 })
 
 test('open new channel after closing one', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios || bowser.firefox) {
-    // https://bugs.webkit.org/show_bug.cgi?id=192566
+  if (bowser.firefox) {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
-    t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')
+    t.pass('Skip on Firefox which does not support this reliably')
     t.end()
     return
   }
@@ -393,15 +351,9 @@ test('open new channel after closing one', function (t) {
 })
 
 test('reusing channelNames of closed channels', function (t) {
-  if (process.env.WRTC === 'electron-webrtc') {
-    t.pass('Skipping test, no support on electron-webrtc') // https://github.com/mappum/electron-webrtc/issues/127
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios || bowser.firefox) {
-    // https://bugs.webkit.org/show_bug.cgi?id=192566
+  if (bowser.firefox) {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1513107
-    t.pass('Skip on Safari and iOS anf Firefox which do not support this reliably')
+    t.pass('Skip on Firefox which does not support this reliably')
     t.end()
     return
   }

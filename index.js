@@ -28,15 +28,11 @@ function Peer (opts) {
 
   self.channelName = opts.channelName
 
-  // Needed by _transformConstraints, so set this early
-  self._isChromium = typeof window !== 'undefined' && !!window.webkitRTCPeerConnection
-
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
   self.config = Object.assign({}, Peer.config, opts.config)
-  self.constraints = self._transformConstraints(opts.constraints || Peer.constraints)
-  self.offerConstraints = self._transformConstraints(opts.offerConstraints || {})
-  self.answerConstraints = self._transformConstraints(opts.answerConstraints || {})
+  self.offerOptions = opts.offerOptions || {}
+  self.answerOptions = opts.answerOptions || {}
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
   self.trickle = opts.trickle !== undefined ? opts.trickle : true
@@ -50,6 +46,7 @@ function Peer (opts) {
   self.remoteFamily = undefined
   self.remotePort = undefined
   self.localAddress = undefined
+  self.localFamily = undefined
   self.localPort = undefined
 
   self._wrtc = (opts.wrtc && typeof opts.wrtc === 'object')
@@ -83,9 +80,10 @@ function Peer (opts) {
   self._channels = []
   self._channelNameCounter = 0
 
-  self._pc = new (self._wrtc.RTCPeerConnection)(self.config, self.constraints)
-  if (self._isChromium || (self._wrtc && self._wrtc.electronDaemon)) { // HACK: Electron and Chromium need a promise shim
-    shimPromiseAPI(self._wrtc.RTCPeerConnection, self._pc)
+  try {
+    self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
+  } catch (err) {
+    self.destroy(err)
   }
 
   // We prefer feature detection whenever possible, but sometimes that's not
@@ -135,15 +133,13 @@ function Peer (opts) {
     self._maybeReady()
   })
 
-  if ('addTrack' in self._pc) {
-    if (self.streams) {
-      self.streams.forEach(function (stream) {
-        self.addStream(stream)
-      })
-    }
-    self._pc.ontrack = function (event) {
-      self._onTrack(event)
-    }
+  if (self.streams) {
+    self.streams.forEach(function (stream) {
+      self.addStream(stream)
+    })
+  }
+  self._pc.ontrack = function (event) {
+    self._onTrack(event)
   }
 
   if (self.initiator) {
@@ -154,8 +150,8 @@ function Peer (opts) {
 Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 
 /**
- * Expose config, constraints, and data channel config for overriding all Peer
- * instances. Otherwise, just set opts.config, opts.constraints, or opts.channelConfig
+ * Expose peer and data channel config for overriding all Peer
+ * instances. Otherwise, just set opts.config or opts.channelConfig
  * when constructing a Peer.
  */
 Peer.config = {
@@ -166,14 +162,14 @@ Peer.config = {
     {
       urls: 'stun:global.stun.twilio.com:3478?transport=udp'
     }
-  ]
+  ],
+  sdpSemantics: 'unified-plan'
 }
-Peer.constraints = {}
 Peer.channelConfig = {}
 
 Peer.prototype.address = function () {
   var self = this
-  return { port: self.localPort, family: 'IPv4', address: self.localAddress }
+  return { port: self.localPort, family: self.localFamily, address: self.localAddress }
 }
 
 Peer.prototype.signal = function (data) {
@@ -192,9 +188,16 @@ Peer.prototype.signal = function (data) {
     self._debug('got request to renegotiate')
     self._needsNegotiation()
   }
+  if (data.transceiverRequest && self.initiator) {
+    self._debug('got request for transceiver')
+    self.addTransceiver(data.transceiverRequest.kind, data.transceiverRequest.init)
+  }
   if (data.candidate) {
-    if (self._pc.remoteDescription && self._pc.remoteDescription.type) self._addIceCandidate(data.candidate)
-    else self._pendingCandidates.push(data.candidate)
+    if (self._pc.localDescription && self._pc.localDescription.type && self._pc.remoteDescription && self._pc.remoteDescription.type) {
+      self._addIceCandidate(data.candidate)
+    } else {
+      self._pendingCandidates.push(data.candidate)
+    }
   }
   if (data.sdp) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data)).then(function () {
@@ -208,22 +211,20 @@ Peer.prototype.signal = function (data) {
       if (self._pc.remoteDescription.type === 'offer') self._createAnswer()
     }).catch(function (err) { self.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION')) })
   }
-  if (!data.sdp && !data.candidate && !data.renegotiate) {
+  if (!data.sdp && !data.candidate && !data.renegotiate && !data.transceiverRequest) {
     self.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
   }
 }
 
 Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
-  try {
-    self._pc.addIceCandidate(
-      new self._wrtc.RTCIceCandidate(candidate),
-      noop,
-      function (err) { self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE')) }
-    )
-  } catch (err) {
-    self.destroy(makeError('error adding candidate: ' + err.message, 'ERR_ADD_ICE_CANDIDATE'))
-  }
+  self._pc.addIceCandidate(new self._wrtc.RTCIceCandidate(candidate)).catch(function (err) {
+    // HACK: node-webrtc throws an incorrect error https://github.com/node-webrtc/node-webrtc/issues/498
+    if (self._pc.signalingState !== 'closed' && err.message === 'Failed to set ICE candidate; RTCPeerConnection is closed.') {
+      return self._debug('ignoring incorrect wrtc error')
+    }
+    self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+  })
 }
 
 Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
@@ -233,6 +234,30 @@ Peer.prototype.createDataChannel = function (channelName, channelConfig, opts) {
   channel._setDataChannel(self._pc.createDataChannel(channelName, channelConfig))
   self._channels.push(channel)
   return channel
+}
+
+/**
+ * Add a Transceiver to the connection.
+ * @param {String} kind
+ * @param {Object} init
+ */
+Peer.prototype.addTransceiver = function (kind, init) {
+  var self = this
+
+  self._debug('addTransceiver()')
+
+  if (self.initiator) {
+    try {
+      self._pc.addTransceiver(kind, init)
+      self._needsNegotiation()
+    } catch (err) {
+      self.destroy(err)
+    }
+  } else {
+    self.emit('signal', { // request initiator to renegotiate
+      transceiverRequest: { kind, init }
+    })
+  }
 }
 
 /**
@@ -259,11 +284,18 @@ Peer.prototype.addTrack = function (track, stream) {
 
   self._debug('addTrack()')
 
-  var sender = self._pc.addTrack(track, stream)
   var submap = self._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
-  submap.set(stream, sender)
-  self._senderMap.set(track, submap)
-  self._needsNegotiation()
+  var sender = submap.get(stream)
+  if (!sender) {
+    sender = self._pc.addTrack(track, stream)
+    submap.set(stream, sender)
+    self._senderMap.set(track, submap)
+    self._needsNegotiation()
+  } else if (sender.removed) {
+    self.destroy(makeError('Track has been removed. You should enable/disable tracks that you want to re-add.'), 'ERR_SENDER_REMOVED')
+  } else {
+    self.destroy(makeError('Track has already been added to that stream.'), 'ERR_SENDER_ALREADY_ADDED')
+  }
 }
 
 /**
@@ -272,7 +304,7 @@ Peer.prototype.addTrack = function (track, stream) {
  * @param {MediaStreamTrack} newTrack
  * @param {MediaStream} stream
  */
-Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
+Peer.prototype.replaceTrack = function (oldTrack, newTrack, stream) {
   var self = this
 
   self._debug('replaceTrack()')
@@ -280,12 +312,12 @@ Peer.prototype.replaceTrack = async function (oldTrack, newTrack, stream) {
   var submap = self._senderMap.get(oldTrack)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(new Error('Cannot replace track that was never added.'))
+    self.destroy(makeError('Cannot replace track that was never added.'), 'ERR_TRACK_NOT_ADDED')
   }
   if (newTrack) self._senderMap.set(newTrack, submap)
 
   if (sender.replaceTrack != null) {
-    await sender.replaceTrack(newTrack)
+    sender.replaceTrack(newTrack)
   } else {
     self.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
   }
@@ -304,9 +336,10 @@ Peer.prototype.removeTrack = function (track, stream) {
   var submap = self._senderMap.get(track)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(new Error('Cannot remove track that was never added.'))
+    self.destroy(makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
   }
   try {
+    sender.removed = true
     self._pc.removeTrack(sender)
   } catch (err) {
     if (err.name === 'NS_ERROR_UNEXPECTED') {
@@ -315,6 +348,7 @@ Peer.prototype.removeTrack = function (track, stream) {
       self.destroy(err)
     }
   }
+  self._needsNegotiation()
 }
 
 /**
@@ -353,7 +387,9 @@ Peer.prototype.negotiate = function () {
       self._debug('already negotiating, queueing')
     } else {
       self._debug('start negotiation')
-      self._createOffer()
+      setTimeout(() => { // HACK: Chrome crashes if we immediately call createOffer
+        self._createOffer()
+      }, 0)
     }
   } else {
     if (!self._isNegotiating) {
@@ -397,33 +433,32 @@ Peer.prototype.destroy = function (err) {
     self._pc.onicegatheringstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    if ('addTrack' in self._pc) {
-      self._pc.ontrack = null
-    }
+    self._pc.ontrack = null
     self._pc.ondatachannel = null
   }
   self._pc = null
 }
 
 Peer.prototype._startIceCompleteTimeout = function () {
-  debug('started iceComplete timeout')
   var self = this
   if (self.destroyed) return
   if (self._iceCompleteTimer) return
+  self._debug('started iceComplete timeout')
   self._iceCompleteTimer = setTimeout(function () {
     if (!self._iceComplete) {
       self._iceComplete = true
+      self._debug('iceComplete timeout completed')
       self.emit('iceTimeout')
       self.emit('_iceComplete')
     }
-  }, this.iceCompleteTimeout)
+  }, self.iceCompleteTimeout)
 }
 
 Peer.prototype._createOffer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createOffer(self.offerConstraints).then(function (offer) {
+  self._pc.createOffer(self.offerOptions).then(function (offer) {
     if (self.destroyed) return
     if (!self.trickle && !self.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp)
     offer.sdp = self.sdpTransform(offer.sdp)
@@ -452,11 +487,23 @@ Peer.prototype._createOffer = function () {
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_OFFER')) })
 }
 
+Peer.prototype._requestMissingTransceivers = function () {
+  var self = this
+
+  if (self._pc.getTransceivers) {
+    self._pc.getTransceivers().forEach(transceiver => {
+      if (!transceiver.mid && transceiver.sender.track) {
+        self.addTransceiver(transceiver.sender.track.kind)
+      }
+    })
+  }
+}
+
 Peer.prototype._createAnswer = function () {
   var self = this
   if (self.destroyed) return
 
-  self._pc.createAnswer(self.answerConstraints).then(function (answer) {
+  self._pc.createAnswer(self.answerOptions).then(function (answer) {
     if (self.destroyed) return
     if (!self.trickle && !self.allowHalfTrickle) answer.sdp = filterTrickle(answer.sdp)
     answer.sdp = self.sdpTransform(answer.sdp)
@@ -480,6 +527,7 @@ Peer.prototype._createAnswer = function () {
         type: signal.type,
         sdp: signal.sdp
       })
+      if (!self.initiator) self._requestMissingTransceivers()
     }
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) })
 }
@@ -505,7 +553,7 @@ Peer.prototype._onIceStateChange = function () {
     self.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
   }
   if (iceConnectionState === 'closed') {
-    self.destroy(new Error('Ice connection closed.'))
+    self.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
   }
 }
 
@@ -517,7 +565,7 @@ Peer.prototype.getStats = function (cb) {
     self._pc.getStats().then(function (res) {
       var reports = []
       res.forEach(function (report) {
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -527,7 +575,7 @@ Peer.prototype.getStats = function (cb) {
     self._pc.getStats(null, function (res) {
       var reports = []
       res.forEach(function (report) {
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -547,7 +595,7 @@ Peer.prototype.getStats = function (cb) {
         report.id = result.id
         report.type = result.type
         report.timestamp = result.timestamp
-        reports.push(report)
+        reports.push(flattenValues(report))
       })
       cb(null, reports)
     }, function (err) { cb(err) })
@@ -556,6 +604,16 @@ Peer.prototype.getStats = function (cb) {
   // getStats() they implement.
   } else {
     cb(null, [])
+  }
+
+  // statreports can come with a value array instead of properties
+  function flattenValues (report) {
+    if (Object.prototype.toString.call(report.values) === '[object Array]') {
+      report.values.forEach(function (value) {
+        Object.assign(report, value)
+      })
+    }
+    return report
   }
 }
 
@@ -629,6 +687,9 @@ Peer.prototype._maybeReady = function () {
           self.localAddress = local[0]
           self.localPort = Number(local[1])
         }
+        if (self.localAddress) {
+          self.localFamily = self.localAddress.includes(':') ? 'IPv6' : 'IPv4'
+        }
 
         var remote = remoteCandidates[selectedCandidatePair.remoteCandidateId]
 
@@ -646,7 +707,9 @@ Peer.prototype._maybeReady = function () {
           self.remoteAddress = remote[0]
           self.remotePort = Number(remote[1])
         }
-        self.remoteFamily = 'IPv4'
+        if (self.remoteAddress) {
+          self.remoteFamily = self.remoteAddress.includes(':') ? 'IPv6' : 'IPv4'
+        }
 
         self._debug(
           'connect local: %s:%s remote: %s:%s',
@@ -747,15 +810,6 @@ Peer.prototype._onTrack = function (event) {
   })
 }
 
-Peer.prototype.setConstraints = function (constraints) {
-  var self = this
-  if (self.initiator) {
-    self.offerConstraints = self._transformConstraints(constraints)
-  } else {
-    self.answerConstraints = self._transformConstraints(constraints)
-  }
-}
-
 Peer.prototype._debug = function () {
   var self = this
   var args = [].slice.call(arguments)
@@ -773,79 +827,6 @@ Peer.prototype._makeUniqueChannelName = function (channelName) {
   return channelName + '@' + self._id + (self._channelNameCounter++)
 }
 
-// Transform constraints objects into the new format (unless Chromium)
-// TODO: This can be removed when Chromium supports the new format
-Peer.prototype._transformConstraints = function (constraints) {
-  var self = this
-
-  if (Object.keys(constraints).length === 0) {
-    return constraints
-  }
-
-  if ((constraints.mandatory || constraints.optional) && !self._isChromium) {
-    // convert to new format
-
-    // Merge mandatory and optional objects, prioritizing mandatory
-    var newConstraints = Object.assign({}, constraints.optional, constraints.mandatory)
-
-    // fix casing
-    if (newConstraints.OfferToReceiveVideo !== undefined) {
-      newConstraints.offerToReceiveVideo = newConstraints.OfferToReceiveVideo
-      delete newConstraints['OfferToReceiveVideo']
-    }
-
-    if (newConstraints.OfferToReceiveAudio !== undefined) {
-      newConstraints.offerToReceiveAudio = newConstraints.OfferToReceiveAudio
-      delete newConstraints['OfferToReceiveAudio']
-    }
-
-    return newConstraints
-  } else if (!constraints.mandatory && !constraints.optional && self._isChromium) {
-    // convert to old format
-
-    // fix casing
-    if (constraints.offerToReceiveVideo !== undefined) {
-      constraints.OfferToReceiveVideo = constraints.offerToReceiveVideo
-      delete constraints['offerToReceiveVideo']
-    }
-
-    if (constraints.offerToReceiveAudio !== undefined) {
-      constraints.OfferToReceiveAudio = constraints.offerToReceiveAudio
-      delete constraints['offerToReceiveAudio']
-    }
-
-    return {
-      mandatory: constraints // NOTE: All constraints are upgraded to mandatory
-    }
-  }
-
-  return constraints
-}
-
-// HACK: Minimal shim to force Chrome and WRTC to use their more reliable callback API
-function shimPromiseAPI (RTCPeerConnection, pc) {
-  pc.createOffer = function (constraints) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.createOffer.call(this, resolve, reject, constraints)
-    })
-  }
-  pc.createAnswer = function (constraints) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.createAnswer.call(this, resolve, reject, constraints)
-    })
-  }
-  pc.setLocalDescription = function (description) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.setLocalDescription.call(this, description, resolve, reject)
-    })
-  }
-  pc.setRemoteDescription = function (description) {
-    return new Promise((resolve, reject) => {
-      RTCPeerConnection.prototype.setRemoteDescription.call(this, description, resolve, reject)
-    })
-  }
-}
-
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
@@ -856,5 +837,3 @@ function makeError (message, code) {
   err.code = code
   return err
 }
-
-function noop () {}

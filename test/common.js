@@ -24,20 +24,20 @@ if (process.env.WRTC === 'wrtc') {
 }
 
 // create a test MediaStream with two tracks
-var audioContext
+var canvas
 exports.getMediaStream = function () {
-  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)()
-  var oscillator = audioContext.createOscillator()
-  var dst = audioContext.createMediaStreamDestination()
-  oscillator.connect(dst)
-  oscillator.start()
-
-  var oscillator2 = audioContext.createOscillator()
-  var dst2 = audioContext.createMediaStreamDestination()
-  oscillator2.connect(dst2)
-  oscillator2.start()
-
-  var track = dst2.stream.getTracks()[0]
-  dst.stream.addTrack(track)
-  return dst.stream
+  if (exports.wrtc) {
+    const source = new exports.wrtc.nonstandard.RTCVideoSource()
+    const tracks = [source.createTrack(), source.createTrack()]
+    return new exports.wrtc.MediaStream(tracks)
+  } else {
+    if (!canvas) {
+      canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 100
+      canvas.getContext('2d') // initialize canvas
+    }
+    const stream = canvas.captureStream(30)
+    stream.addTrack(stream.getTracks()[0].clone()) // should have 2 tracks
+    return stream
+  }
 }
