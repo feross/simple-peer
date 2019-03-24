@@ -141,15 +141,6 @@ function Peer (opts) {
     self._maybeReady()
   })
 
-  if (self.streams) {
-    self.streams.forEach(function (stream) {
-      self.addStream(stream)
-    })
-  }
-  self._pc.ontrack = function (event) {
-    self._onTrack(event)
-  }
-
   if (self.initiator) {
     self._needsNegotiation()
   }
