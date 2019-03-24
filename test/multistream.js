@@ -12,11 +12,6 @@ test('get config', function (t) {
 })
 
 test('multistream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(20)
 
   var peer1 = new Peer({
@@ -52,14 +47,83 @@ test('multistream', function (t) {
       receivedIds[stream.id] = true
     }
   })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('multistream on non-initiator only', function (t) {
+  t.plan(10)
+
+  var peer1 = new Peer({
+    config: config,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+  var peer2 = new Peer({
+    config: config,
+    wrtc: common.wrtc,
+    streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  var receivedIds = {}
+
+  peer1.on('stream', function (stream) {
+    t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('delayed stream on non-initiator', function (t) {
+  t.timeoutAfter(15000)
+  t.plan(1)
+
+  var peer1 = new Peer({
+    config: config,
+    trickle: true,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: [common.getMediaStream()]
+  })
+  var peer2 = new Peer({
+    config: config,
+    trickle: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  setTimeout(() => {
+    peer2.addStream(common.getMediaStream())
+  }, 10000)
+  peer1.on('stream', function () {
+    t.pass('peer1 got stream')
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
 })
 
 test('incremental multistream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(12)
 
   var peer1 = new Peer({
@@ -115,14 +179,91 @@ test('incremental multistream', function (t) {
       peer2.addStream(common.getMediaStream())
     }
   })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('incremental multistream on non-initiator only', function (t) {
+  t.plan(7)
+
+  var peer1 = new Peer({
+    config: config,
+    initiator: true,
+    wrtc: common.wrtc,
+    streams: []
+  })
+  var peer2 = new Peer({
+    config: config,
+    wrtc: common.wrtc,
+    streams: []
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connected')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connected')
+    peer2.addStream(common.getMediaStream())
+  })
+
+  var receivedIds = {}
+
+  var count = 0
+  peer1.on('stream', function (stream) {
+    t.pass('peer1 got stream')
+    if (receivedIds[stream.id]) {
+      t.fail('received one unique stream per event')
+    } else {
+      receivedIds[stream.id] = true
+    }
+    count++
+    if (count < 5) {
+      peer2.addStream(common.getMediaStream())
+    }
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
+})
+
+test('addStream after removeStream', function (t) {
+  t.plan(2)
+
+  var stream1 = common.getMediaStream()
+  var stream2 = common.getMediaStream()
+
+  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config: config, wrtc: common.wrtc, streams: [stream1] })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.once('stream', () => {
+    t.pass('peer1 got first stream')
+    peer2.removeStream(stream1)
+    setTimeout(() => {
+      peer1.once('stream', () => {
+        t.pass('peer1 got second stream')
+      })
+      peer2.addStream(stream2)
+    }, 1000)
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
 })
 
 test('removeTrack immediately', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(2)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -153,14 +294,14 @@ test('removeTrack immediately', function (t) {
   peer2.on('connect', function () {
     t.pass('peer2 connected')
   })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
+  })
 })
 
 test('replaceTrack', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -183,7 +324,7 @@ test('replaceTrack', function (t) {
     peer2.replaceTrack(stream2.getTracks()[0], null, stream2)
   })
   peer2.on('track', function (track, stream) {
-    t.pass('peer2 did got track event')
+    t.pass('peer2 got track event')
     peer1.replaceTrack(stream1.getTracks()[0], null, stream1)
   })
 
@@ -192,5 +333,10 @@ test('replaceTrack', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
+  })
+
+  t.on('end', () => {
+    peer1.destroy()
+    peer2.destroy()
   })
 })
