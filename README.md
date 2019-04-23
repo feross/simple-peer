@@ -66,24 +66,24 @@ Let's create an html page that lets you manually connect two peers:
 var Peer = require('simple-peer')
 var p = new Peer({ initiator: location.hash === '#1', trickle: false })
 
-p.on('error', function (err) { console.log('error', err) })
+p.on('error', err => console.log('error', err))
 
-p.on('signal', function (data) {
+p.on('signal', data => {
   console.log('SIGNAL', JSON.stringify(data))
   document.querySelector('#outgoing').textContent = JSON.stringify(data)
 })
 
-document.querySelector('form').addEventListener('submit', function (ev) {
+document.querySelector('form').addEventListener('submit', ev => {
   ev.preventDefault()
   p.signal(JSON.parse(document.querySelector('#incoming').value))
 })
 
-p.on('connect', function () {
+p.on('connect', () => {
   console.log('CONNECT')
   p.send('whatever' + Math.random())
 })
 
-p.on('data', function (data) {
+p.on('data', data => {
   console.log('data: ' + data)
 })
 ```
@@ -114,22 +114,22 @@ var Peer = require('simple-peer')
 var peer1 = new Peer({ initiator: true })
 var peer2 = new Peer()
 
-peer1.on('signal', function (data) {
+peer1.on('signal', data => {
   // when peer1 has signaling data, give it to peer2 somehow
   peer2.signal(data)
 })
 
-peer2.on('signal', function (data) {
+peer2.on('signal', data => {
   // when peer2 has signaling data, give it to peer1 somehow
   peer1.signal(data)
 })
 
-peer1.on('connect', function () {
+peer1.on('connect', () => {
   // wait for 'connect' event before using the data channel
   peer1.send('hey peer2, how is it going?')
 })
 
-peer2.on('data', function (data) {
+peer2.on('data', data => {
   // got a data channel message
   console.log('got a message from peer1: ' + data)
 })
@@ -143,24 +143,30 @@ Video/voice is also super simple! In this example, peer1 sends video to peer2.
 var Peer = require('simple-peer')
 
 // get video/voice stream
-navigator.getUserMedia({ video: true, audio: true }, gotMedia, function () {})
+navigator.getUserMedia({ video: true, audio: true }, gotMedia, () => {})
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
   var peer2 = new Peer()
 
-  peer1.on('signal', function (data) {
+  peer1.on('signal', data => {
     peer2.signal(data)
   })
 
-  peer2.on('signal', function (data) {
+  peer2.on('signal', data => {
     peer1.signal(data)
   })
 
-  peer2.on('stream', function (stream) {
+  peer2.on('stream', stream => {
     // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
-    video.src = window.URL.createObjectURL(stream)
+    
+    if ('srcObject' in video) {
+      video.srcObject = stream
+    } else {
+      video.src = window.URL.createObjectURL(stream) // for older browsers
+    }
+    
     video.play()
   })
 }
@@ -326,7 +332,7 @@ peer.on('data', function (chunk) {
 ## events
 
 
-### `peer.on('signal', function (data) {})`
+### `peer.on('signal', data => {})`
 
 Fired when the peer wants to send signaling data to the remote peer.
 
@@ -339,38 +345,41 @@ call `peer.signal(data)` on the remote peer.
 peers, it fires right away. For `initatior: false` peers, it fires when the remote
 offer is received.)
 
-### `peer.on('connect', function () {})`
+### `peer.on('connect', () => {})`
 
 Fired when the peer connection and data channel are ready to use.
 
-### `peer.on('data', function (data) {})`
+### `peer.on('data', data => {})`
 
 Received a message from the remote peer (via the data channel).
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
-### `peer.on('stream', function (stream) {})`
+### `peer.on('stream', stream => {})`
 
 Received a remote video stream, which can be displayed in a video tag:
 
 ```js
-peer.on('stream', function (stream) {
-  var video = document.createElement('video')
-  video.src = window.URL.createObjectURL(stream)
-  document.body.appendChild(video)
+peer.on('stream', stream => {
+  var video = document.querySelector('video')
+  if (video.srcObject) {
+    video.srcObject = stream
+  } else {
+    video.src = window.URL.createObjectURL(stream)
+  }
   video.play()
 })
 ```
 
-### `peer.on('track', function (track, stream) {})`
+### `peer.on('track', (track, stream) => {})`
 
 Received a remote audio/video track. Streams may contain multiple tracks.
 
-### `peer.on('close', function () {})`
+### `peer.on('close', () => {})`
 
 Called when the peer connection has closed.
 
-### `peer.on('error', function (err) {})`
+### `peer.on('error', (err) => {})`
 
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
 
@@ -418,27 +427,27 @@ For clarity, here is the code to connect 3 peers together:
 var peer2 = new Peer({ initiator: true })
 var peer3 = new Peer({ initiator: true })
 
-peer2.on('signal', function (data) {
+peer2.on('signal', data => {
   // send this signaling data to peer2 somehow
 })
 
-peer2.on('connect', function () {
+peer2.on('connect', () => {
   peer2.send('hi peer2, this is peer1')
 })
 
-peer2.on('data', function (data) {
+peer2.on('data', data => {
   console.log('got a message from peer2: ' + data)
 })
 
-peer3.on('signal', function (data) {
+peer3.on('signal', data => {
   // send this signaling data to peer3 somehow
 })
 
-peer3.on('connect', function () {
+peer3.on('connect', () => {
   peer3.send('hi peer3, this is peer1')
 })
 
-peer3.on('data', function (data) {
+peer3.on('data', data => {
   console.log('got a message from peer3: ' + data)
 })
 ```
@@ -450,27 +459,27 @@ peer3.on('data', function (data) {
 var peer1 = new Peer()
 var peer3 = new Peer({ initiator: true })
 
-peer1.on('signal', function (data) {
+peer1.on('signal', data => {
   // send this signaling data to peer1 somehow
 })
 
-peer1.on('connect', function () {
+peer1.on('connect', () => {
   peer1.send('hi peer1, this is peer2')
 })
 
-peer1.on('data', function (data) {
+peer1.on('data', data => {
   console.log('got a message from peer1: ' + data)
 })
 
-peer3.on('signal', function (data) {
+peer3.on('signal', data => {
   // send this signaling data to peer3 somehow
 })
 
-peer3.on('connect', function () {
+peer3.on('connect', () => {
   peer3.send('hi peer3, this is peer2')
 })
 
-peer3.on('data', function (data) {
+peer3.on('data', data => {
   console.log('got a message from peer3: ' + data)
 })
 ```
@@ -482,27 +491,27 @@ peer3.on('data', function (data) {
 var peer1 = new Peer()
 var peer2 = new Peer()
 
-peer1.on('signal', function (data) {
+peer1.on('signal', data => {
   // send this signaling data to peer1 somehow
 })
 
-peer1.on('connect', function () {
+peer1.on('connect', () => {
   peer1.send('hi peer1, this is peer3')
 })
 
-peer1.on('data', function (data) {
+peer1.on('data', data => {
   console.log('got a message from peer1: ' + data)
 })
 
-peer2.on('signal', function (data) {
+peer2.on('signal', data => {
   // send this signaling data to peer2 somehow
 })
 
-peer2.on('connect', function () {
+peer2.on('connect', () => {
   peer2.send('hi peer2, this is peer3')
 })
 
-peer2.on('data', function (data) {
+peer2.on('data', data => {
   console.log('got a message from peer2: ' + data)
 })
 ```
