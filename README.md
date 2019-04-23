@@ -161,15 +161,10 @@ function gotMedia (stream) {
     // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
     
-    // This detection is optional and is just here to be retrocompatible with some olders browsers:
-    // May can be removed
-    if (video.srcObject) {
-      // This is for updated browsers, since they can't use window.URL.createObjectURL(stream).
-      // You can probably keep only this line if you know to not be runned on outdated browsers.
+    if ('srcObject' in video) {
       video.srcObject = stream
     } else {
-      // This is for outdated browsers.
-      video.src = window.URL.createObjectURL(stream)
+      video.src = window.URL.createObjectURL(stream) // for older browsers
     }
     
     video.play()
