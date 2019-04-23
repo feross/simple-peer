@@ -362,7 +362,7 @@ Received a remote video stream, which can be displayed in a video tag:
 ```js
 peer.on('stream', stream => {
   var video = document.querySelector('video')
-  if (video.srcObject) {
+  if (srcObject' in video) {
     video.srcObject = stream
   } else {
     video.src = window.URL.createObjectURL(stream)
