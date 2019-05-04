@@ -209,6 +209,8 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
 - [Metastream](https://github.com/samuelmaddock/metastream) - Watch streaming media with friends.
 - [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
+- [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
+- [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
 - *Your app here! - send a PR!*
 
 ## api
