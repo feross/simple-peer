@@ -57,12 +57,6 @@ test('signal event does not get emitted by non-initiator', function (t) {
 })
 
 test('signal event does not get emitted by non-initiator with stream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
-
   var peer = new Peer({
     config: config,
     stream: common.getMediaStream(),

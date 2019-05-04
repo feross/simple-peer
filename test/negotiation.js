@@ -1,7 +1,6 @@
 var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
-var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -13,11 +12,6 @@ test('get config', function (t) {
 })
 
 test('single negotiation', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
   t.plan(10)
 
   var peer1 = new Peer({ config: config, initiator: true, stream: common.getMediaStream(), wrtc: common.wrtc })
@@ -116,16 +110,6 @@ test('repeated manual renegotiation', function (t) {
 })
 
 test('renegotiation after addStream', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
@@ -151,32 +135,18 @@ test('renegotiation after addStream', function (t) {
 })
 
 test('add stream on non-initiator only', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
   t.plan(3)
 
-  var peer1 = new Peer({ config: config,
+  var peer1 = new Peer({
+    config: config,
     initiator: true,
+    wrtc: common.wrtc
+  })
+  var peer2 = new Peer({
+    config: config,
     wrtc: common.wrtc,
-    offerConstraints: {
-      offerToReceiveVideo: true,
-      offerToReceiveAudio: true
-    } })
-  var peer2 = new Peer({ config: config,
-    wrtc: common.wrtc,
-    stream: common.getMediaStream(),
-    answerConstraints: {
-      offerToReceiveVideo: false,
-      offerToReceiveAudio: false
-    } })
+    stream: common.getMediaStream()
+  })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -186,45 +156,6 @@ test('add stream on non-initiator only', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connect')
-  })
-  peer1.on('stream', function () {
-    t.pass('peer1 got stream')
-  })
-})
-
-test('upgrade constraints from non-initiator', function (t) {
-  if (common.wrtc) {
-    t.pass('Skipping test, no MediaStream support on wrtc')
-    t.end()
-    return
-  }
-  if (bowser.safari || bowser.ios) { // https://bugs.webkit.org/show_bug.cgi?id=186576
-    t.pass('Skip on Safari and iOS which do not support this reliably')
-    t.end()
-    return
-  }
-  t.plan(3)
-
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
-
-  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
-  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
-
-  peer1.on('connect', function () {
-    t.pass('peer1 connect')
-  })
-  peer2.on('connect', function () {
-    t.pass('peer2 connect')
-    peer1.setConstraints({ // would be initiated via signaling channel
-      offerToReceiveVideo: true,
-      offerToReceiveAudio: true
-    })
-    peer2.setConstraints({
-      offerToReceiveVideo: false,
-      offerToReceiveAudio: false
-    })
-    peer2.addStream(common.getMediaStream())
   })
   peer1.on('stream', function () {
     t.pass('peer1 got stream')
