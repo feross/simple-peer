@@ -1,6 +1,7 @@
 var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
+var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -55,7 +56,7 @@ test('multistream', function (t) {
 })
 
 test('multistream on non-initiator only', function (t) {
-  t.plan(10)
+  t.plan(30)
 
   var peer1 = new Peer({
     config: config,
@@ -69,8 +70,14 @@ test('multistream on non-initiator only', function (t) {
     streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
   })
 
-  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
-  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+  peer1.on('signal', function (data) {
+    if (data.transceiverRequest) t.pass('got transceiverRequest')
+    if (!peer2.destroyed) peer2.signal(data)
+  })
+  peer2.on('signal', function (data) {
+    if (data.transceiverRequest) t.pass('got transceiverRequest')
+    if (!peer1.destroyed) peer1.signal(data)
+  })
 
   var receivedIds = {}
 
@@ -90,6 +97,11 @@ test('multistream on non-initiator only', function (t) {
 })
 
 test('delayed stream on non-initiator', function (t) {
+  if (bowser.safari || bowser.ios) {
+    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+    t.end()
+    return
+  }
   t.timeoutAfter(15000)
   t.plan(1)
 
@@ -235,6 +247,11 @@ test('incremental multistream on non-initiator only', function (t) {
 })
 
 test('addStream after removeStream', function (t) {
+  if (bowser.safari || bowser.ios) {
+    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+    t.end()
+    return
+  }
   t.plan(2)
 
   var stream1 = common.getMediaStream()
