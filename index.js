@@ -623,7 +623,8 @@ Peer.prototype._requestMissingTransceivers = function () {
 
   if (self._pc.getTransceivers) {
     self._pc.getTransceivers().forEach(transceiver => {
-      if (!transceiver.mid && transceiver.sender.track) {
+      if (!transceiver.mid && transceiver.sender.track && !transceiver.requested) {
+        transceiver.requested = true // HACK: Safari returns negotiated transceivers with a null mid
         self.addTransceiver(transceiver.sender.track.kind)
       }
     })
