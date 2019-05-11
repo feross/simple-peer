@@ -1,4 +1,4 @@
-# simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
 [travis-url]: https://travis-ci.org/feross/simple-peer
@@ -8,10 +8,10 @@
 [downloads-url]: https://npmjs.org/package/simple-peer
 [standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
 [standard-url]: https://standardjs.com
+[sauce-image]: https://saucelabs.com/buildstatus/simple-peer
+[sauce-url]: https://saucelabs.com/u/simple-peer
 
 #### Simple WebRTC video/voice and data channels.
-
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/feross-simple-peer.svg)](https://saucelabs.com/u/feross-simple-peer)
 
 ## features
 
