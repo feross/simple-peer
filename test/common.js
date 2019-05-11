@@ -44,7 +44,7 @@ exports.getMediaStream = function () {
 }
 
 exports.isBrowser = function (name) {
-  if (typeof(window) === 'undefined') return false
+  if (typeof (window) === 'undefined') return false
   const satifyObject = {}
   if (name === 'ios') { // bowser can't directly name iOS Safari
     satifyObject['mobile'] = { 'safari': '>=0' }
