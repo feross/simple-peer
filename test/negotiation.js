@@ -110,6 +110,11 @@ test('repeated manual renegotiation', function (t) {
 })
 
 test('renegotiation after addStream', function (t) {
+  if (common.isBrowser('safari') || common.isBrowser('ios')) {
+    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+    t.end()
+    return
+  }
   t.plan(4)
 
   var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })

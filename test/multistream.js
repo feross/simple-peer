@@ -1,7 +1,6 @@
 var common = require('./common')
 var Peer = require('../')
 var test = require('tape')
-var bowser = require('bowser')
 
 var config
 test('get config', function (t) {
@@ -97,7 +96,7 @@ test('multistream on non-initiator only', function (t) {
 })
 
 test('delayed stream on non-initiator', function (t) {
-  if (bowser.safari || bowser.ios) {
+  if (common.isBrowser('safari') || common.isBrowser('ios')) {
     t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
     t.end()
     return
@@ -247,7 +246,7 @@ test('incremental multistream on non-initiator only', function (t) {
 })
 
 test('addStream after removeStream', function (t) {
-  if (bowser.safari || bowser.ios) {
+  if (common.isBrowser('safari') || common.isBrowser('ios')) {
     t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
     t.end()
     return
