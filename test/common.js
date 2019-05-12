@@ -1,5 +1,6 @@
 var get = require('simple-get')
 var thunky = require('thunky')
+var bowser = require('bowser')
 
 exports.getConfig = thunky(function (cb) {
   // Includes TURN -- needed for tests to pass on Sauce Labs
@@ -40,4 +41,15 @@ exports.getMediaStream = function () {
     stream.addTrack(stream.getTracks()[0].clone()) // should have 2 tracks
     return stream
   }
+}
+
+exports.isBrowser = function (name) {
+  if (typeof (window) === 'undefined') return false
+  const satifyObject = {}
+  if (name === 'ios') { // bowser can't directly name iOS Safari
+    satifyObject['mobile'] = { 'safari': '>=0' }
+  } else {
+    satifyObject[name] = '>=0'
+  }
+  return bowser.getParser(window.navigator.userAgent).satisfies(satifyObject)
 }
