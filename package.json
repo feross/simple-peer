@@ -30,7 +30,7 @@
     "string-to-stream": "^1.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "wrtc": "^0.3.6",
+    "wrtc": "^0.4.1",
     "ws": "^6.0.0"
   },
   "keywords": [
