@@ -873,7 +873,7 @@ Peer.prototype._maybeReady = function () {
       // fallback to using setInterval to implement backpressure.
       if (typeof self._channel.bufferedAmountLowThreshold !== 'number') {
         self._interval = setInterval(function () { self._onInterval() }, 150)
-        if (self._interval.unref) self._interval.unref()
+        if (self._interval && self._interval.unref) self._interval.unref()
       }
 
       self._debug('connect')
