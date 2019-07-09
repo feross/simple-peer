@@ -206,7 +206,7 @@ Peer.prototype.signal = function (data) {
       self._pendingCandidates.push(data.candidate)
     }
   }
-  if (data.sdp) {
+  if (data.sdp && !self._pc.remoteDescription) {
     self._pc.setRemoteDescription(new (self._wrtc.RTCSessionDescription)(data)).then(function () {
       if (self.destroyed) return
 
