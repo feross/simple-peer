@@ -30,6 +30,16 @@ test('create peer without options', function (t) {
   }
 })
 
+test('can detect error when RTCPeerConstructor throws', function (t) {
+  t.plan(1)
+
+  var peer = new Peer({ wrtc: { RTCPeerConnection: null } })
+  peer.once('error', function () {
+    t.pass('got error event')
+    peer.destroy()
+  })
+})
+
 test('signal event gets emitted', function (t) {
   t.plan(2)
 
