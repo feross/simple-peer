@@ -15,10 +15,10 @@
     "get-browser-rtc": "^1.0.0",
     "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
-    "readable-stream": "^2.3.4"
+    "readable-stream": "^3.4.0"
   },
   "devDependencies": {
-    "airtap": "1.0.0",
+    "airtap": "^2.0.3",
     "babel-minify": "^0.5.0",
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
@@ -27,7 +27,7 @@
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
     "standard": "*",
-    "string-to-stream": "^1.0.0",
+    "string-to-stream": "^2.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
     "wrtc": "^0.4.1",
