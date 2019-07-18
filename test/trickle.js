@@ -149,6 +149,86 @@ test('disable trickle (only receiver)', function (t) {
   }
 })
 
+test('null end candidate does not throw', function (t) {
+  const peer1 = new Peer({ trickle: true, config: config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ trickle: true, config: config, wrtc: common.wrtc })
+
+  // translate all falsey candidates to null
+  let endCandidateSent = false
+  function endToNull(data) {
+    if (data.candidate && !data.candidate.candidate) {
+      data.candidate.candidate = null 
+      endCandidateSent = true
+    }
+    return data
+  }
+
+  peer1.on('error', () => t.fail('peer1 threw error'))
+  peer2.on('error', () => t.fail('peer2 threw error'))
+
+  peer1.on('signal', data => peer2.signal(endToNull(data)))
+  peer2.on('signal', data => peer1.signal(endToNull(data)))
+
+  peer1.on('connect', () => {
+    if (!endCandidateSent) { // force an end candidate to browsers that don't send them
+      peer1.signal({ candidate: { candidate: null, sdpMLineIndex:0, sdpMid:'0'}})
+      peer2.signal({ candidate: { candidate: null, sdpMLineIndex:0, sdpMid:'0'}})
+    }
+    t.pass('connected')
+    t.end()
+  })
+})
+
+test('empty-string end candidate does not throw', function (t) {
+  var peer1 = new Peer({ trickle: true, config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ trickle: true, config: config, wrtc: common.wrtc })
+
+  // translate all falsey candidates to null
+  let endCandidateSent = false
+  function endToEmptyString(data) {
+    if (data.candidate && !data.candidate.candidate) {
+      data.candidate.candidate = ''
+      endCandidateSent = true
+    }
+    return data
+  }
+
+  peer1.on('error', () => t.fail('peer1 threw error'))
+  peer2.on('error', () => t.fail('peer2 threw error'))
+
+  peer1.on('signal', data => peer2.signal(endToEmptyString(data)))
+  peer2.on('signal', data => peer1.signal(endToEmptyString(data)))
+
+  peer1.on('connect', () => {
+    if (!endCandidateSent) { // force an end candidate to browsers that don't send them
+      peer1.signal({ candidate: { candidate: '', sdpMLineIndex:0, sdpMid:'0'}})
+      peer2.signal({ candidate: { candidate: '', sdpMLineIndex:0, sdpMid:'0'}})
+    }
+    t.pass('connected')
+    t.end()
+  })
+})
+
+test('mDNS candidate does not throw', function (t) {
+  var peer1 = new Peer({ trickle: true, config: config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ trickle: true, config: config, wrtc: common.wrtc })
+
+  peer1.on('error', () => t.fail('peer1 threw error'))
+  peer2.on('error', () => t.fail('peer2 threw error'))
+
+  peer1.on('signal', data => peer2.signal(data))
+  peer2.on('signal', data => peer1.signal(data))
+
+  peer1.on('connect', () => {
+    // force an mDNS candidate to browsers that don't send them
+    const candidate = 'candidate:2053030672 1 udp 2113937151 ede93942-fbc5-4323-9b73-169de626e467.local 55741 typ host generation 0 ufrag HNmH network-cost 999'
+    peer1.signal({ candidate: { candidate, sdpMLineIndex:0, sdpMid:'0'}})
+    peer2.signal({ candidate: { candidate, sdpMLineIndex:0, sdpMid:'0'}})
+    t.pass('connected')
+    t.end()
+  })
+})
+
 test('ice candidates received before description', function (t) {
   t.plan(3)
 
