@@ -227,7 +227,7 @@ Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
   var iceCandidateObj = new self._wrtc.RTCIceCandidate(candidate)
   self._pc.addIceCandidate(iceCandidateObj).catch(function (err) {
-   if (!candidate.candidate) {
+    if (!candidate.candidate) {
       warn('Ignoring unsupported ICE end candidate.')
     } else {
       self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
@@ -1021,7 +1021,7 @@ function makeError (message, code) {
   return err
 }
 
-function warn(message) {
+function warn (message) {
   if (console === undefined) return
   console.warn(message)
 }

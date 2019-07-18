@@ -155,9 +155,9 @@ test('null end candidate does not throw', function (t) {
 
   // translate all falsey candidates to null
   let endCandidateSent = false
-  function endToNull(data) {
+  function endToNull (data) {
     if (data.candidate && !data.candidate.candidate) {
-      data.candidate.candidate = null 
+      data.candidate.candidate = null
       endCandidateSent = true
     }
     return data
@@ -171,8 +171,8 @@ test('null end candidate does not throw', function (t) {
 
   peer1.on('connect', () => {
     if (!endCandidateSent) { // force an end candidate to browsers that don't send them
-      peer1.signal({ candidate: { candidate: null, sdpMLineIndex:0, sdpMid:'0'}})
-      peer2.signal({ candidate: { candidate: null, sdpMLineIndex:0, sdpMid:'0'}})
+      peer1.signal({ candidate: { candidate: null, sdpMLineIndex: 0, sdpMid: '0' } })
+      peer2.signal({ candidate: { candidate: null, sdpMLineIndex: 0, sdpMid: '0' } })
     }
     t.pass('connected')
     t.end()
@@ -185,7 +185,7 @@ test('empty-string end candidate does not throw', function (t) {
 
   // translate all falsey candidates to null
   let endCandidateSent = false
-  function endToEmptyString(data) {
+  function endToEmptyString (data) {
     if (data.candidate && !data.candidate.candidate) {
       data.candidate.candidate = ''
       endCandidateSent = true
@@ -201,8 +201,8 @@ test('empty-string end candidate does not throw', function (t) {
 
   peer1.on('connect', () => {
     if (!endCandidateSent) { // force an end candidate to browsers that don't send them
-      peer1.signal({ candidate: { candidate: '', sdpMLineIndex:0, sdpMid:'0'}})
-      peer2.signal({ candidate: { candidate: '', sdpMLineIndex:0, sdpMid:'0'}})
+      peer1.signal({ candidate: { candidate: '', sdpMLineIndex: 0, sdpMid: '0' } })
+      peer2.signal({ candidate: { candidate: '', sdpMLineIndex: 0, sdpMid: '0' } })
     }
     t.pass('connected')
     t.end()
@@ -222,8 +222,8 @@ test('mDNS candidate does not throw', function (t) {
   peer1.on('connect', () => {
     // force an mDNS candidate to browsers that don't send them
     const candidate = 'candidate:2053030672 1 udp 2113937151 ede93942-fbc5-4323-9b73-169de626e467.local 55741 typ host generation 0 ufrag HNmH network-cost 999'
-    peer1.signal({ candidate: { candidate, sdpMLineIndex:0, sdpMid:'0'}})
-    peer2.signal({ candidate: { candidate, sdpMLineIndex:0, sdpMid:'0'}})
+    peer1.signal({ candidate: { candidate, sdpMLineIndex: 0, sdpMid: '0' } })
+    peer2.signal({ candidate: { candidate, sdpMLineIndex: 0, sdpMid: '0' } })
     t.pass('connected')
     t.end()
   })
