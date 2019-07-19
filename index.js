@@ -175,6 +175,8 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
   }
 })
 
+// HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
+// https://bugs.chromium.org/p/chromium/issues/detail?id=882743
 Object.defineProperty(Peer.prototype, 'connected', {
   get: function () {
     var self = this
