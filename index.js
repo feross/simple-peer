@@ -92,7 +92,7 @@ function Peer (opts) {
   try {
     self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
   } catch (err) {
-    process.nextTick(() => self.destroy(err))
+    setTimeout(() => self.destroy(err), 0)
     return
   }
 
