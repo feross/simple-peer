@@ -235,8 +235,13 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
-  self._pc.addIceCandidate(new self._wrtc.RTCIceCandidate(candidate)).catch(function (err) {
-    self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+  var iceCandidateObj = new self._wrtc.RTCIceCandidate(candidate)
+  self._pc.addIceCandidate(iceCandidateObj).catch(function (err) {
+    if (!candidate.candidate) {
+      warn('Ignoring unsupported ICE end candidate.')
+    } else {
+      self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+    }
   })
 }
 
@@ -1024,4 +1029,8 @@ function makeError (message, code) {
   var err = new Error(message)
   err.code = code
   return err
+}
+
+function warn (message) {
+  console.warn(message)
 }
