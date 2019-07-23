@@ -1023,6 +1023,5 @@ function makeError (message, code) {
 }
 
 function warn (message) {
-  if (console === undefined) return
   console.warn(message)
 }
