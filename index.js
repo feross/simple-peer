@@ -46,7 +46,7 @@ function Peer (opts) {
   self.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
   self.destroyed = false
-  self.connected = false
+  self._connected = false
 
   self.remoteAddress = undefined
   self.remoteFamily = undefined
@@ -175,6 +175,15 @@ Object.defineProperty(Peer.prototype, 'bufferSize', {
   }
 })
 
+// HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
+// https://bugs.chromium.org/p/chromium/issues/detail?id=882743
+Object.defineProperty(Peer.prototype, 'connected', {
+  get: function () {
+    var self = this
+    return (self._connected && self._channel.readyState === 'open')
+  }
+})
+
 Peer.prototype.address = function () {
   var self = this
   return { port: self.localPort, family: self.localFamily, address: self.localAddress }
@@ -226,8 +235,13 @@ Peer.prototype.signal = function (data) {
 
 Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
-  self._pc.addIceCandidate(new self._wrtc.RTCIceCandidate(candidate)).catch(function (err) {
-    self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+  var iceCandidateObj = new self._wrtc.RTCIceCandidate(candidate)
+  self._pc.addIceCandidate(iceCandidateObj).catch(function (err) {
+    if (!candidate.candidate) {
+      warn('Ignoring unsupported ICE end candidate.')
+    } else {
+      self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+    }
   })
 }
 
@@ -426,7 +440,7 @@ Peer.prototype._destroy = function (err, cb) {
   if (!self._writableState.finished) self.end()
 
   self.destroyed = true
-  self.connected = false
+  self._connected = false
   self._pcReady = false
   self._channelReady = false
   self._remoteTracks = null
@@ -527,7 +541,7 @@ Peer.prototype._write = function (chunk, encoding, cb) {
   var self = this
   if (self.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
 
-  if (self.connected) {
+  if (self._connected) {
     try {
       self.send(chunk)
     } catch (err) {
@@ -552,7 +566,7 @@ Peer.prototype._onFinish = function () {
   var self = this
   if (self.destroyed) return
 
-  if (self.connected) {
+  if (self._connected) {
     destroySoon()
   } else {
     self.once('connect', destroySoon)
@@ -749,7 +763,7 @@ Peer.prototype.getStats = function (cb) {
 Peer.prototype._maybeReady = function () {
   var self = this
   self._debug('maybeReady pc %s channel %s', self._pcReady, self._channelReady)
-  if (self.connected || self._connecting || !self._pcReady || !self._channelReady) return
+  if (self._connected || self._connecting || !self._pcReady || !self._channelReady) return
 
   self._connecting = true
 
@@ -853,7 +867,7 @@ Peer.prototype._maybeReady = function () {
         return
       } else {
         self._connecting = false
-        self.connected = true
+        self._connected = true
       }
 
       if (self._chunk) {
@@ -962,7 +976,7 @@ Peer.prototype._onChannelBufferedAmountLow = function () {
 
 Peer.prototype._onChannelOpen = function () {
   var self = this
-  if (self.connected || self.destroyed) return
+  if (self._connected || self.destroyed) return
   self._debug('on channel open')
   self._channelReady = true
   self._maybeReady()
@@ -1015,4 +1029,8 @@ function makeError (message, code) {
   var err = new Error(message)
   err.code = code
   return err
+}
+
+function warn (message) {
+  console.warn(message)
 }
