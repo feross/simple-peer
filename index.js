@@ -237,8 +237,8 @@ Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
   var iceCandidateObj = new self._wrtc.RTCIceCandidate(candidate)
   self._pc.addIceCandidate(iceCandidateObj).catch(function (err) {
-    if (!candidate.candidate) {
-      warn('Ignoring unsupported ICE end candidate.')
+    if (!candidate.candidate || candidate.candidate.indexOf('.local') !== -1) {
+      warn('Ignoring unsupported ICE candidate.')
     } else {
       self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
     }
@@ -425,7 +425,7 @@ Peer.prototype.negotiate = function () {
 // See: https://github.com/nodejs/readable-stream/issues/283
 Peer.prototype.destroy = function (err) {
   var self = this
-  self._destroy(err, function () {})
+  self._destroy(err, function () { })
 }
 
 Peer.prototype._destroy = function (err, cb) {
@@ -461,7 +461,7 @@ Peer.prototype._destroy = function (err, cb) {
   if (self._channel) {
     try {
       self._channel.close()
-    } catch (err) {}
+    } catch (err) { }
 
     self._channel.onmessage = null
     self._channel.onopen = null
@@ -471,7 +471,7 @@ Peer.prototype._destroy = function (err, cb) {
   if (self._pc) {
     try {
       self._pc.close()
-    } catch (err) {}
+    } catch (err) { }
 
     self._pc.oniceconnectionstatechange = null
     self._pc.onicegatheringstatechange = null
@@ -535,7 +535,7 @@ Peer.prototype._setupData = function (event) {
   }, CHANNEL_CLOSING_TIMEOUT)
 }
 
-Peer.prototype._read = function () {}
+Peer.prototype._read = function () { }
 
 Peer.prototype._write = function (chunk, encoding, cb) {
   var self = this
@@ -713,7 +713,7 @@ Peer.prototype.getStats = function (cb) {
       cb(null, reports)
     }, function (err) { cb(err) })
 
-  // Two-parameter callback-based getStats() (deprecated, former standard)
+    // Two-parameter callback-based getStats() (deprecated, former standard)
   } else if (self._isReactNativeWebrtc) {
     self._pc.getStats(null, function (res) {
       var reports = []
@@ -723,7 +723,7 @@ Peer.prototype.getStats = function (cb) {
       cb(null, reports)
     }, function (err) { cb(err) })
 
-  // Single-parameter callback-based getStats() (non-standard)
+    // Single-parameter callback-based getStats() (non-standard)
   } else if (self._pc.getStats.length > 0) {
     self._pc.getStats(function (res) {
       // If we destroy connection in `connect` callback this code might happen to run when actual connection is already closed
@@ -743,8 +743,8 @@ Peer.prototype.getStats = function (cb) {
       cb(null, reports)
     }, function (err) { cb(err) })
 
-  // Unknown browser, skip getStats() since it's anyone's guess which style of
-  // getStats() they implement.
+    // Unknown browser, skip getStats() since it's anyone's guess which style of
+    // getStats() they implement.
   } else {
     cb(null, [])
   }
