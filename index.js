@@ -237,8 +237,8 @@ Peer.prototype._addIceCandidate = function (candidate) {
   var self = this
   var iceCandidateObj = new self._wrtc.RTCIceCandidate(candidate)
   self._pc.addIceCandidate(iceCandidateObj).catch(function (err) {
-    if (!candidate.candidate) {
-      warn('Ignoring unsupported ICE end candidate.')
+    if (!candidate.candidate || candidate.candidate.endsWith('.local')) {
+      warn('Ignoring unsupported ICE candidate.')
     } else {
       self.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
     }
