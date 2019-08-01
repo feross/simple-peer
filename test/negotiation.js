@@ -110,8 +110,8 @@ test('repeated manual renegotiation', function (t) {
 })
 
 test('renegotiation after addStream', function (t) {
-  if (common.isBrowser('safari') || common.isBrowser('ios')) {
-    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+  if (common.isBrowser('ios')) {
+    t.pass('Skip on iOS which does not support this reliably')
     t.end()
     return
   }
