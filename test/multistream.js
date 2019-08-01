@@ -145,7 +145,7 @@ test('multistream on non-initiator only', function (t) {
 
 test('delayed stream on non-initiator', function (t) {
   if (common.isBrowser('ios')) {
-    t.pass('Skip on iOS which does not support this reliably') 
+    t.pass('Skip on iOS which does not support this reliably')
     t.end()
     return
   }
