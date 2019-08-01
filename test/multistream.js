@@ -144,8 +144,8 @@ test('multistream on non-initiator only', function (t) {
 })
 
 test('delayed stream on non-initiator', function (t) {
-  if (common.isBrowser('safari') || common.isBrowser('ios')) {
-    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+  if (common.isBrowser('ios')) {
+    t.pass('Skip on iOS which does not support this reliably') 
     t.end()
     return
   }
@@ -415,8 +415,8 @@ test('incremental multistream on non-initiator only (track event)', function (t)
 })
 
 test('addStream after removeStream', function (t) {
-  if (common.isBrowser('safari') || common.isBrowser('ios')) {
-    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+  if (common.isBrowser('ios')) {
+    t.pass('Skip on iOS which does not support this reliably')
     t.end()
     return
   }
