@@ -330,7 +330,8 @@ Peer.prototype.replaceTrack = function (oldTrack, newTrack, stream) {
   var submap = self._senderMap.get(oldTrack)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    self.emit('error', makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    return
   }
   if (newTrack) self._senderMap.set(newTrack, submap)
 
@@ -354,7 +355,8 @@ Peer.prototype.removeTrack = function (track, stream) {
   var submap = self._senderMap.get(track)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    self.emit('error', makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    return
   }
   try {
     sender.removed = true
