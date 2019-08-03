@@ -310,9 +310,9 @@ Peer.prototype.addTrack = function (track, stream) {
     self._senderMap.set(track, submap)
     self._needsNegotiation()
   } else if (sender.removed) {
-    self.emit('error', makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED'))
+    throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
   } else {
-    self.emit('error', makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED'))
+    throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED')
   }
 }
 
@@ -330,8 +330,7 @@ Peer.prototype.replaceTrack = function (oldTrack, newTrack, stream) {
   var submap = self._senderMap.get(oldTrack)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.emit('error', makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED'))
-    return
+    throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED')
   }
   if (newTrack) self._senderMap.set(newTrack, submap)
 
@@ -355,8 +354,7 @@ Peer.prototype.removeTrack = function (track, stream) {
   var submap = self._senderMap.get(track)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.emit('error', makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
-    return
+    throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED')
   }
   try {
     sender.removed = true
