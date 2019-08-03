@@ -310,9 +310,9 @@ Peer.prototype.addTrack = function (track, stream) {
     self._senderMap.set(track, submap)
     self._needsNegotiation()
   } else if (sender.removed) {
-    self.destroy(makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED'))
+    self.emit('error', makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED'))
   } else {
-    self.destroy(makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED'))
+    self.emit('error', makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED'))
   }
 }
 
