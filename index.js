@@ -92,7 +92,7 @@ function Peer (opts) {
   try {
     self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
   } catch (err) {
-    setTimeout(() => self.destroy(err), 0)
+    setTimeout(() => self.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')), 0)
     return
   }
 
@@ -269,7 +269,7 @@ Peer.prototype.addTransceiver = function (kind, init) {
       self._pc.addTransceiver(kind, init)
       self._needsNegotiation()
     } catch (err) {
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_ADD_TRANSCEIVER'))
     }
   } else {
     self.emit('signal', { // request initiator to renegotiate
@@ -363,7 +363,7 @@ Peer.prototype.removeTrack = function (track, stream) {
     if (err.name === 'NS_ERROR_UNEXPECTED') {
       self._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
     } else {
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_REMOVE_TRACK'))
     }
   }
   self._needsNegotiation()
