@@ -57,35 +57,36 @@ Let's create an html page that lets you manually connect two peers:
       <button type="submit">submit</button>
     </form>
     <pre id="outgoing"></pre>
-    <script src="bundle.js"></script>
+    <script src="simplepeer.min.js"></script>
+    <script>
+      const p = new SimplePeer({
+        initiator: location.hash === '#1',
+        trickle: false
+      })
+
+      p.on('error', err => console.log('error', err))
+
+      p.on('signal', data => {
+        console.log('SIGNAL', JSON.stringify(data))
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+
+      document.querySelector('form').addEventListener('submit', ev => {
+        ev.preventDefault()
+        p.signal(JSON.parse(document.querySelector('#incoming').value))
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        p.send('whatever' + Math.random())
+      })
+
+      p.on('data', data => {
+        console.log('data: ' + data)
+      })
+    </script>
   </body>
 </html>
-```
-
-```js
-var Peer = require('simple-peer')
-var p = new Peer({ initiator: location.hash === '#1', trickle: false })
-
-p.on('error', err => console.log('error', err))
-
-p.on('signal', data => {
-  console.log('SIGNAL', JSON.stringify(data))
-  document.querySelector('#outgoing').textContent = JSON.stringify(data)
-})
-
-document.querySelector('form').addEventListener('submit', ev => {
-  ev.preventDefault()
-  p.signal(JSON.parse(document.querySelector('#incoming').value))
-})
-
-p.on('connect', () => {
-  console.log('CONNECT')
-  p.send('whatever' + Math.random())
-})
-
-p.on('data', data => {
-  console.log('data: ' + data)
-})
 ```
 
 Visit `index.html#1` from one browser (the initiator) and `index.html` from another
@@ -160,13 +161,13 @@ function gotMedia (stream) {
   peer2.on('stream', stream => {
     // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
-    
+
     if ('srcObject' in video) {
       video.srcObject = stream
     } else {
       video.src = window.URL.createObjectURL(stream) // for older browsers
     }
-    
+
     video.play()
   })
 }
