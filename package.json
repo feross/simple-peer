@@ -27,7 +27,7 @@
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
     "standard": "*",
-    "string-to-stream": "^2.0.0",
+    "string-to-stream": "^3.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
     "wrtc": "^0.4.1",
