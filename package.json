@@ -26,7 +26,7 @@
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
-    "standard": "*",
+    "standard": "14.0.2",
     "string-to-stream": "^3.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
