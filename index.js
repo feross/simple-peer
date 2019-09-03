@@ -117,7 +117,6 @@ function Peer (opts) {
   }
 
   // Other spec events, unused by this implementation:
-  // - onconnectionstatechange
   // - onicecandidateerror
   // - onfingerprintfailure
   // - onnegotiationneeded
