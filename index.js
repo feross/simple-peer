@@ -92,7 +92,7 @@ function Peer (opts) {
   try {
     self._pc = new (self._wrtc.RTCPeerConnection)(self.config)
   } catch (err) {
-    setTimeout(() => self.destroy(err), 0)
+    setTimeout(() => self.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')), 0)
     return
   }
 
@@ -269,7 +269,7 @@ Peer.prototype.addTransceiver = function (kind, init) {
       self._pc.addTransceiver(kind, init)
       self._needsNegotiation()
     } catch (err) {
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_ADD_TRANSCEIVER'))
     }
   } else {
     self.emit('signal', { // request initiator to renegotiate
@@ -310,9 +310,9 @@ Peer.prototype.addTrack = function (track, stream) {
     self._senderMap.set(track, submap)
     self._needsNegotiation()
   } else if (sender.removed) {
-    self.destroy(makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED'))
+    throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
   } else {
-    self.destroy(makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED'))
+    throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED')
   }
 }
 
@@ -330,7 +330,7 @@ Peer.prototype.replaceTrack = function (oldTrack, newTrack, stream) {
   var submap = self._senderMap.get(oldTrack)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED')
   }
   if (newTrack) self._senderMap.set(newTrack, submap)
 
@@ -354,7 +354,7 @@ Peer.prototype.removeTrack = function (track, stream) {
   var submap = self._senderMap.get(track)
   var sender = submap ? submap.get(stream) : null
   if (!sender) {
-    self.destroy(makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED'))
+    throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED')
   }
   try {
     sender.removed = true
@@ -363,7 +363,7 @@ Peer.prototype.removeTrack = function (track, stream) {
     if (err.name === 'NS_ERROR_UNEXPECTED') {
       self._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
     } else {
-      self.destroy(err)
+      self.destroy(makeError(err, 'ERR_REMOVE_TRACK'))
     }
   }
   self._needsNegotiation()

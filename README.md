@@ -57,35 +57,36 @@ Let's create an html page that lets you manually connect two peers:
       <button type="submit">submit</button>
     </form>
     <pre id="outgoing"></pre>
-    <script src="bundle.js"></script>
+    <script src="simplepeer.min.js"></script>
+    <script>
+      const p = new SimplePeer({
+        initiator: location.hash === '#1',
+        trickle: false
+      })
+
+      p.on('error', err => console.log('error', err))
+
+      p.on('signal', data => {
+        console.log('SIGNAL', JSON.stringify(data))
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+
+      document.querySelector('form').addEventListener('submit', ev => {
+        ev.preventDefault()
+        p.signal(JSON.parse(document.querySelector('#incoming').value))
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        p.send('whatever' + Math.random())
+      })
+
+      p.on('data', data => {
+        console.log('data: ' + data)
+      })
+    </script>
   </body>
 </html>
-```
-
-```js
-var Peer = require('simple-peer')
-var p = new Peer({ initiator: location.hash === '#1', trickle: false })
-
-p.on('error', err => console.log('error', err))
-
-p.on('signal', data => {
-  console.log('SIGNAL', JSON.stringify(data))
-  document.querySelector('#outgoing').textContent = JSON.stringify(data)
-})
-
-document.querySelector('form').addEventListener('submit', ev => {
-  ev.preventDefault()
-  p.signal(JSON.parse(document.querySelector('#incoming').value))
-})
-
-p.on('connect', () => {
-  console.log('CONNECT')
-  p.send('whatever' + Math.random())
-})
-
-p.on('data', data => {
-  console.log('data: ' + data)
-})
 ```
 
 Visit `index.html#1` from one browser (the initiator) and `index.html` from another
@@ -160,19 +161,59 @@ function gotMedia (stream) {
   peer2.on('stream', stream => {
     // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
-    
+
     if ('srcObject' in video) {
       video.srcObject = stream
     } else {
       video.src = window.URL.createObjectURL(stream) // for older browsers
     }
-    
+
     video.play()
   })
 }
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+### dynamic video/voice
+
+It is also possible to establish a data-only connection at first, and later add
+a video/voice stream, if desired.
+
+```js
+var Peer = require('simple-peer') // create peer without waiting for media
+
+var peer1 = new Peer({ initiator: true }) // you don't need streams here
+var peer2 = new Peer()
+
+peer1.on('signal', data => {
+  peer2.signal(data)
+})
+
+peer2.on('signal', data => {
+  peer1.signal(data)
+})
+
+peer2.on('stream', stream => {
+  // got remote video stream, now let's show it in a video tag
+  var video = document.querySelector('video')
+
+  if ('srcObject' in video) {
+    video.srcObject = stream
+  } else {
+    video.src = window.URL.createObjectURL(stream) // for older browsers
+  }
+
+  video.play()
+})
+
+function addMedia (stream) {
+  peer1.addStream(stream) // <- add streams to peer dynamically
+}
+
+// then, anytime later...
+navigator.getUserMedia({ video: true, audio: true }, addMedia, () => {})
+```
 
 ### in node
 
@@ -211,6 +252,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
 - [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
 - [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
+- [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
 - *Your app here! - send a PR!*
 
 ## api
