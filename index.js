@@ -103,6 +103,9 @@ function Peer (opts) {
   self._pc.oniceconnectionstatechange = function () {
     self._onIceStateChange()
   }
+  self._pc.onconnectionstatechange = function () {
+    self._onConnectionStateChange()
+  }
   self._pc.onicegatheringstatechange = function () {
     self._onIceStateChange()
   }
@@ -673,6 +676,13 @@ Peer.prototype._createAnswer = function () {
       if (!self.initiator) self._requestMissingTransceivers()
     }
   }).catch(function (err) { self.destroy(makeError(err, 'ERR_CREATE_ANSWER')) })
+}
+
+Peer.prototype._onConnectionStateChange = function () {
+  var self = this
+  if (self._pc.connectionState === 'failed') {
+    self.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+  }
 }
 
 Peer.prototype._onIceStateChange = function () {
