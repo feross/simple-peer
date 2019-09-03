@@ -679,6 +679,7 @@ Peer.prototype._createAnswer = function () {
 
 Peer.prototype._onConnectionStateChange = function () {
   var self = this
+  if (self.destroyed) return
   if (self._pc.connectionState === 'failed') {
     self.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
   }
