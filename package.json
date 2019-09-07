@@ -13,6 +13,7 @@
   "dependencies": {
     "debug": "^4.0.1",
     "get-browser-rtc": "^1.0.0",
+    "queue-microtask": "^1.1.0",
     "randombytes": "^2.0.3",
     "readable-stream": "^3.4.0"
   },
