@@ -253,6 +253,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
 - [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
 - [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
+- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - *Your app here! - send a PR!*
 
 ## api

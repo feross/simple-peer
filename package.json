@@ -13,7 +13,6 @@
   "dependencies": {
     "debug": "^4.0.1",
     "get-browser-rtc": "^1.0.0",
-    "inherits": "^2.0.1",
     "randombytes": "^2.0.3",
     "readable-stream": "^3.4.0"
   },
