@@ -2,6 +2,7 @@ var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')
 var stream = require('readable-stream')
+var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
@@ -100,7 +101,7 @@ class Peer extends stream.Duplex {
     try {
       this._pc = new (this._wrtc.RTCPeerConnection)(this.config)
     } catch (err) {
-      setTimeout(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')), 0)
+      queueMicrotask(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')))
       return
     }
 
@@ -358,11 +359,11 @@ class Peer extends stream.Duplex {
     this._debug('_needsNegotiation')
     if (this._batchedNegotiation) return // batch synchronous renegotiations
     this._batchedNegotiation = true
-    setTimeout(() => {
+    queueMicrotask(() => {
       this._batchedNegotiation = false
       this._debug('starting batched negotiation')
       this.negotiate()
-    }, 0)
+    })
   }
 
   negotiate () {
@@ -965,9 +966,9 @@ class Peer extends stream.Duplex {
       })) return // Only fire one 'stream' event, even though there may be multiple tracks per stream
 
       this._remoteStreams.push(eventStream)
-      setTimeout(() => {
+      queueMicrotask(() => {
         this.emit('stream', eventStream) // ensure all tracks have been added
-      }, 0)
+      })
     })
   }
 
