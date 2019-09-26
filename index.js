@@ -115,6 +115,9 @@ class Peer extends stream.Duplex {
     this._pc.onicegatheringstatechange = () => {
       this._onIceStateChange()
     }
+    this._pc.onconnectionstatechange = () => {
+      this._onConnectionStateChange()
+    }
     this._pc.onsignalingstatechange = () => {
       this._onSignalingStateChange()
     }
@@ -643,6 +646,13 @@ class Peer extends stream.Duplex {
       .catch(err => {
         this.destroy(makeError(err, 'ERR_CREATE_ANSWER'))
       })
+  }
+
+  _onConnectionStateChange () {
+    if (this.destroyed) return
+    if (this._pc.connectionState === 'failed') {
+      this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+    }
   }
 
   _onIceStateChange () {
