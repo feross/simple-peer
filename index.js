@@ -191,7 +191,7 @@ class Peer extends stream.Duplex {
       this.addTransceiver(data.transceiverRequest.kind, data.transceiverRequest.init)
     }
     if (data.candidate) {
-      if (this._pc.localDescription && this._pc.localDescription.type && this._pc.remoteDescription && this._pc.remoteDescription.type) {
+      if (this._pc.remoteDescription && this._pc.remoteDescription.type) {
         this._addIceCandidate(data.candidate)
       } else {
         this._pendingCandidates.push(data.candidate)
