@@ -1,3 +1,9 @@
+<p align="center">
+<a href="https://codefund.io/properties/560/visit-sponsor">
+<img src="https://codefund.io/properties/560/sponsor" />
+</a>
+</p>
+
 # simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
