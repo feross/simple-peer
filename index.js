@@ -691,7 +691,7 @@ class Peer extends stream.Duplex {
     }
 
     // Promise-based getStats() (standard)
-    if (this._pc.getStats.length === 0) {
+    if (this._pc.getStats.length === 0 || this._isReactNativeWebrtc) {
       this._pc.getStats()
         .then(res => {
           var reports = []
@@ -700,16 +700,6 @@ class Peer extends stream.Duplex {
           })
           cb(null, reports)
         }, err => cb(err))
-
-    // Two-parameter callback-based getStats() (deprecated, former standard)
-    } else if (this._isReactNativeWebrtc) {
-      this._pc.getStats(null, res => {
-        var reports = []
-        res.forEach(report => {
-          reports.push(flattenValues(report))
-        })
-        cb(null, reports)
-      }, err => cb(err))
 
     // Single-parameter callback-based getStats() (non-standard)
     } else if (this._pc.getStats.length > 0) {
