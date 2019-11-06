@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "airtap": "^2.0.3",
-    "babel-minify": "^0.5.0",
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
     "nyc": "^14.1.1",
@@ -30,6 +29,7 @@
     "string-to-stream": "^3.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
+    "tinyify": "^2.5.2",
     "wrtc": "^0.4.1",
     "ws": "^7.0.0"
   },
@@ -55,12 +55,12 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "build": "browserify -s SimplePeer -r ./ | minify > simplepeer.min.js",
+    "build": "browserify --plugin tinyify -s SimplePeer -r ./ > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap --coverage -- test/*.js",
     "test-browser-local": "airtap --coverage --local -- test/*.js",
-    "test-node": "WRTC=wrtc tape test/*.js",
-    "test-coverage": "nyc report --reporter=html"
+    "test-coverage": "nyc report --reporter=html",
+    "test-node": "WRTC=wrtc tape test/*.js"
   }
 }
