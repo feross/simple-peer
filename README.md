@@ -32,17 +32,17 @@
   - manually set config options
   - transceivers and renegotiation
 
-This module works in the browser with [browserify](http://browserify.org/).
-
-**Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`. Wherever
-you see `Peer` in the examples below, substitute that with `SimplePeer`.
-
 ## install
 
 ```
 npm install simple-peer
 ```
+
+This package works in the browser with [browserify](https://browserify.org). If
+you do not use a bundler, you can use the `simplepeer.min.js` standalone script
+directly in a `<script>` tag. This exports a `SimplePeer` constructor on
+`window`. Wherever you see `Peer` in the examples below, substitute that with
+`SimplePeer`.
 
 ## usage
 
