@@ -17,7 +17,7 @@
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
-#### Simple WebRTC video, voice, and data channels.
+#### Simple WebRTC video, voice, and data channels
 
 ## features
 
