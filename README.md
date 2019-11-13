@@ -17,7 +17,7 @@
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
-#### Simple WebRTC video/voice and data channels.
+#### Simple WebRTC video, voice, and data channels.
 
 ## features
 
@@ -31,6 +31,8 @@
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config options
   - transceivers and renegotiation
+
+This package is used by [WebTorrent](https://webtorrent.io).
 
 ## install
 
