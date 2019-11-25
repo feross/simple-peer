@@ -45,6 +45,7 @@ class Peer extends stream.Duplex {
 
     this.initiator = opts.initiator || false
     this.channelConfig = opts.channelConfig || Peer.channelConfig
+    this.negotiated = this.channelConfig.negotiated
     this.config = Object.assign({}, Peer.config, opts.config)
     this.offerOptions = opts.offerOptions || {}
     this.answerOptions = opts.answerOptions || {}
@@ -83,7 +84,7 @@ class Peer extends stream.Duplex {
     this._channel = null
     this._pendingCandidates = []
 
-    this._isNegotiating = !this.initiator // is this peer waiting for negotiation to complete?
+    this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
     this._batchedNegotiation = false // batch synchronous negotiations
     this._queuedNegotiation = false // is there a queued negotiation request?
     this._sendersAwaitingStable = []
@@ -131,7 +132,7 @@ class Peer extends stream.Duplex {
     // - onfingerprintfailure
     // - onnegotiationneeded
 
-    if (this.initiator) {
+    if (this.initiator || this.negotiated) {
       this._setupData({
         channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
       })
