@@ -1,3 +1,9 @@
+<p align="center">
+<a href="https://codefund.io/properties/560/visit-sponsor">
+<img src="https://codefund.io/properties/560/sponsor" />
+</a>
+</p>
+
 # simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
@@ -11,7 +17,7 @@
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
-#### Simple WebRTC video/voice and data channels.
+#### Simple WebRTC video, voice, and data channels
 
 ## features
 
@@ -26,17 +32,19 @@
   - manually set config options
   - transceivers and renegotiation
 
-This module works in the browser with [browserify](http://browserify.org/).
-
-**Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`. Wherever
-you see `Peer` in the examples below, substitute that with `SimplePeer`.
+This package is used by [WebTorrent](https://webtorrent.io).
 
 ## install
 
 ```
 npm install simple-peer
 ```
+
+This package works in the browser with [browserify](https://browserify.org). If
+you do not use a bundler, you can use the `simplepeer.min.js` standalone script
+directly in a `<script>` tag. This exports a `SimplePeer` constructor on
+`window`. Wherever you see `Peer` in the examples below, substitute that with
+`SimplePeer`.
 
 ## usage
 
@@ -253,6 +261,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
 - [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
 - [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
+- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - *Your app here! - send a PR!*
 
 ## api
