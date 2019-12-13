@@ -295,14 +295,14 @@ If `opts` is specified, then the default options (shown below) will be overridde
 The options do the following:
 
 - `initiator` - set to `true` if this is the initiating peer
-- `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
+- `channelConfig` - custom webrtc data channel configuration (used by [`createDataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel))
 - `channelName` - custom webrtc data channel name
-- `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
-- `offerOptions` - custom offer options (used by `createOffer` method)
-- `answerOptions` - custom answer options (used by `createAnswer` method)
+- `config` - custom webrtc configuration (used by [`RTCPeerConnection`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) constructor)
+- `offerOptions` - custom offer options (used by [`createOffer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createOffer) method)
+- `answerOptions` - custom answer options (used by [`createAnswer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createAnswer) method)
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
-- `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
-- `streams` - an array of MediaStreams returned from `getUserMedia`
+- `stream` - if video/voice is desired, pass stream returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+- `streams` - an array of MediaStreams returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
