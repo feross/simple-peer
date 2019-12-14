@@ -4,10 +4,12 @@
 </a>
 </p>
 
-# simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
+# simple-peer [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
 [travis-url]: https://travis-ci.org/feross/simple-peer
+[coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
 [npm-image]: https://img.shields.io/npm/v/simple-peer.svg
 [npm-url]: https://npmjs.org/package/simple-peer
 [downloads-image]: https://img.shields.io/npm/dm/simple-peer.svg
