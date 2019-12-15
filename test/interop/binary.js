@@ -23,6 +23,8 @@ test('data send/receive Buffer', function (t) {
   })
   peer.on('connect', tryTest)
 
+  peer.on('close', function () { t.pass('peer destroyed') })
+
   async function tryTest () {
     await t.barrier('connected')
 
@@ -32,7 +34,6 @@ test('data send/receive Buffer', function (t) {
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       await t.barrier('readyToClose')
-      peer.on('close', function () { t.pass('peer destroyed') })
       peer.destroy()
     })
   }
@@ -50,6 +51,8 @@ test('data send/receive Uint8Array', function (t) {
   })
   peer.on('connect', tryTest)
 
+  peer.on('close', function () { t.pass('peer destroyed') })
+
   async function tryTest () {
     await t.barrier('connected')
 
@@ -61,7 +64,6 @@ test('data send/receive Uint8Array', function (t) {
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       await t.barrier('readyToClose')
-      peer.on('close', function () { t.pass('peer destroyed') })
       peer.destroy()
     })
   }
@@ -79,6 +81,8 @@ test('data send/receive ArrayBuffer', function (t) {
   })
   peer.on('connect', tryTest)
 
+  peer.on('close', function () { t.pass('peer destroyed') })
+
   async function tryTest () {
     await t.barrier('connected')
 
@@ -90,7 +94,6 @@ test('data send/receive ArrayBuffer', function (t) {
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       await t.barrier('readyToClose')
-      peer.on('close', function () { t.pass('peer destroyed') })
       peer.destroy()
     })
   }
