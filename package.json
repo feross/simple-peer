@@ -62,9 +62,8 @@
     "test-browser": "airtap --coverage -- test/unit/*.js",
     "test-browser-local": "airtap --coverage --local -- test/unit/*.js",
     "test-node": "WRTC=wrtc tape test/unit/*.js",
-    "test-interop": "npm run test-interop-node && npm run test-interop-browser",
-    "test-interop-browser": "twintap -- test/interop/*.js",
-    "test-interop-browser-local": "twintap --local -- test/interop/*.js",
+    "test-interop": "twintap -- test/interop/*.js",
+    "test-interop-local": "twintap --local -- test/interop/*.js",
     "coverage": "nyc report --reporter=html"
   }
 }
