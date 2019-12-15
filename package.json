@@ -1,7 +1,7 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "9.4.0",
+  "version": "9.6.2",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
@@ -13,13 +13,13 @@
   "dependencies": {
     "debug": "^4.0.1",
     "get-browser-rtc": "^1.0.0",
-    "inherits": "^2.0.1",
+    "queue-microtask": "^1.1.0",
     "randombytes": "^2.0.3",
     "readable-stream": "^3.4.0"
   },
   "devDependencies": {
     "airtap": "^2.0.3",
-    "babel-minify": "^0.5.0",
+    "babel-minify": "^0.5.1",
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
     "nyc": "^14.1.1",
@@ -27,7 +27,7 @@
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
     "standard": "*",
-    "string-to-stream": "^2.0.0",
+    "string-to-stream": "^3.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
     "wrtc": "^0.4.1",
@@ -55,12 +55,12 @@
     "url": "git://github.com/feross/simple-peer.git"
   },
   "scripts": {
-    "build": "browserify -s SimplePeer -r ./ | minify > simplepeer.min.js",
+    "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap --coverage -- test/*.js",
     "test-browser-local": "airtap --coverage --local -- test/*.js",
-    "test-node": "WRTC=wrtc tape test/*.js",
-    "test-coverage": "nyc report --reporter=html"
+    "test-coverage": "nyc report --reporter=html",
+    "test-node": "WRTC=wrtc tape test/*.js"
   }
 }

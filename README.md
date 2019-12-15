@@ -1,3 +1,9 @@
+<p align="center">
+<a href="https://codefund.io/properties/560/visit-sponsor">
+<img src="https://codefund.io/properties/560/sponsor" />
+</a>
+</p>
+
 # simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
@@ -11,7 +17,7 @@
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
-#### Simple WebRTC video/voice and data channels.
+#### Simple WebRTC video, voice, and data channels
 
 ## features
 
@@ -26,17 +32,19 @@
   - manually set config options
   - transceivers and renegotiation
 
-This module works in the browser with [browserify](http://browserify.org/).
-
-**Note:** If you're **NOT** using browserify, then use the included standalone file
-`simplepeer.min.js`. This exports a `SimplePeer` constructor on `window`. Wherever
-you see `Peer` in the examples below, substitute that with `SimplePeer`.
+This package is used by [WebTorrent](https://webtorrent.io).
 
 ## install
 
 ```
 npm install simple-peer
 ```
+
+This package works in the browser with [browserify](https://browserify.org). If
+you do not use a bundler, you can use the `simplepeer.min.js` standalone script
+directly in a `<script>` tag. This exports a `SimplePeer` constructor on
+`window`. Wherever you see `Peer` in the examples below, substitute that with
+`SimplePeer`.
 
 ## usage
 
@@ -57,35 +65,36 @@ Let's create an html page that lets you manually connect two peers:
       <button type="submit">submit</button>
     </form>
     <pre id="outgoing"></pre>
-    <script src="bundle.js"></script>
+    <script src="simplepeer.min.js"></script>
+    <script>
+      const p = new SimplePeer({
+        initiator: location.hash === '#1',
+        trickle: false
+      })
+
+      p.on('error', err => console.log('error', err))
+
+      p.on('signal', data => {
+        console.log('SIGNAL', JSON.stringify(data))
+        document.querySelector('#outgoing').textContent = JSON.stringify(data)
+      })
+
+      document.querySelector('form').addEventListener('submit', ev => {
+        ev.preventDefault()
+        p.signal(JSON.parse(document.querySelector('#incoming').value))
+      })
+
+      p.on('connect', () => {
+        console.log('CONNECT')
+        p.send('whatever' + Math.random())
+      })
+
+      p.on('data', data => {
+        console.log('data: ' + data)
+      })
+    </script>
   </body>
 </html>
-```
-
-```js
-var Peer = require('simple-peer')
-var p = new Peer({ initiator: location.hash === '#1', trickle: false })
-
-p.on('error', err => console.log('error', err))
-
-p.on('signal', data => {
-  console.log('SIGNAL', JSON.stringify(data))
-  document.querySelector('#outgoing').textContent = JSON.stringify(data)
-})
-
-document.querySelector('form').addEventListener('submit', ev => {
-  ev.preventDefault()
-  p.signal(JSON.parse(document.querySelector('#incoming').value))
-})
-
-p.on('connect', () => {
-  console.log('CONNECT')
-  p.send('whatever' + Math.random())
-})
-
-p.on('data', data => {
-  console.log('data: ' + data)
-})
 ```
 
 Visit `index.html#1` from one browser (the initiator) and `index.html` from another
@@ -160,19 +169,59 @@ function gotMedia (stream) {
   peer2.on('stream', stream => {
     // got remote video stream, now let's show it in a video tag
     var video = document.querySelector('video')
-    
+
     if ('srcObject' in video) {
       video.srcObject = stream
     } else {
       video.src = window.URL.createObjectURL(stream) // for older browsers
     }
-    
+
     video.play()
   })
 }
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+### dynamic video/voice
+
+It is also possible to establish a data-only connection at first, and later add
+a video/voice stream, if desired.
+
+```js
+var Peer = require('simple-peer') // create peer without waiting for media
+
+var peer1 = new Peer({ initiator: true }) // you don't need streams here
+var peer2 = new Peer()
+
+peer1.on('signal', data => {
+  peer2.signal(data)
+})
+
+peer2.on('signal', data => {
+  peer1.signal(data)
+})
+
+peer2.on('stream', stream => {
+  // got remote video stream, now let's show it in a video tag
+  var video = document.querySelector('video')
+
+  if ('srcObject' in video) {
+    video.srcObject = stream
+  } else {
+    video.src = window.URL.createObjectURL(stream) // for older browsers
+  }
+
+  video.play()
+})
+
+function addMedia (stream) {
+  peer1.addStream(stream) // <- add streams to peer dynamically
+}
+
+// then, anytime later...
+navigator.getUserMedia({ video: true, audio: true }, addMedia, () => {})
+```
 
 ### in node
 
@@ -211,6 +260,8 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
 - [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
 - [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
+- [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
+- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - *Your app here! - send a PR!*
 
 ## api
@@ -244,14 +295,14 @@ If `opts` is specified, then the default options (shown below) will be overridde
 The options do the following:
 
 - `initiator` - set to `true` if this is the initiating peer
-- `channelConfig` - custom webrtc data channel configuration (used by `createDataChannel`)
+- `channelConfig` - custom webrtc data channel configuration (used by [`createDataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel))
 - `channelName` - custom webrtc data channel name
-- `config` - custom webrtc configuration (used by `RTCPeerConnection` constructor)
-- `offerOptions` - custom offer options (used by `createOffer` method)
-- `answerOptions` - custom answer options (used by `createAnswer` method)
+- `config` - custom webrtc configuration (used by [`RTCPeerConnection`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) constructor)
+- `offerOptions` - custom offer options (used by [`createOffer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createOffer) method)
+- `answerOptions` - custom answer options (used by [`createAnswer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createAnswer) method)
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
-- `stream` - if video/voice is desired, pass stream returned from `getUserMedia`
-- `streams` - an array of MediaStreams returned from `getUserMedia`
+- `stream` - if video/voice is desired, pass stream returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+- `streams` - an array of MediaStreams returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
