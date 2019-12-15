@@ -31,6 +31,7 @@ test('disable trickle', function (t) {
     t.equal(peer1.initiator, !!t.instance, 'initiator is correct')
 
     peer1.on('close', function () { t.pass('peer1 destroyed') })
+    await t.barrier('readyToClose')
     peer1.destroy()
   }
 })
@@ -60,6 +61,7 @@ test('disable trickle (only initiator)', function (t) {
     t.equal(peer1.initiator, !!t.instance, 'initiator is correct')
 
     peer1.on('close', function () { t.pass('peer1 destroyed') })
+    await t.barrier('readyToClose')
     peer1.destroy()
   }
 })
@@ -89,6 +91,7 @@ test('disable trickle (only non-initiator)', function (t) {
     t.equal(peer1.initiator, !!t.instance, 'initiator is correct')
 
     peer1.on('close', function () { t.pass('peer1 destroyed') })
+    await t.barrier('readyToClose')
     peer1.destroy()
   }
 })
