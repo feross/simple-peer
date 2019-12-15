@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config
@@ -110,8 +110,8 @@ test('repeated manual renegotiation', function (t) {
 })
 
 test('renegotiation after addStream', function (t) {
-  if (common.isBrowser('safari') || common.isBrowser('ios')) {
-    t.pass('Skip on Safari and iOS which do not support this reliably') // TODO: Enable in Safari 12.2
+  if (common.isBrowser('ios')) {
+    t.pass('Skip on iOS which does not support this reliably')
     t.end()
     return
   }
@@ -164,5 +164,47 @@ test('add stream on non-initiator only', function (t) {
   })
   peer1.on('stream', function () {
     t.pass('peer1 got stream')
+  })
+})
+
+test('negotiated channels', function (t) {
+  t.plan(4)
+
+  var peer1 = new Peer({
+    config: config,
+    initiator: true,
+    wrtc: common.wrtc,
+    channelConfig: {
+      id: 1,
+      negotiated: true
+    }
+  })
+  var peer2 = new Peer({
+    config: config,
+    wrtc: common.wrtc,
+    channelConfig: {
+      id: 1,
+      negotiated: true
+    }
+  })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer1.on('connect', function () {
+    t.pass('peer1 connect')
+  })
+  peer2.on('connect', function () {
+    t.pass('peer2 connect')
+  })
+
+  peer1.write('testData1')
+  peer2.write('testData2')
+
+  peer1.on('data', async (data) => {
+    t.equal(data.toString(), 'testData2', 'got correct message')
+  })
+  peer2.on('data', async (data) => {
+    t.equal(data.toString(), 'testData1', 'got correct message')
   })
 })

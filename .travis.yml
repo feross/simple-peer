@@ -8,7 +8,8 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
-  sauce_connect: true
+  sauce_connect:
+    no_ssl_bump_domains: airtap.local
   hosts:
     - airtap.local
 env:
@@ -16,3 +17,4 @@ env:
     - CXX=g++-4.8
     - secure: LqHyGcEyVXqymrZ77atyvoTthiE9ehXaxHjqLWFpIGNBdGBlASJNG42lhTR8YsM2MiIbzhslxLudyy2r4IljwbRV3/AB1mEf8J3lu1S3v5L/P1a6OeJOQWR3Nl50Z518rRFUermFlSjsdDEZp/i/o+KRz6VNAgwS31j6fvV8tdw=
     - secure: jEGOmkQelLxLeBQnHxpJN9G/TmGLbUNY+qyzVSV2ImC+EJ1QXRv03ynHO6WxZt0RPbHcOgbY3pA8gpPKA0uQagkVHNkBneJeeqJBD9kSywJpdfhzvD42ZsEWkUAQF3T8DOuSOUS0PR2/h4QpMmFmz9wTgb4Y1QLd47oMSglnIs8=
+after_success: npm run coverage

@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config
@@ -219,6 +219,11 @@ test('new constraint formats are used', function (t) {
 test('ensure remote address and port are available right after connection', function (t) {
   if (common.isBrowser('safari') || common.isBrowser('ios')) {
     t.pass('Skip on Safari and iOS which do not support modern getStats() calls')
+    t.end()
+    return
+  }
+  if (common.isBrowser('chrome')) {
+    t.pass('Skip on Chrome which hides local IPs with mDNS')
     t.end()
     return
   }
