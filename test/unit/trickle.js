@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config

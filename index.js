@@ -176,7 +176,7 @@ class Peer extends stream.Duplex {
   }
 
   signal (data) {
-    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING')
+    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_DESTROYED')
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
@@ -249,6 +249,7 @@ class Peer extends stream.Duplex {
    */
   addTransceiver (kind, init) {
     this._debug('addTransceiver()')
+    if (this.destroyed) throw makeError('cannot add transceiver after peer is destroyed', 'ERR_DESTROYED')
 
     if (this.initiator) {
       try {
@@ -270,6 +271,7 @@ class Peer extends stream.Duplex {
    */
   addStream (stream) {
     this._debug('addStream()')
+    if (this.destroyed) throw makeError('cannot add stream after peer is destroyed', 'ERR_DESTROYED')
 
     stream.getTracks().forEach(track => {
       this.addTrack(track, stream)
@@ -283,6 +285,7 @@ class Peer extends stream.Duplex {
    */
   addTrack (track, stream) {
     this._debug('addTrack()')
+    if (this.destroyed) throw makeError('cannot add track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
     var sender = submap.get(stream)
@@ -306,6 +309,7 @@ class Peer extends stream.Duplex {
    */
   replaceTrack (oldTrack, newTrack, stream) {
     this._debug('replaceTrack()')
+    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(oldTrack)
     var sender = submap ? submap.get(stream) : null
@@ -328,6 +332,7 @@ class Peer extends stream.Duplex {
    */
   removeTrack (track, stream) {
     this._debug('removeSender()')
+    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track)
     var sender = submap ? submap.get(stream) : null
@@ -507,7 +512,7 @@ class Peer extends stream.Duplex {
   _read () {}
 
   _write (chunk, encoding, cb) {
-    if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
+    if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DESTROYED'))
 
     if (this._connected) {
       try {
@@ -681,6 +686,8 @@ class Peer extends stream.Duplex {
   }
 
   getStats (cb) {
+    if (this.destroyed) throw makeError('cannot get stats after peer is destroyed', 'ERR_DESTROYED')
+
     // statreports can come with a value array instead of properties
     const flattenValues = report => {
       if (Object.prototype.toString.call(report.values) === '[object Array]') {

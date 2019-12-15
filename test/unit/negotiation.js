@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config
@@ -168,7 +168,7 @@ test('add stream on non-initiator only', function (t) {
 })
 
 test('negotiated channels', function (t) {
-  t.plan(2)
+  t.plan(4)
 
   var peer1 = new Peer({
     config: config,
@@ -196,5 +196,15 @@ test('negotiated channels', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connect')
+  })
+
+  peer1.write('testData1')
+  peer2.write('testData2')
+
+  peer1.on('data', async (data) => {
+    t.equal(data.toString(), 'testData2', 'got correct message')
+  })
+  peer2.on('data', async (data) => {
+    t.equal(data.toString(), 'testData1', 'got correct message')
   })
 })

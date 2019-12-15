@@ -1,0 +1,10 @@
+sauce_connect: true
+loopback: airtap.local
+browsers:
+  - name: firefox
+    version: latest
+  - name: chrome
+    version: latest
+  - name: safari
+    version: latest
+
