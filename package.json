@@ -22,6 +22,7 @@
     "babel-minify": "^0.5.1",
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
+    "coveralls": "^3.0.9",
     "nyc": "^14.1.1",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
@@ -30,7 +31,7 @@
     "string-to-stream": "^3.0.0",
     "tape": "^4.0.0",
     "thunky": "^1.0.1",
-    "twintap": "^1.3.1",
+    "twintap": "^1.3.9",
     "wrtc": "^0.4.1",
     "ws": "^7.0.0"
   },
@@ -58,13 +59,12 @@
   "scripts": {
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
-    "test": "standard && npm run test-node && npm run test-browser && npm run test-interop && coverage",
+    "test": "standard && npm run test-node && npm run test-browser && npm run test-interop",
     "test-browser": "airtap --coverage -- test/unit/*.js",
     "test-browser-local": "airtap --coverage --local -- test/unit/*.js",
     "test-node": "WRTC=wrtc tape test/unit/*.js",
-    "test-interop": "npm run test-interop-node && npm run test-interop-browser",
-    "test-interop-browser": "twintap -- test/interop/*.js",
-    "test-interop-browser-local": "twintap --local -- test/interop/*.js",
-    "coverage": "nyc report --reporter=html"
+    "test-interop": "twintap -- test/interop/*.js",
+    "test-interop-local": "twintap --local -- test/interop/*.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   }
 }

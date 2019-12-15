@@ -26,6 +26,8 @@ test('data send/receive text', function (t) {
   })
   peer.on('connect', tryTest)
 
+  peer.on('close', function () { t.pass('peer destroyed') })
+
   async function tryTest () {
     await t.barrier('connected')
 
@@ -38,7 +40,6 @@ test('data send/receive text', function (t) {
       t.equal(data.toString(), 'sup peer' + (t.instance), 'got correct message')
 
       await t.barrier('waitingToClose')
-      peer.on('close', function () { t.pass('peer destroyed') })
       peer.destroy()
     })
   }
