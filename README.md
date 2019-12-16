@@ -262,6 +262,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
 - [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
 - [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
+- [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
 - *Your app here! - send a PR!*
 
 ## api
