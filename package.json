@@ -20,7 +20,7 @@
   "devDependencies": {
     "airtap": "^2.0.3",
     "babel-minify": "^0.5.1",
-    "bowser": "^2.4.0",
+    "bowser": "^2.8.0",
     "browserify": "^16.1.0",
     "nyc": "^14.1.1",
     "prettier-bytes": "^1.0.3",
