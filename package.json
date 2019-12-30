@@ -22,6 +22,7 @@
     "babel-minify": "^0.5.1",
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
+    "coveralls": "^3.0.9",
     "nyc": "^14.1.1",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
@@ -60,7 +61,7 @@
     "test": "standard && npm run test-node && npm run test-browser",
     "test-browser": "airtap --coverage -- test/*.js",
     "test-browser-local": "airtap --coverage --local -- test/*.js",
-    "test-coverage": "nyc report --reporter=html",
-    "test-node": "WRTC=wrtc tape test/*.js"
+    "test-node": "WRTC=wrtc tape test/*.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   }
 }
