@@ -382,7 +382,10 @@ class Peer extends stream.Duplex {
         }, 0)
       }
     } else {
-      if (!this._isNegotiating) {
+      if (this._isNegotiating) {
+        this._queuedNegotiation = true
+        this._debug('already negotiating, queueing')
+      } else {
         this._debug('requesting negotiation from initiator')
         this.emit('signal', { // request initiator to renegotiate
           renegotiate: true
