@@ -259,6 +259,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
 - [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
+- [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
 - *Your app here! - send a PR!*
 
 ## api
