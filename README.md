@@ -116,8 +116,8 @@ peer-to-peer connection is established.
 ```js
 var Peer = require('simple-peer')
 
-var peer1 = new Peer({ initiator: true })
-var peer2 = new Peer()
+var peer1 = new SimplePeer({ initiator: true })
+var peer2 = new SimplePeer()
 
 peer1.on('signal', data => {
   // when peer1 has signaling data, give it to peer2 somehow
@@ -151,8 +151,8 @@ var Peer = require('simple-peer')
 navigator.getUserMedia({ video: true, audio: true }, gotMedia, () => {})
 
 function gotMedia (stream) {
-  var peer1 = new Peer({ initiator: true, stream: stream })
-  var peer2 = new Peer()
+  var peer1 = new SimplePeer({ initiator: true, stream: stream })
+  var peer2 = new SimplePeer()
 
   peer1.on('signal', data => {
     peer2.signal(data)
@@ -187,8 +187,8 @@ a video/voice stream, if desired.
 ```js
 var Peer = require('simple-peer') // create peer without waiting for media
 
-var peer1 = new Peer({ initiator: true }) // you don't need streams here
-var peer2 = new Peer()
+var peer1 = new SimplePeer({ initiator: true }) // you don't need streams here
+var peer2 = new SimplePeer()
 
 peer1.on('signal', data => {
   peer2.signal(data)
@@ -227,8 +227,8 @@ To use this library in node, pass in `opts.wrtc` as a parameter:
 var Peer = require('simple-peer')
 var wrtc = require('wrtc')
 
-var peer1 = new Peer({ initiator: true, wrtc: wrtc })
-var peer2 = new Peer({ wrtc: wrtc })
+var peer1 = new SimplePeer({ initiator: true, wrtc: wrtc })
+var peer2 = new SimplePeer({ wrtc: wrtc })
 ```
 
 ## Who is using `simple-peer`?
@@ -264,7 +264,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 
 ## api
 
-### `peer = new Peer([opts])`
+### `peer = new SimplePeer([opts])`
 
 Create a new WebRTC peer connection.
 
@@ -372,7 +372,7 @@ if (Peer.WEBRTC_SUPPORT) {
 channel.
 
 ```js
-var peer = new Peer(opts)
+var peer = new SimplePeer(opts)
 // ... signaling ...
 peer.write(new Buffer('hey'))
 peer.on('data', function (chunk) {
@@ -475,8 +475,8 @@ For clarity, here is the code to connect 3 peers together:
 
 ```js
 // These are peer1's connections to peer2 and peer3
-var peer2 = new Peer({ initiator: true })
-var peer3 = new Peer({ initiator: true })
+var peer2 = new SimplePeer({ initiator: true })
+var peer3 = new SimplePeer({ initiator: true })
 
 peer2.on('signal', data => {
   // send this signaling data to peer2 somehow
@@ -507,8 +507,8 @@ peer3.on('data', data => {
 
 ```js
 // These are peer2's connections to peer1 and peer3
-var peer1 = new Peer()
-var peer3 = new Peer({ initiator: true })
+var peer1 = new SimplePeer()
+var peer3 = new SimplePeer({ initiator: true })
 
 peer1.on('signal', data => {
   // send this signaling data to peer1 somehow
@@ -539,8 +539,8 @@ peer3.on('data', data => {
 
 ```js
 // These are peer3's connections to peer1 and peer2
-var peer1 = new Peer()
-var peer2 = new Peer()
+var peer1 = new SimplePeer()
+var peer2 = new SimplePeer()
 
 peer1.on('signal', data => {
   // send this signaling data to peer1 somehow
