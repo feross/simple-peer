@@ -148,7 +148,10 @@ Video/voice is also super simple! In this example, peer1 sends video to peer2.
 var Peer = require('simple-peer')
 
 // get video/voice stream
-navigator.getUserMedia({ video: true, audio: true }, gotMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(gotMedia).catch(() => {})
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
@@ -178,6 +181,8 @@ function gotMedia (stream) {
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+Please notice that `getUserMedia` only works in [pages loaded via **https**](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Encryption_based_security).
 
 ### dynamic video/voice
 
