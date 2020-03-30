@@ -221,7 +221,10 @@ function addMedia (stream) {
 }
 
 // then, anytime later...
-navigator.getUserMedia({ video: true, audio: true }, addMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(addMedia).catch(() => {})
 ```
 
 ### in node
