@@ -151,7 +151,7 @@ var Peer = require('simple-peer')
 navigator.mediaDevices.getUserMedia({
   video: true,
   audio: true
-}).then(gotMedia).catch(() => {});
+}).then(gotMedia).catch(() => {})
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
