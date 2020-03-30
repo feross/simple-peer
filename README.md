@@ -148,17 +148,10 @@ Video/voice is also super simple! In this example, peer1 sends video to peer2.
 var Peer = require('simple-peer')
 
 // get video/voice stream
-if (typeof navigator.mediaDevices.getUserMedia === 'undefined') {
-  navigator.getUserMedia({
-    video: true,
-    audio: true
-  }, gotMedia, () => {});
-} else {
-  navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true
-  }).then(gotMedia).catch(() => {});
-}
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(gotMedia).catch(() => {});
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
