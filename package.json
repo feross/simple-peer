@@ -23,7 +23,7 @@
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
     "coveralls": "^3.0.9",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.1",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
