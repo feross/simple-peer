@@ -350,6 +350,10 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
 
+## `peer.replaceTrack(oldTrack, newTrack, stream)`
+
+Replace a `MediaStreamTrack` with another track. Must also pass the `MediaStream` that the old track was attached to.
+
 ### `peer.addTransceiver(kind, init)`
 
 Add a `RTCRtpTransceiver` to the connection. Can be used to add transceivers before adding tracks. Automatically called as neccesary by `addTrack`.
@@ -460,6 +464,7 @@ Possible error codes:
 - `ERR_ICE_CONNECTION_FAILURE`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_CONNECTION_FAILURE`
 
 
 ## connecting more than 2 peers?
