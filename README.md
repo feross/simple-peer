@@ -268,6 +268,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
 - [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
+- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
 - *Your app here! - send a PR!*
 
 ## api
