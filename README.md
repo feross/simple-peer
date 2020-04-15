@@ -462,6 +462,7 @@ Possible error codes:
 - `ERR_ICE_CONNECTION_FAILURE`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_CONNECTION_FAILURE`
 
 
 ## connecting more than 2 peers?
