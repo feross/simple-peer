@@ -269,6 +269,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
 - [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
 - [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
+- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
 - *Your app here! - send a PR!*
 
 ## api
