@@ -13,8 +13,8 @@ function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
 }
 
-function makeError (message, code) {
-  var err = new Error(message)
+function makeError (err, code) {
+  if (!(err instanceof Error)) err = new Error(err)
   err.code = code
   return err
 }
