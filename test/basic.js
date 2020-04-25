@@ -43,7 +43,7 @@ test('can detect error when RTCPeerConstructor throws', function (t) {
 test('signal event gets emitted', function (t) {
   t.plan(2)
 
-  var peer = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
+  var peer = new Peer({ config, initiator: true, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.pass('got signal event')
     peer.on('close', function () { t.pass('peer destroyed') })
@@ -52,7 +52,7 @@ test('signal event gets emitted', function (t) {
 })
 
 test('signal event does not get emitted by non-initiator', function (t) {
-  var peer = new Peer({ config: config, initiator: false, wrtc: common.wrtc })
+  var peer = new Peer({ config, initiator: false, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.fail('got signal event')
     peer.on('close', function () { t.pass('peer destroyed') })
@@ -67,7 +67,7 @@ test('signal event does not get emitted by non-initiator', function (t) {
 
 test('signal event does not get emitted by non-initiator with stream', function (t) {
   var peer = new Peer({
-    config: config,
+    config,
     stream: common.getMediaStream(),
     initiator: false,
     wrtc: common.wrtc
@@ -87,8 +87,8 @@ test('signal event does not get emitted by non-initiator with stream', function 
 test('data send/receive text', function (t) {
   t.plan(10)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config, wrtc: common.wrtc })
 
   var numSignal1 = 0
   peer1.on('signal', function (data) {
@@ -135,8 +135,8 @@ test('data send/receive text', function (t) {
 test('sdpTransform function is called', function (t) {
   t.plan(3)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, sdpTransform: sdpTransform, wrtc: common.wrtc })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config, sdpTransform, wrtc: common.wrtc })
 
   function sdpTransform (sdp) {
     t.equal(typeof sdp, 'string', 'got a string as SDP')
@@ -168,8 +168,8 @@ test('old constraint formats are used', function (t) {
     }
   }
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, constraints: constraints })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, constraints: constraints })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -196,8 +196,8 @@ test('new constraint formats are used', function (t) {
     offerToReceiveVideo: true
   }
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, constraints: constraints })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, constraints: constraints })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -230,8 +230,8 @@ test('ensure remote address and port are available right after connection', func
 
   t.plan(7)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  var peer2 = new Peer({ config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
