@@ -1,3 +1,4 @@
+/*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')

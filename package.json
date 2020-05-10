@@ -5,7 +5,7 @@
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
-    "url": "http://feross.org/"
+    "url": "https://feross.org"
   },
   "bugs": {
     "url": "https://github.com/feross/simple-peer/issues"
@@ -63,5 +63,19 @@
     "test-browser-local": "airtap --coverage --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
-  }
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/feross"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/feross"
+    },
+    {
+      "type": "consulting",
+      "url": "https://feross.org/support"
+    }
+  ]
 }
