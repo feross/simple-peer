@@ -15,7 +15,8 @@ function filterTrickle (sdp) {
 }
 
 function makeError (err, code) {
-  if (!(err instanceof Error)) err = new Error(err)
+  if (typeof err === 'string') err = new Error(err)
+  if (err.error instanceof Error) err = err.error
   err.code = code
   return err
 }
