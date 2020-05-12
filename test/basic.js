@@ -222,8 +222,8 @@ test('ensure remote address and port are available right after connection', func
     t.end()
     return
   }
-  if (common.isBrowser('chrome')) {
-    t.pass('Skip on Chrome which hides local IPs with mDNS')
+  if (common.isBrowser('chrome') || common.isBrowser('edge')) {
+    t.pass('Skip on Chrome and Edge which hide local IPs with mDNS')
     t.end()
     return
   }
