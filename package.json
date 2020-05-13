@@ -1,11 +1,11 @@
 {
   "name": "simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
-  "version": "9.6.2",
+  "version": "9.7.2",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
-    "url": "http://feross.org/"
+    "url": "https://feross.org"
   },
   "bugs": {
     "url": "https://github.com/feross/simple-peer/issues"
@@ -23,13 +23,13 @@
     "bowser": "^2.4.0",
     "browserify": "^16.1.0",
     "coveralls": "^3.0.9",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.1",
     "prettier-bytes": "^1.0.3",
     "simple-get": "^3.0.1",
     "speedometer": "^1.0.0",
     "standard": "*",
     "string-to-stream": "^3.0.0",
-    "tape": "^4.0.0",
+    "tape": "^5.0.0",
     "thunky": "^1.0.1",
     "wrtc": "^0.4.1",
     "ws": "^7.0.0"
@@ -63,5 +63,19 @@
     "test-browser-local": "airtap --coverage --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
-  }
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/feross"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/feross"
+    },
+    {
+      "type": "consulting",
+      "url": "https://feross.org/support"
+    }
+  ]
 }

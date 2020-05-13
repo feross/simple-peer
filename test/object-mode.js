@@ -14,8 +14,8 @@ test('get config', function (t) {
 test('data send/receive string {objectMode: true}', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, objectMode: true })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, objectMode: true })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, objectMode: true })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, objectMode: true })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -50,8 +50,8 @@ test('data send/receive string {objectMode: true}', function (t) {
 test('data send/receive Buffer {objectMode: true}', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, objectMode: true })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, objectMode: true })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, objectMode: true })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, objectMode: true })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -86,8 +86,8 @@ test('data send/receive Buffer {objectMode: true}', function (t) {
 test('data send/receive Uint8Array {objectMode: true}', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, objectMode: true })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, objectMode: true })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, objectMode: true })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, objectMode: true })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })
@@ -124,8 +124,8 @@ test('data send/receive Uint8Array {objectMode: true}', function (t) {
 test('data send/receive ArrayBuffer {objectMode: true}', function (t) {
   t.plan(6)
 
-  var peer1 = new Peer({ config: config, initiator: true, wrtc: common.wrtc, objectMode: true })
-  var peer2 = new Peer({ config: config, wrtc: common.wrtc, objectMode: true })
+  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, objectMode: true })
+  var peer2 = new Peer({ config, wrtc: common.wrtc, objectMode: true })
   peer1.on('signal', function (data) {
     peer2.signal(data)
   })

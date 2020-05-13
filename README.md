@@ -148,7 +148,10 @@ Video/voice is also super simple! In this example, peer1 sends video to peer2.
 var Peer = require('simple-peer')
 
 // get video/voice stream
-navigator.getUserMedia({ video: true, audio: true }, gotMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(gotMedia).catch(() => {})
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
@@ -178,6 +181,8 @@ function gotMedia (stream) {
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+Please notice that `getUserMedia` only works in [pages loaded via **https**](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Encryption_based_security).
 
 ### dynamic video/voice
 
@@ -216,7 +221,10 @@ function addMedia (stream) {
 }
 
 // then, anytime later...
-navigator.getUserMedia({ video: true, audio: true }, addMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(addMedia).catch(() => {})
 ```
 
 ### in node
@@ -260,6 +268,8 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
 - [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
+- [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
+- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
 - [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
 - [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
 - *Your app here! - send a PR!*
@@ -341,6 +351,10 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 ### `peer.removeTrack(track, stream)`
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
+
+## `peer.replaceTrack(oldTrack, newTrack, stream)`
+
+Replace a `MediaStreamTrack` with another track. Must also pass the `MediaStream` that the old track was attached to.
 
 ### `peer.addTransceiver(kind, init)`
 
@@ -452,6 +466,7 @@ Possible error codes:
 - `ERR_ICE_CONNECTION_FAILURE`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_CONNECTION_FAILURE`
 
 
 ## connecting more than 2 peers?
