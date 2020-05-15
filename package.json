@@ -25,7 +25,7 @@
     "coveralls": "^3.0.9",
     "nyc": "^15.0.1",
     "prettier-bytes": "^1.0.3",
-    "simple-get": "^3.0.1",
+    "simple-get": "^4.0.0",
     "speedometer": "^1.0.0",
     "standard": "*",
     "string-to-stream": "^3.0.0",
