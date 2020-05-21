@@ -293,6 +293,7 @@ class Peer extends stream.Duplex {
       submap.set(stream, sender)
       this._senderMap.set(track, submap)
       this._needsNegotiation()
+      return sender
     } else if (sender.removed) {
       throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
     } else {
@@ -317,7 +318,7 @@ class Peer extends stream.Duplex {
     if (newTrack) this._senderMap.set(newTrack, submap)
 
     if (sender.replaceTrack != null) {
-      sender.replaceTrack(newTrack)
+      return sender.replaceTrack(newTrack)
     } else {
       this.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
     }
