@@ -261,6 +261,7 @@ class Peer extends stream.Duplex {
       }
     } else {
       this.emit('signal', { // request initiator to renegotiate
+        type: 'transceiverRequest',
         transceiverRequest: { kind, init }
       })
     }
@@ -393,6 +394,7 @@ class Peer extends stream.Duplex {
       } else {
         this._debug('requesting negotiation from initiator')
         this.emit('signal', { // request initiator to renegotiate
+          type: 'renegotiate',
           renegotiate: true
         })
       }
@@ -911,6 +913,7 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return
     if (event.candidate && this.trickle) {
       this.emit('signal', {
+        type: 'candidate',
         candidate: {
           candidate: event.candidate.candidate,
           sdpMLineIndex: event.candidate.sdpMLineIndex,
