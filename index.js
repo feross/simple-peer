@@ -146,7 +146,7 @@ class Peer extends stream.Duplex {
 
     if (this.streams) {
       this.streams.forEach(stream => {
-        this.addStream(stream)
+        this.addStream(stream, false)
       })
     }
     this._pc.ontrack = event => {
@@ -270,11 +270,11 @@ class Peer extends stream.Duplex {
    * Add a MediaStream to the connection.
    * @param {MediaStream} stream
    */
-  addStream (stream) {
+  addStream (stream, triggerNegotiate = true) {
     this._debug('addStream()')
 
     stream.getTracks().forEach(track => {
-      this.addTrack(track, stream)
+      this.addTrack(track, stream, triggerNegotiate)
     })
   }
 
@@ -283,7 +283,7 @@ class Peer extends stream.Duplex {
    * @param {MediaStreamTrack} track
    * @param {MediaStream} stream
    */
-  addTrack (track, stream) {
+  addTrack (track, stream, triggerNegotiate = true) {
     this._debug('addTrack()')
 
     var submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
@@ -292,7 +292,7 @@ class Peer extends stream.Duplex {
       sender = this._pc.addTrack(track, stream)
       submap.set(stream, sender)
       this._senderMap.set(track, submap)
-      this._needsNegotiation()
+      if (triggerNegotiate) this._needsNegotiation()
     } else if (sender.removed) {
       throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
     } else {
@@ -373,6 +373,9 @@ class Peer extends stream.Duplex {
   }
 
   negotiate () {
+    this._debug('negotiate')
+    this.emit('negotiate')
+
     if (this.initiator) {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
@@ -882,6 +885,7 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return
 
     if (this._pc.signalingState === 'stable' && !this._firstStable) {
+      this._firstStable = false
       this._isNegotiating = false
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -897,11 +901,7 @@ class Peer extends stream.Duplex {
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
       }
-
-      this._debug('negotiate')
-      this.emit('negotiate')
     }
-    this._firstStable = false
 
     this._debug('signalingStateChange %s', this._pc.signalingState)
     this.emit('signalingStateChange', this._pc.signalingState)
