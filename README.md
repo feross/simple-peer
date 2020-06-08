@@ -270,6 +270,8 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
 - [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
 - [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
+- [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
+- [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
 - *Your app here! - send a PR!*
 
 ## api
