@@ -1,3 +1,4 @@
+/*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')
@@ -13,8 +14,9 @@ function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
 }
 
-function makeError (message, code) {
-  var err = new Error(message)
+function makeError (err, code) {
+  if (typeof err === 'string') err = new Error(err)
+  if (err.error instanceof Error) err = err.error
   err.code = code
   return err
 }
@@ -382,7 +384,10 @@ class Peer extends stream.Duplex {
         }, 0)
       }
     } else {
-      if (!this._isNegotiating) {
+      if (this._isNegotiating) {
+        this._queuedNegotiation = true
+        this._debug('already negotiating, queueing')
+      } else {
         this._debug('requesting negotiation from initiator')
         this.emit('signal', { // request initiator to renegotiate
           renegotiate: true
@@ -990,10 +995,10 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 Peer.config = {
   iceServers: [
     {
-      urls: 'stun:stun.l.google.com:19302'
-    },
-    {
-      urls: 'stun:global.stun.twilio.com:3478?transport=udp'
+      urls: [
+        'stun:stun.l.google.com:19302',
+        'stun:global.stun.twilio.com:3478'
+      ]
     }
   ],
   sdpSemantics: 'unified-plan'

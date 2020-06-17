@@ -1,13 +1,9 @@
-<p align="center">
-<a href="https://codefund.io/properties/560/visit-sponsor">
-<img src="https://codefund.io/properties/560/sponsor" />
-</a>
-</p>
-
-# simple-peer [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
+# simple-peer [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
 [travis-image]: https://img.shields.io/travis/feross/simple-peer/master.svg
 [travis-url]: https://travis-ci.org/feross/simple-peer
+[coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
 [npm-image]: https://img.shields.io/npm/v/simple-peer.svg
 [npm-url]: https://npmjs.org/package/simple-peer
 [downloads-image]: https://img.shields.io/npm/dm/simple-peer.svg
@@ -152,7 +148,10 @@ Video/voice is also super simple! In this example, peer1 sends video to peer2.
 var Peer = require('simple-peer')
 
 // get video/voice stream
-navigator.getUserMedia({ video: true, audio: true }, gotMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(gotMedia).catch(() => {})
 
 function gotMedia (stream) {
   var peer1 = new Peer({ initiator: true, stream: stream })
@@ -182,6 +181,8 @@ function gotMedia (stream) {
 ```
 
 For two-way video, simply pass a `stream` option into both `Peer` constructors. Simple!
+
+Please notice that `getUserMedia` only works in [pages loaded via **https**](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Encryption_based_security).
 
 ### dynamic video/voice
 
@@ -220,7 +221,10 @@ function addMedia (stream) {
 }
 
 // then, anytime later...
-navigator.getUserMedia({ video: true, audio: true }, addMedia, () => {})
+navigator.mediaDevices.getUserMedia({
+  video: true,
+  audio: true
+}).then(addMedia).catch(() => {})
 ```
 
 ### in node
@@ -263,7 +267,12 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
 - [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
 - [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
-- [FileFire](https://filefire.ca) - Share large files and folders at high speed without size limits.
+- [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
+- [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
+- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
+- [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
+- [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
+- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
 - *Your app here! - send a PR!*
 
 ## api
@@ -343,6 +352,10 @@ Add a `MediaStreamTrack` to the connection. Must also pass the `MediaStream` you
 ### `peer.removeTrack(track, stream)`
 
 Remove a `MediaStreamTrack` from the connection. Must also pass the `MediaStream` that it was attached to.
+
+### `peer.replaceTrack(oldTrack, newTrack, stream)`
+
+Replace a `MediaStreamTrack` with another track. Must also pass the `MediaStream` that the old track was attached to.
 
 ### `peer.addTransceiver(kind, init)`
 
@@ -454,6 +467,7 @@ Possible error codes:
 - `ERR_ICE_CONNECTION_FAILURE`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_CONNECTION_FAILURE`
 
 
 ## connecting more than 2 peers?
