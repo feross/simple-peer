@@ -272,6 +272,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
 - [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
 - [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
+- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
 - *Your app here! - send a PR!*
 
 ## api
