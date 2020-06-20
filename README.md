@@ -273,6 +273,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
 - [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
 - [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
+- [safeShare](https://safeshare.live) - Transfer files easily with text and voice communication.
 - *Your app here! - send a PR!*
 
 ## api
