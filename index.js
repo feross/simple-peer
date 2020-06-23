@@ -4,6 +4,7 @@ var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')
 var stream = require('readable-stream')
 var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
+var errCode = require('err-code')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
@@ -12,13 +13,6 @@ var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
-}
-
-function makeError (err, code) {
-  if (typeof err === 'string') err = new Error(err)
-  if (err.error instanceof Error) err = err.error
-  err.code = code
-  return err
 }
 
 function warn (message) {
@@ -73,9 +67,9 @@ class Peer extends stream.Duplex {
 
     if (!this._wrtc) {
       if (typeof window === 'undefined') {
-        throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
+        throw errCode(new Error('No WebRTC support: Specify `opts.wrtc` option in this environment'), 'ERR_WEBRTC_SUPPORT')
       } else {
-        throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
+        throw errCode(new Error('No WebRTC support: Not a supported browser'), 'ERR_WEBRTC_SUPPORT')
       }
     }
 
@@ -104,7 +98,7 @@ class Peer extends stream.Duplex {
     try {
       this._pc = new (this._wrtc.RTCPeerConnection)(this.config)
     } catch (err) {
-      queueMicrotask(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')))
+      queueMicrotask(() => this.destroy(errCode(err, 'ERR_PC_CONSTRUCTOR')))
       return
     }
 
@@ -178,7 +172,7 @@ class Peer extends stream.Duplex {
   }
 
   signal (data) {
-    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING')
+    if (this.destroyed) throw errCode(new Error('cannot signal after peer is destroyed'), 'ERR_SIGNALING')
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
@@ -216,11 +210,11 @@ class Peer extends stream.Duplex {
           if (this._pc.remoteDescription.type === 'offer') this._createAnswer()
         })
         .catch(err => {
-          this.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_REMOTE_DESCRIPTION'))
         })
     }
     if (!data.sdp && !data.candidate && !data.renegotiate && !data.transceiverRequest) {
-      this.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
+      this.destroy(errCode(new Error('signal() called with invalid signal data'), 'ERR_SIGNALING'))
     }
   }
 
@@ -231,7 +225,7 @@ class Peer extends stream.Duplex {
         if (!iceCandidateObj.address || iceCandidateObj.address.endsWith('.local')) {
           warn('Ignoring unsupported ICE candidate.')
         } else {
-          this.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+          this.destroy(errCode(err, 'ERR_ADD_ICE_CANDIDATE'))
         }
       })
   }
@@ -257,7 +251,7 @@ class Peer extends stream.Duplex {
         this._pc.addTransceiver(kind, init)
         this._needsNegotiation()
       } catch (err) {
-        this.destroy(makeError(err, 'ERR_ADD_TRANSCEIVER'))
+        this.destroy(errCode(err, 'ERR_ADD_TRANSCEIVER'))
       }
     } else {
       this.emit('signal', { // request initiator to renegotiate
@@ -294,9 +288,9 @@ class Peer extends stream.Duplex {
       this._senderMap.set(track, submap)
       this._needsNegotiation()
     } else if (sender.removed) {
-      throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
+      throw errCode(new Error('Track has been removed. You should enable/disable tracks that you want to re-add.'), 'ERR_SENDER_REMOVED')
     } else {
-      throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED')
+      throw errCode(new Error('Track has already been added to that stream.'), 'ERR_SENDER_ALREADY_ADDED')
     }
   }
 
@@ -312,14 +306,14 @@ class Peer extends stream.Duplex {
     var submap = this._senderMap.get(oldTrack)
     var sender = submap ? submap.get(stream) : null
     if (!sender) {
-      throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED')
+      throw errCode(new Error('Cannot replace track that was never added.'), 'ERR_TRACK_NOT_ADDED')
     }
     if (newTrack) this._senderMap.set(newTrack, submap)
 
     if (sender.replaceTrack != null) {
       sender.replaceTrack(newTrack)
     } else {
-      this.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
+      this.destroy(errCode(new Error('replaceTrack is not supported in this browser'), 'ERR_UNSUPPORTED_REPLACETRACK'))
     }
   }
 
@@ -334,7 +328,7 @@ class Peer extends stream.Duplex {
     var submap = this._senderMap.get(track)
     var sender = submap ? submap.get(stream) : null
     if (!sender) {
-      throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED')
+      throw errCode(new Error('Cannot remove track that was never added.'), 'ERR_TRACK_NOT_ADDED')
     }
     try {
       sender.removed = true
@@ -343,7 +337,7 @@ class Peer extends stream.Duplex {
       if (err.name === 'NS_ERROR_UNEXPECTED') {
         this._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
       } else {
-        this.destroy(makeError(err, 'ERR_REMOVE_TRACK'))
+        this.destroy(errCode(err, 'ERR_REMOVE_TRACK'))
       }
     }
     this._needsNegotiation()
@@ -468,7 +462,7 @@ class Peer extends stream.Duplex {
       // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
       // which is invalid behavior. Handle it gracefully.
       // See: https://github.com/feross/simple-peer/issues/163
-      return this.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'))
+      return this.destroy(errCode(new Error('Data channel event is missing `channel` property'), 'ERR_DATA_CHANNEL'))
     }
 
     this._channel = event.channel
@@ -493,7 +487,7 @@ class Peer extends stream.Duplex {
       this._onChannelClose()
     }
     this._channel.onerror = err => {
-      this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
+      this.destroy(errCode(err, 'ERR_DATA_CHANNEL'))
     }
 
     // HACK: Chrome will sometimes get stuck in readyState "closing", let's check for this condition
@@ -512,13 +506,13 @@ class Peer extends stream.Duplex {
   _read () {}
 
   _write (chunk, encoding, cb) {
-    if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
+    if (this.destroyed) return cb(errCode(new Error('cannot write after peer is destroyed'), 'ERR_DATA_CHANNEL'))
 
     if (this._connected) {
       try {
         this.send(chunk)
       } catch (err) {
-        return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
+        return this.destroy(errCode(err, 'ERR_DATA_CHANNEL'))
       }
       if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
         this._debug('start backpressure: bufferedAmount %d', this._channel.bufferedAmount)
@@ -592,7 +586,7 @@ class Peer extends stream.Duplex {
         }
 
         const onError = err => {
-          this.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_LOCAL_DESCRIPTION'))
         }
 
         this._pc.setLocalDescription(offer)
@@ -600,7 +594,7 @@ class Peer extends stream.Duplex {
           .catch(onError)
       })
       .catch(err => {
-        this.destroy(makeError(err, 'ERR_CREATE_OFFER'))
+        this.destroy(errCode(err, 'ERR_CREATE_OFFER'))
       })
   }
 
@@ -642,7 +636,7 @@ class Peer extends stream.Duplex {
         }
 
         const onError = err => {
-          this.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_LOCAL_DESCRIPTION'))
         }
 
         this._pc.setLocalDescription(answer)
@@ -650,14 +644,14 @@ class Peer extends stream.Duplex {
           .catch(onError)
       })
       .catch(err => {
-        this.destroy(makeError(err, 'ERR_CREATE_ANSWER'))
+        this.destroy(errCode(err, 'ERR_CREATE_ANSWER'))
       })
   }
 
   _onConnectionStateChange () {
     if (this.destroyed) return
     if (this._pc.connectionState === 'failed') {
-      this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+      this.destroy(errCode(new Error('Connection failed.'), 'ERR_CONNECTION_FAILURE'))
     }
   }
 
@@ -678,10 +672,10 @@ class Peer extends stream.Duplex {
       this._maybeReady()
     }
     if (iceConnectionState === 'failed') {
-      this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+      this.destroy(errCode(new Error('Ice connection failed.'), 'ERR_ICE_CONNECTION_FAILURE'))
     }
     if (iceConnectionState === 'closed') {
-      this.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
+      this.destroy(errCode(new Error('Ice connection closed.'), 'ERR_ICE_CONNECTION_CLOSED'))
     }
   }
 
@@ -847,7 +841,7 @@ class Peer extends stream.Duplex {
           try {
             this.send(this._chunk)
           } catch (err) {
-            return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
+            return this.destroy(errCode(err, 'ERR_DATA_CHANNEL'))
           }
           this._chunk = null
           this._debug('sent chunk from "write before connect"')

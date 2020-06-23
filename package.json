@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "debug": "^4.0.1",
+    "err-code": "^2.0.3",
     "get-browser-rtc": "^1.0.0",
     "queue-microtask": "^1.1.0",
     "randombytes": "^2.0.3",
