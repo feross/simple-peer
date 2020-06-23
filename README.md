@@ -242,6 +242,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 ## Who is using `simple-peer`?
 
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
+- [Virus Cafe](https://virus.cafe) - Make a friend in 2 minutes
 - [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
 - [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
 - [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
