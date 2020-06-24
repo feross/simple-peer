@@ -292,7 +292,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
+  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }, { urls: 'turn:relay.example.com:443?transport=udp', username: '', credential: '' }] },
   offerOptions: {},
   answerOptions: {},
   sdpTransform: function (sdp) { return sdp },
