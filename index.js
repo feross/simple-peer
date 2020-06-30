@@ -2,12 +2,11 @@
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')
-var stream = require('readable-stream')
 var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
+var DataChannel = require('./datachannel')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
-var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
@@ -30,24 +29,14 @@ function warn (message) {
  * Duplex stream.
  * @param {Object} opts
  */
-class Peer extends stream.Duplex {
-  constructor (opts) {
-    opts = Object.assign({
-      allowHalfOpen: false
-    }, opts)
-
+class Peer extends DataChannel {
+  constructor (opts = {}) {
     super(opts)
 
     this._id = randombytes(4).toString('hex').slice(0, 7)
     this._debug('new peer %o', opts)
 
-    this.channelName = opts.initiator
-      ? opts.channelName || randombytes(20).toString('hex')
-      : null
-
     this.initiator = opts.initiator || false
-    this.channelConfig = opts.channelConfig || Peer.channelConfig
-    this.negotiated = this.channelConfig.negotiated
     this.config = Object.assign({}, Peer.config, opts.config)
     this.offerOptions = opts.offerOptions || {}
     this.answerOptions = opts.answerOptions || {}
@@ -83,7 +72,6 @@ class Peer extends stream.Duplex {
     this._channelReady = false
     this._iceComplete = false // ice candidate trickle done (got null candidate)
     this._iceCompleteTimer = null // send an offer/answer anyway after some timeout
-    this._channel = null
     this._pendingCandidates = []
 
     this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
@@ -92,14 +80,12 @@ class Peer extends stream.Duplex {
     this._sendersAwaitingStable = []
     this._senderMap = new Map()
     this._firstStable = true
-    this._closingInterval = null
 
     this._remoteTracks = []
     this._remoteStreams = []
 
-    this._chunk = null
-    this._cb = null
-    this._interval = null
+    this._channels = []
+    this._channelNameCounter = 0
 
     try {
       this._pc = new (this._wrtc.RTCPeerConnection)(this.config)
@@ -135,14 +121,23 @@ class Peer extends stream.Duplex {
     // - onnegotiationneeded
 
     if (this.initiator || this.negotiated) {
-      this._setupData({
-        channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
-      })
-    } else {
-      this._pc.ondatachannel = event => {
-        this._setupData(event)
+      var channelName = this._makeUniqueChannelName(this.channelName || 'default')
+      var channel = this._pc.createDataChannel(channelName, this.channelConfig)
+      this._setDataChannel(channel)
+    }
+
+    this._pc.ondatachannel = event => {
+      this._debug('ondatachannel', event.channel.label)
+      if (!this._channels[0]._channel) {
+        this._setDataChannel(event.channel)
+      } else {
+        var channel = new DataChannel(opts)
+        channel._setDataChannel(event.channel)
+        this._channels.push(channel)
+        this.emit('datachannel', channel, channel.channelName)
       }
     }
+    this._channels.push(this) // the peer is itself a DataChannel object
 
     if (this.streams) {
       this.streams.forEach(stream => {
@@ -153,18 +148,14 @@ class Peer extends stream.Duplex {
       this._onTrack(event)
     }
 
+    this.on('open', () => {
+      this._channelReady = true
+      this._maybeReady()
+    })
+
     if (this.initiator) {
       this._needsNegotiation()
     }
-
-    this._onFinishBound = () => {
-      this._onFinish()
-    }
-    this.once('finish', this._onFinishBound)
-  }
-
-  get bufferSize () {
-    return (this._channel && this._channel.bufferedAmount) || 0
   }
 
   // HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
@@ -237,11 +228,17 @@ class Peer extends stream.Duplex {
   }
 
   /**
-   * Send text/binary data to the remote peer.
-   * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
-   */
-  send (chunk) {
-    this._channel.send(chunk)
+  * Add a DataChannel to the connection.
+  * @param {String} channelName
+  * @param {Object} channelConfig
+  * @param {Object} opts
+  */
+  createDataChannel (channelName, channelConfig, opts) {
+    var channel = new DataChannel(opts)
+    channelName = this._makeUniqueChannelName(channelName)
+    channel._setDataChannel(this._pc.createDataChannel(channelName, channelConfig))
+    this._channels.push(channel)
+    return channel
   }
 
   /**
@@ -401,7 +398,7 @@ class Peer extends stream.Duplex {
   // implementation of destroy() that automatically calls _destroy()
   // See: https://github.com/nodejs/readable-stream/issues/283
   destroy (err) {
-    this._destroy(err, () => {})
+    this._destroy(err, () => { })
   }
 
   _destroy (err, cb) {
@@ -409,44 +406,24 @@ class Peer extends stream.Duplex {
 
     this._debug('destroy (error: %s)', err && (err.message || err))
 
-    this.readable = this.writable = false
+    this._channels.forEach(channel => {
+      DataChannel.prototype._destroy.call(channel, err, () => { })
+    })
 
-    if (!this._readableState.ended) this.push(null)
-    if (!this._writableState.finished) this.end()
+    this._channels = null
+    this._channelNameCounter = null
 
     this.destroyed = true
     this._connected = false
     this._pcReady = false
-    this._channelReady = false
     this._remoteTracks = null
     this._remoteStreams = null
     this._senderMap = null
 
-    clearInterval(this._closingInterval)
-    this._closingInterval = null
-
-    clearInterval(this._interval)
-    this._interval = null
-    this._chunk = null
-    this._cb = null
-
-    if (this._onFinishBound) this.removeListener('finish', this._onFinishBound)
-    this._onFinishBound = null
-
-    if (this._channel) {
-      try {
-        this._channel.close()
-      } catch (err) {}
-
-      this._channel.onmessage = null
-      this._channel.onopen = null
-      this._channel.onclose = null
-      this._channel.onerror = null
-    }
     if (this._pc) {
       try {
         this._pc.close()
-      } catch (err) {}
+      } catch (err) { }
 
       this._pc.oniceconnectionstatechange = null
       this._pc.onicegatheringstatechange = null
@@ -456,99 +433,9 @@ class Peer extends stream.Duplex {
       this._pc.ondatachannel = null
     }
     this._pc = null
-    this._channel = null
 
     if (err) this.emit('error', err)
-    this.emit('close')
     cb()
-  }
-
-  _setupData (event) {
-    if (!event.channel) {
-      // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
-      // which is invalid behavior. Handle it gracefully.
-      // See: https://github.com/feross/simple-peer/issues/163
-      return this.destroy(makeError('Data channel event is missing `channel` property', 'ERR_DATA_CHANNEL'))
-    }
-
-    this._channel = event.channel
-    this._channel.binaryType = 'arraybuffer'
-
-    if (typeof this._channel.bufferedAmountLowThreshold === 'number') {
-      this._channel.bufferedAmountLowThreshold = MAX_BUFFERED_AMOUNT
-    }
-
-    this.channelName = this._channel.label
-
-    this._channel.onmessage = event => {
-      this._onChannelMessage(event)
-    }
-    this._channel.onbufferedamountlow = () => {
-      this._onChannelBufferedAmountLow()
-    }
-    this._channel.onopen = () => {
-      this._onChannelOpen()
-    }
-    this._channel.onclose = () => {
-      this._onChannelClose()
-    }
-    this._channel.onerror = err => {
-      this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-    }
-
-    // HACK: Chrome will sometimes get stuck in readyState "closing", let's check for this condition
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
-    var isClosing = false
-    this._closingInterval = setInterval(() => { // No "onclosing" event
-      if (this._channel && this._channel.readyState === 'closing') {
-        if (isClosing) this._onChannelClose() // closing timed out: equivalent to onclose firing
-        isClosing = true
-      } else {
-        isClosing = false
-      }
-    }, CHANNEL_CLOSING_TIMEOUT)
-  }
-
-  _read () {}
-
-  _write (chunk, encoding, cb) {
-    if (this.destroyed) return cb(makeError('cannot write after peer is destroyed', 'ERR_DATA_CHANNEL'))
-
-    if (this._connected) {
-      try {
-        this.send(chunk)
-      } catch (err) {
-        return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-      }
-      if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-        this._debug('start backpressure: bufferedAmount %d', this._channel.bufferedAmount)
-        this._cb = cb
-      } else {
-        cb(null)
-      }
-    } else {
-      this._debug('write before connect')
-      this._chunk = chunk
-      this._cb = cb
-    }
-  }
-
-  // When stream finishes writing, close socket. Half open connections are not
-  // supported.
-  _onFinish () {
-    if (this.destroyed) return
-
-    // Wait a bit before destroying so the socket flushes.
-    // TODO: is there a more reliable way to accomplish this?
-    const destroySoon = () => {
-      setTimeout(() => this.destroy(), 1000)
-    }
-
-    if (this._connected) {
-      destroySoon()
-    } else {
-      this.once('connect', destroySoon)
-    }
   }
 
   _startIceCompleteTimeout () {
@@ -707,7 +594,7 @@ class Peer extends stream.Duplex {
           cb(null, reports)
         }, err => cb(err))
 
-    // Single-parameter callback-based getStats() (non-standard)
+      // Single-parameter callback-based getStats() (non-standard)
     } else if (this._pc.getStats.length > 0) {
       this._pc.getStats(res => {
         // If we destroy connection in `connect` callback this code might happen to run when actual connection is already closed
@@ -727,8 +614,8 @@ class Peer extends stream.Duplex {
         cb(null, reports)
       }, err => cb(err))
 
-    // Unknown browser, skip getStats() since it's anyone's guess which style of
-    // getStats() they implement.
+      // Unknown browser, skip getStats() since it's anyone's guess which style of
+      // getStats() they implement.
     } else {
       cb(null, [])
     }
@@ -927,34 +814,6 @@ class Peer extends stream.Duplex {
     }
   }
 
-  _onChannelMessage (event) {
-    if (this.destroyed) return
-    var data = event.data
-    if (data instanceof ArrayBuffer) data = Buffer.from(data)
-    this.push(data)
-  }
-
-  _onChannelBufferedAmountLow () {
-    if (this.destroyed || !this._cb) return
-    this._debug('ending backpressure: bufferedAmount %d', this._channel.bufferedAmount)
-    var cb = this._cb
-    this._cb = null
-    cb(null)
-  }
-
-  _onChannelOpen () {
-    if (this._connected || this.destroyed) return
-    this._debug('on channel open')
-    this._channelReady = true
-    this._maybeReady()
-  }
-
-  _onChannelClose () {
-    if (this.destroyed) return
-    this._debug('on channel close')
-    this.destroy()
-  }
-
   _onTrack (event) {
     if (this.destroyed) return
 
@@ -976,6 +835,14 @@ class Peer extends stream.Duplex {
         this.emit('stream', eventStream) // ensure all tracks have been added
       })
     })
+  }
+
+  _makeUniqueChannelName (channelName) {
+    channelName = channelName || ''
+    if (channelName.indexOf('@') !== -1) {
+      return this.destroy(makeError('channelName cannot include "@" character', 'INVALID_CHANNEL_NAME'))
+    }
+    return channelName + '@' + this._id + (this._channelNameCounter++)
   }
 
   _debug () {
@@ -1003,7 +870,5 @@ Peer.config = {
   ],
   sdpSemantics: 'unified-plan'
 }
-
-Peer.channelConfig = {}
 
 module.exports = Peer

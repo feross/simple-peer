@@ -45,11 +45,11 @@ exports.getMediaStream = function () {
 
 exports.isBrowser = function (name) {
   if (typeof (window) === 'undefined') return false
-  const satifyObject = {}
+  const satisfyObject = {}
   if (name === 'ios') { // bowser can't directly name iOS Safari
-    satifyObject.mobile = { safari: '>=0' }
+    satisfyObject.mobile = { safari: '>=0' }
   } else {
-    satifyObject[name] = '>=0'
+    satisfyObject[name] = '>=0'
   }
-  return bowser.getParser(window.navigator.userAgent).satisfies(satifyObject)
+  return bowser.getParser(window.navigator.userAgent).satisfies(satisfyObject)
 }
