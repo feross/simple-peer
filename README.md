@@ -276,6 +276,7 @@ var peer2 = new Peer({ wrtc: wrtc })
 - [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
 - [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
 - [CubeChat](https://cubechat.io) - Party in 3D 🎉
+- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
 - *Your app here! - send a PR!*
 
 ## api
