@@ -8,6 +8,7 @@ var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
 var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
+var ICEFAILURE_RECOVERY_TIMEOUT = 5 * 1000
 
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
@@ -56,6 +57,7 @@ class Peer extends stream.Duplex {
     this.trickle = opts.trickle !== undefined ? opts.trickle : true
     this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
     this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
+    this.iceFailureRecoveryTimeout = opts.iceFailureRecoveryTimeout || ICEFAILURE_RECOVERY_TIMEOUT
 
     this.destroyed = false
     this._connected = false
@@ -85,6 +87,9 @@ class Peer extends stream.Duplex {
     this._iceCompleteTimer = null // send an offer/answer anyway after some timeout
     this._channel = null
     this._pendingCandidates = []
+
+    // Failed recovery
+    this._iceFailureRecoveryTimer = null // how long to wait for recovery from failed state
 
     this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
     this._batchedNegotiation = false // batch synchronous negotiations
@@ -682,8 +687,16 @@ class Peer extends stream.Duplex {
       this._pcReady = true
       this._maybeReady()
     }
-    if (iceConnectionState === 'failed') {
-      this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+    // Should we also include disconnected?
+    if (iceConnectionState === 'disconnected' || iceConnectionState === 'failed') {
+      if (this.initiator) {
+        // Restart 
+        this._debug('ICE restart triggered.')
+        this._pc.restartIce()
+        this._needsNegotiation()
+        // Timeout after some time if we haven't connected yet
+        this._startIceFailureRecoveryTimeout()
+      }
     }
     if (iceConnectionState === 'closed') {
       this.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
@@ -986,6 +999,21 @@ class Peer extends stream.Duplex {
     var args = [].slice.call(arguments)
     args[0] = '[' + this._id + '] ' + args[0]
     debug.apply(null, args)
+  }
+
+  _startIceFailureRecoveryTimeout () {
+    if (this.destroyed) return
+    if (this._iceFailureRecoveryTimer) return
+    this._debug('started iceFailureRecovery timeout')
+    this._iceFailureRecoveryTimer = setTimeout(() => {
+
+      let hasFailedToRecover = !this._iceComplete && !(iceConnectionState === 'connected' || iceConnectionState === 'completed')
+      
+      if (hasFailedToRecover) {
+        this._debug('iceFailureRecovery timeout completed')
+        this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+      }
+    }, this.iceFailureRecoveryTimeout)
   }
 }
 
