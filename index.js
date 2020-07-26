@@ -92,6 +92,7 @@ class Peer extends stream.Duplex {
     this._iceFailureRecoveryTimer = null // how long to wait for recovery from failed state
 
     this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
+    this._isRestartingIce = false // turned true while restarting and false when connected
     this._batchedNegotiation = false // batch synchronous negotiations
     this._queuedNegotiation = false // is there a queued negotiation request?
     this._sendersAwaitingStable = []
@@ -685,14 +686,18 @@ class Peer extends stream.Duplex {
 
     if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
       this._pcReady = true
+      this._isRestartingIce = false
       this._maybeReady()
     }
     // Should we also include disconnected?
     if (iceConnectionState === 'disconnected' || iceConnectionState === 'failed') {
-      if (this.initiator) {
+      if (this.initiator && !this._isRestartingIce) {
         // Restart 
+        this._isNegotiating = false
+        this._isRestartingIce = true
         this._debug('ICE restart triggered.')
         this._pc.restartIce()
+        // Terminate current negotiating
         this._needsNegotiation()
         // Timeout after some time if we haven't connected yet
         this._startIceFailureRecoveryTimeout()
@@ -1006,7 +1011,6 @@ class Peer extends stream.Duplex {
     if (this._iceFailureRecoveryTimer) return
     this._debug('started iceFailureRecovery timeout')
     this._iceFailureRecoveryTimer = setTimeout(() => {
-
       let hasFailedToRecover = !this._iceComplete && !(iceConnectionState === 'connected' || iceConnectionState === 'completed')
       
       if (hasFailedToRecover) {
