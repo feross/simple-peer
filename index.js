@@ -8,6 +8,7 @@ var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
 var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
+var ICEFAILURE_RECOVERY_TIMEOUT = 5 * 1000
 
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
@@ -56,6 +57,7 @@ class Peer extends stream.Duplex {
     this.trickle = opts.trickle !== undefined ? opts.trickle : true
     this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
     this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
+    this.iceFailureRecoveryTimeout = opts.iceFailureRecoveryTimeout || ICEFAILURE_RECOVERY_TIMEOUT
 
     this.destroyed = false
     this._connected = false
@@ -86,7 +88,11 @@ class Peer extends stream.Duplex {
     this._channel = null
     this._pendingCandidates = []
 
+    // Failed recovery
+    this._iceFailureRecoveryTimer = null // how long to wait for recovery from failed state
+
     this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
+    this._isRestartingIce = false // turned true while restarting and false when connected
     this._batchedNegotiation = false // batch synchronous negotiations
     this._queuedNegotiation = false // is there a queued negotiation request?
     this._sendersAwaitingStable = []
@@ -146,7 +152,7 @@ class Peer extends stream.Duplex {
 
     if (this.streams) {
       this.streams.forEach(stream => {
-        this.addStream(stream)
+        this.addStream(stream, false)
       })
     }
     this._pc.ontrack = event => {
@@ -261,6 +267,7 @@ class Peer extends stream.Duplex {
       }
     } else {
       this.emit('signal', { // request initiator to renegotiate
+        type: 'transceiverRequest',
         transceiverRequest: { kind, init }
       })
     }
@@ -270,11 +277,11 @@ class Peer extends stream.Duplex {
    * Add a MediaStream to the connection.
    * @param {MediaStream} stream
    */
-  addStream (stream) {
+  addStream (stream, triggerNegotiate = true) {
     this._debug('addStream()')
 
     stream.getTracks().forEach(track => {
-      this.addTrack(track, stream)
+      this.addTrack(track, stream, triggerNegotiate)
     })
   }
 
@@ -283,7 +290,7 @@ class Peer extends stream.Duplex {
    * @param {MediaStreamTrack} track
    * @param {MediaStream} stream
    */
-  addTrack (track, stream) {
+  addTrack (track, stream, triggerNegotiate = true) {
     this._debug('addTrack()')
 
     var submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
@@ -292,7 +299,7 @@ class Peer extends stream.Duplex {
       sender = this._pc.addTrack(track, stream)
       submap.set(stream, sender)
       this._senderMap.set(track, submap)
-      this._needsNegotiation()
+      if (triggerNegotiate) this._needsNegotiation()
     } else if (sender.removed) {
       throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
     } else {
@@ -373,6 +380,9 @@ class Peer extends stream.Duplex {
   }
 
   negotiate () {
+    this._debug('negotiate')
+    this.emit('negotiate')
+
     if (this.initiator) {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
@@ -390,6 +400,7 @@ class Peer extends stream.Duplex {
       } else {
         this._debug('requesting negotiation from initiator')
         this.emit('signal', { // request initiator to renegotiate
+          type: 'renegotiate',
           renegotiate: true
         })
       }
@@ -657,7 +668,8 @@ class Peer extends stream.Duplex {
   _onConnectionStateChange () {
     if (this.destroyed) return
     if (this._pc.connectionState === 'failed') {
-      this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+      // Do nothing, just wait for ice restart 
+      // this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
     }
   }
 
@@ -675,10 +687,22 @@ class Peer extends stream.Duplex {
 
     if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
       this._pcReady = true
+      this._isRestartingIce = false
       this._maybeReady()
     }
-    if (iceConnectionState === 'failed') {
-      this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+    // Should we also include disconnected?
+    if (iceConnectionState === 'disconnected' || iceConnectionState === 'failed') {
+      if (this.initiator && !this._isRestartingIce) {
+        // Restart 
+        this._isNegotiating = false
+        this._isRestartingIce = true
+        this._debug('ICE restart triggered.')
+        this._pc.restartIce()
+        // Terminate current negotiating
+        this._needsNegotiation()
+        // Timeout after some time if we haven't connected yet
+        this._startIceFailureRecoveryTimeout()
+      }
     }
     if (iceConnectionState === 'closed') {
       this.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
@@ -882,6 +906,7 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return
 
     if (this._pc.signalingState === 'stable' && !this._firstStable) {
+      this._firstStable = false
       this._isNegotiating = false
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -897,11 +922,7 @@ class Peer extends stream.Duplex {
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
       }
-
-      this._debug('negotiate')
-      this.emit('negotiate')
     }
-    this._firstStable = false
 
     this._debug('signalingStateChange %s', this._pc.signalingState)
     this.emit('signalingStateChange', this._pc.signalingState)
@@ -911,6 +932,7 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return
     if (event.candidate && this.trickle) {
       this.emit('signal', {
+        type: 'candidate',
         candidate: {
           candidate: event.candidate.candidate,
           sdpMLineIndex: event.candidate.sdpMLineIndex,
@@ -973,6 +995,7 @@ class Peer extends stream.Duplex {
 
       this._remoteStreams.push(eventStream)
       queueMicrotask(() => {
+        this._debug('on stream')
         this.emit('stream', eventStream) // ensure all tracks have been added
       })
     })
@@ -982,6 +1005,20 @@ class Peer extends stream.Duplex {
     var args = [].slice.call(arguments)
     args[0] = '[' + this._id + '] ' + args[0]
     debug.apply(null, args)
+  }
+
+  _startIceFailureRecoveryTimeout () {
+    if (this.destroyed) return
+    if (this._iceFailureRecoveryTimer) return
+    this._debug('started iceFailureRecovery timeout')
+    this._iceFailureRecoveryTimer = setTimeout(() => {
+      let hasFailedToRecover = !this._iceComplete && !(iceConnectionState === 'connected' || iceConnectionState === 'completed')
+      
+      if (hasFailedToRecover) {
+        this._debug('iceFailureRecovery timeout completed')
+        this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+      }
+    }, this.iceFailureRecoveryTimeout)
   }
 }
 
