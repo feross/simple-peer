@@ -668,7 +668,8 @@ class Peer extends stream.Duplex {
   _onConnectionStateChange () {
     if (this.destroyed) return
     if (this._pc.connectionState === 'failed') {
-      this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+      // Do nothing, just wait for ice restart 
+      // this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
     }
   }
 
