@@ -70,5 +70,5 @@
     "test-node": "WRTC=wrtc tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
-  "version": "1.1.2"
+  "version": "1.1.3"
 }
