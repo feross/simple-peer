@@ -383,6 +383,12 @@ peer.on('data', function (chunk) {
 
 ## events
 
+`Peer` objects are instance of `EventEmitter`. Take a look at the [nodejs events documentation](https://nodejs.org/api/events.html) for more information.
+
+Example of removing all registered **close**-event listeners:
+```js
+peer.removeAllListeners('close')
+```
 
 ### `peer.on('signal', data => {})`
 
@@ -598,6 +604,7 @@ constructor. See the API docs above.
 ## Who is using `simple-peer`?
 
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
+- [Virus Cafe](https://virus.cafe) - Make a friend in 2 minutes
 - [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
 - [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
 - [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
@@ -628,6 +635,11 @@ constructor. See the API docs above.
 - [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
 - [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
 - [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
+- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
+- [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
+- [CubeChat](https://cubechat.io) - Party in 3D 🎉
+- [Homely School](https://homelyschool.com) - A virtual schooling system
+- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
 - *Your app here! - send a PR!*
 
 ## license
