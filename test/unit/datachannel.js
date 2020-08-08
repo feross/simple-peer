@@ -1,6 +1,6 @@
-var common = require('./common')
-var Peer = require('../')
-var DataChannel = require('../datachannel')
+var common = require('../common')
+var Peer = require('../..')
+var DataChannel = require('../../datachannel')
 var str = require('string-to-stream')
 var test = require('tape')
 
@@ -442,9 +442,8 @@ test('channelName should be exposed as channel.channelName', function (t) {
   var stream1 = peer1.createDataChannel('5')
   t.equal(stream1.channelName, '5')
 
-  peer2.on('datachannel', function onStream (stream, channelName) {
+  peer2.on('datachannel', function onStream (stream) {
     t.equal(stream.channelName, '5')
-    t.equal(channelName, '5')
     t.end()
 
     peer1.destroy()
@@ -465,9 +464,8 @@ test('channelName can be a long string', function (t) {
   var stream1 = peer1.createDataChannel('hello-yes-this-is-dog')
   t.equal(stream1.channelName, 'hello-yes-this-is-dog')
 
-  peer2.on('datachannel', function onStream (stream, id) {
+  peer2.on('datachannel', function onStream (stream) {
     t.equal(stream.channelName, 'hello-yes-this-is-dog')
-    t.equal(id, 'hello-yes-this-is-dog')
     t.end()
 
     peer1.destroy()

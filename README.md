@@ -309,7 +309,7 @@ The options do the following:
 
 - `initiator` - set to `true` if this is the initiating peer
 - `channelConfig` - custom webrtc data channel configuration (used by [`createDataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel))
-- `channelName` - custom webrtc data channel name
+- `channelName` - custom webrtc data channel name. Must be the same on both peers.
 - `config` - custom webrtc configuration (used by [`RTCPeerConnection`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) constructor)
 - `offerOptions` - custom offer options (used by [`createOffer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createOffer) method)
 - `answerOptions` - custom answer options (used by [`createAnswer`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createAnswer) method)
@@ -365,9 +365,9 @@ Add a `RTCRtpTransceiver` to the connection. Can be used to add transceivers bef
 
 ### `datachannel = peer.createDataChannel(channelName, channelConfig)`
 
-Used to create additional DataChannel objects. DataChannels are instances of `stream.Duplex`.
+Used to create additional `DataChannel` objects. `DataChannel`s are instances of `stream.Duplex`.
 
-Firefox currently [does not support](https://bugzilla.mozilla.org/show_bug.cgi?id=1513107) creating new datachannels after closing any datachannel.
+NOTE: Firefox currently [does not support](https://bugzilla.mozilla.org/show_bug.cgi?id=1513107) creating new datachannels after closing any datachannel.
 
 ### `peer.destroy([err])`
 
@@ -375,6 +375,21 @@ Destroy and cleanup this peer connection.
 
 If the optional `err` parameter is passed, then it will be emitted as an `'error'`
 event on the stream.
+
+### `datachannel.send(data)`
+Send text/binary data to the remote peer. Similar to `peer.send(data)`.
+
+Note: If this method is called before the `datachannel.on('open')` event has fired, then data
+will be buffered.
+
+### `datachannel.end()`
+Closes and destroys the `DataChannel` after waiting for it to flush.
+
+### `datachannel.close([err])`
+Immediately closes and destroys the DataChannel without waiting for it to flush.
+
+If the optional `err` parameter is passed, then it will be emitted as an `'error'`
+event on the DataChannel.
 
 ### `Peer.WEBRTC_SUPPORT`
 
@@ -392,7 +407,7 @@ if (Peer.WEBRTC_SUPPORT) {
 
 ### duplex stream
 
-`Peer` objects are instances of `stream.Duplex`. They behave very similarly to a
+`Peer` and `DataChannel` objects are instances of `stream.Duplex`. They behave very similarly to a
 `net.Socket` from the node core `net` module. The duplex stream reads/writes to the data
 channel.
 
@@ -427,7 +442,7 @@ Fired when the peer connection and data channel are ready to use.
 
 ### `peer.on('data', data => {})`
 
-Received a message from the remote peer (via the data channel).
+Received a message from the remote peer (via the default data channel).
 
 `data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
 
@@ -453,15 +468,39 @@ Received a remote audio/video track. Streams may contain multiple tracks.
 
 ### `peer.on('datachannel', function (datachannel) {})`
 
-Received an additional DataChannel. This fires after the remote peer calls `peer.createDataChannel()`.
+Received an additional DataChannel. This fires after the remote peer calls `peer.createDataChannel()`. It will not fire for the default DataChannel.
+
+### `peer.on('negotiate', () => {})`
+
+The peer has completed a round of (re)negotiation, but may not be connected yet.
 
 ### `peer.on('close', () => {})`
 
-Called when the peer connection has closed.
+Fired when the peer connection has closed.
 
 ### `peer.on('error', (err) => {})`
 
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
+
+`err` is an `Error` object.
+
+### `datachannel.on('open', () => {})`
+
+Fired when the DataChannel has opened and is ready to use.
+
+### `datachannel.on('data', () => {})`
+
+Received a message from the remote peer (via the data channel).
+
+`data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
+
+### `datachannel.on('close', () => {})`
+
+Fired when the DataChannel has closed.
+
+### `datachannel.on('error', (err) => {})`
+
+Fired when a fatal error occurs on the DataChannel.
 
 `err` is an `Error` object.
 
@@ -471,14 +510,24 @@ Errors returned by the `error` event have an `err.code` property that will indic
 
 Possible error codes:
 - `ERR_WEBRTC_SUPPORT`
+- `ERR_PC_CONSTRUCTOR`
+- `ERR_DESTROYED`
 - `ERR_CREATE_OFFER`
 - `ERR_CREATE_ANSWER`
 - `ERR_SET_LOCAL_DESCRIPTION`
 - `ERR_SET_REMOTE_DESCRIPTION`
 - `ERR_ADD_ICE_CANDIDATE`
+- `ERR_ADD_TRANSCEIVER`
+- `ERR_SENDER_REMOVED`
+- `ERR_SENDER_ALREADY_ADDED`
+- `ERR_TRACK_NOT_ADDED`
+- `ERR_REMOVE_TRACK`
+- `ERR_UNSUPPORTED_REPLACETRACK`
 - `ERR_ICE_CONNECTION_FAILURE`
+- `ERR_ICE_CONNECTION_CLOSED`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_INVALID_CHANNEL_NAME`
 - `ERR_CONNECTION_FAILURE`
 
 

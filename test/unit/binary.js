@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config
@@ -30,12 +30,12 @@ test('data send/receive Buffer', function (t) {
 
     peer1.send(Buffer.from([0, 1, 2]))
     peer2.on('data', function (data) {
-      t.ok(Buffer.isBuffer(data), 'data is Buffer')
+      t.ok(Buffer.isBuffer(data), 'data 1 is Buffer')
       t.deepEqual(data, Buffer.from([0, 1, 2]), 'got correct message')
 
       peer2.send(Buffer.from([0, 2, 4]))
       peer1.on('data', function (data) {
-        t.ok(Buffer.isBuffer(data), 'data is Buffer')
+        t.ok(Buffer.isBuffer(data), 'data 2 is Buffer')
         t.deepEqual(data, Buffer.from([0, 2, 4]), 'got correct message')
 
         peer1.on('close', function () { t.pass('peer1 destroyed') })

@@ -5,7 +5,6 @@ var randombytes = require('randombytes')
 var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
 var DataChannel = require('./datachannel')
 
-var MAX_BUFFERED_AMOUNT = 64 * 1024
 var ICECOMPLETE_TIMEOUT = 5 * 1000
 
 // HACK: Filter trickle lines when trickle is disabled #354
@@ -31,6 +30,7 @@ function warn (message) {
  */
 class Peer extends DataChannel {
   constructor (opts = {}) {
+    opts.channelName = opts.channelName || 'default'
     super(opts)
 
     this._id = randombytes(4).toString('hex').slice(0, 7)
@@ -74,12 +74,12 @@ class Peer extends DataChannel {
     this._iceCompleteTimer = null // send an offer/answer anyway after some timeout
     this._pendingCandidates = []
 
-    this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
+    this._isNegotiating = false // is this peer waiting for negotiation to complete?
+    this._firstNegotiation = true
     this._batchedNegotiation = false // batch synchronous negotiations
     this._queuedNegotiation = false // is there a queued negotiation request?
     this._sendersAwaitingStable = []
     this._senderMap = new Map()
-    this._firstStable = true
 
     this._remoteTracks = []
     this._remoteStreams = []
@@ -120,21 +120,20 @@ class Peer extends DataChannel {
     // - onfingerprintfailure
     // - onnegotiationneeded
 
-    if (this.initiator || this.negotiated) {
-      var channelName = this._makeUniqueChannelName(this.channelName || 'default')
-      var channel = this._pc.createDataChannel(channelName, this.channelConfig)
+    if (this.initiator || this.channelNegotiated) {
+      var channel = this._pc.createDataChannel(this.channelName, this.channelConfig)
       this._setDataChannel(channel)
     }
 
     this._pc.ondatachannel = event => {
       this._debug('ondatachannel', event.channel.label)
-      if (!this._channels[0]._channel) {
+      if (event.channel.label.split('@').length === 1) {
         this._setDataChannel(event.channel)
       } else {
         var channel = new DataChannel(opts)
         channel._setDataChannel(event.channel)
         this._channels.push(channel)
-        this.emit('datachannel', channel, channel.channelName)
+        this.emit('datachannel', channel)
       }
     }
     this._channels.push(this) // the peer is itself a DataChannel object
@@ -149,16 +148,22 @@ class Peer extends DataChannel {
     }
 
     this.on('open', () => {
+      this._debug('on default channel open')
+      if (this._connected || this.destroyed) return
       this._channelReady = true
       this._maybeReady()
     })
+    this.on('close', () => {
+      this._debug('on default channel close')
+      if (this.destroyed) return
+      this.destroy()
+    })
 
-    if (this.initiator) {
-      this._needsNegotiation()
-    }
+    this._debug('initial negotiation')
+    this._needsNegotiation()
   }
 
-  // HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
+  // HACK: it's possible channel.readyState is "closing" before channel.close() fires
   // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
   get connected () {
     return (this._connected && this._channel.readyState === 'open')
@@ -169,7 +174,7 @@ class Peer extends DataChannel {
   }
 
   signal (data) {
-    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_SIGNALING')
+    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_DESTROYED')
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
@@ -177,7 +182,7 @@ class Peer extends DataChannel {
         data = {}
       }
     }
-    this._debug('signal()')
+    this._debug('signal()', data)
 
     if (data.renegotiate && this.initiator) {
       this._debug('got request to renegotiate')
@@ -234,6 +239,7 @@ class Peer extends DataChannel {
   * @param {Object} opts
   */
   createDataChannel (channelName, channelConfig, opts) {
+    if (this.destroyed) throw makeError('cannot create DataChannel after peer is destroyed', 'ERR_DESTROYED')
     var channel = new DataChannel(opts)
     channelName = this._makeUniqueChannelName(channelName)
     channel._setDataChannel(this._pc.createDataChannel(channelName, channelConfig))
@@ -248,10 +254,12 @@ class Peer extends DataChannel {
    */
   addTransceiver (kind, init) {
     this._debug('addTransceiver()')
+    if (this.destroyed) throw makeError('cannot add transceiver after peer is destroyed', 'ERR_DESTROYED')
 
     if (this.initiator) {
       try {
         this._pc.addTransceiver(kind, init)
+        this._debug('negotiating new transceiver')
         this._needsNegotiation()
       } catch (err) {
         this.destroy(makeError(err, 'ERR_ADD_TRANSCEIVER'))
@@ -269,6 +277,7 @@ class Peer extends DataChannel {
    */
   addStream (stream) {
     this._debug('addStream()')
+    if (this.destroyed) throw makeError('cannot add stream after peer is destroyed', 'ERR_DESTROYED')
 
     stream.getTracks().forEach(track => {
       this.addTrack(track, stream)
@@ -282,6 +291,7 @@ class Peer extends DataChannel {
    */
   addTrack (track, stream) {
     this._debug('addTrack()')
+    if (this.destroyed) throw makeError('cannot add track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
     var sender = submap.get(stream)
@@ -289,6 +299,7 @@ class Peer extends DataChannel {
       sender = this._pc.addTrack(track, stream)
       submap.set(stream, sender)
       this._senderMap.set(track, submap)
+      this._debug('negotiating new track')
       this._needsNegotiation()
     } else if (sender.removed) {
       throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
@@ -305,6 +316,7 @@ class Peer extends DataChannel {
    */
   replaceTrack (oldTrack, newTrack, stream) {
     this._debug('replaceTrack()')
+    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(oldTrack)
     var sender = submap ? submap.get(stream) : null
@@ -327,6 +339,7 @@ class Peer extends DataChannel {
    */
   removeTrack (track, stream) {
     this._debug('removeSender()')
+    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track)
     var sender = submap ? submap.get(stream) : null
@@ -343,6 +356,7 @@ class Peer extends DataChannel {
         this.destroy(makeError(err, 'ERR_REMOVE_TRACK'))
       }
     }
+    this._debug('negotiating track removal')
     this._needsNegotiation()
   }
 
@@ -359,23 +373,32 @@ class Peer extends DataChannel {
   }
 
   _needsNegotiation () {
-    this._debug('_needsNegotiation')
-    if (this._batchedNegotiation) return // batch synchronous renegotiations
-    this._batchedNegotiation = true
-    queueMicrotask(() => {
-      this._batchedNegotiation = false
-      this._debug('starting batched negotiation')
-      this.negotiate()
-    })
+    this._debug('_needsNegotiation()')
+    if (!this._batchedNegotiation) {
+      this._debug('created new negotiation batch')
+      this._batchedNegotiation = true
+      queueMicrotask(() => {
+        this._batchedNegotiation = false
+        if (this.initiator || !this._firstNegotiation) { // discard the 1st non-initiator batch
+          this.negotiate()
+        } else {
+          this._debug('non-initiator initial negotiation request discarded')
+        }
+        this._firstNegotiation = false
+      })
+    } else {
+      this._debug('negotiation added to batch')
+    }
   }
 
   negotiate () {
+    this._debug('negotiate()')
     if (this.initiator) {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
         this._debug('already negotiating, queueing')
       } else {
-        this._debug('start negotiation')
+        this._debug('starting negotiation')
         setTimeout(() => { // HACK: Chrome crashes if we immediately call createOffer
           this._createOffer()
         }, 0)
@@ -407,7 +430,7 @@ class Peer extends DataChannel {
     this._debug('destroy (error: %s)', err && (err.message || err))
 
     this._channels.forEach(channel => {
-      DataChannel.prototype._destroy.call(channel, err, () => { })
+      channel.close()
     })
 
     this._channels = null
@@ -564,6 +587,14 @@ class Peer extends DataChannel {
       this._pcReady = true
       this._maybeReady()
     }
+    // HACK: Brave can appear to be stuck in "new"/"checking". Use the state of the datachannel to determine connection.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=966798&q=iceConnectionState%20new&can=2
+    if (typeof window !== 'undefined' && window.Brave) {
+      if ((iceConnectionState === 'new' || iceConnectionState === 'checking') && iceGatheringState === 'complete') {
+        this._pcReady = true
+        this._maybeReady()
+      }
+    }
     if (iceConnectionState === 'failed') {
       this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
     }
@@ -573,6 +604,8 @@ class Peer extends DataChannel {
   }
 
   getStats (cb) {
+    if (this.destroyed) throw makeError('cannot get stats after peer is destroyed', 'ERR_DESTROYED')
+
     // statreports can come with a value array instead of properties
     const flattenValues = report => {
       if (Object.prototype.toString.call(report.values) === '[object Array]') {
@@ -730,27 +763,6 @@ class Peer extends DataChannel {
           this._connected = true
         }
 
-        if (this._chunk) {
-          try {
-            this.send(this._chunk)
-          } catch (err) {
-            return this.destroy(makeError(err, 'ERR_DATA_CHANNEL'))
-          }
-          this._chunk = null
-          this._debug('sent chunk from "write before connect"')
-
-          var cb = this._cb
-          this._cb = null
-          cb(null)
-        }
-
-        // If `bufferedAmountLowThreshold` and 'onbufferedamountlow' are unsupported,
-        // fallback to using setInterval to implement backpressure.
-        if (typeof this._channel.bufferedAmountLowThreshold !== 'number') {
-          this._interval = setInterval(() => this._onInterval(), 150)
-          if (this._interval.unref) this._interval.unref()
-        }
-
         this._debug('connect')
         this.emit('connect')
       })
@@ -758,17 +770,10 @@ class Peer extends DataChannel {
     findCandidatePair()
   }
 
-  _onInterval () {
-    if (!this._cb || !this._channel || this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
-      return
-    }
-    this._onChannelBufferedAmountLow()
-  }
-
   _onSignalingStateChange () {
     if (this.destroyed) return
 
-    if (this._pc.signalingState === 'stable' && !this._firstStable) {
+    if (this._pc.signalingState === 'stable') {
       this._isNegotiating = false
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -783,12 +788,11 @@ class Peer extends DataChannel {
         this._debug('flushing negotiation queue')
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
+      } else {
+        this._debug('negotiate')
+        this.emit('negotiate')
       }
-
-      this._debug('negotiate')
-      this.emit('negotiate')
     }
-    this._firstStable = false
 
     this._debug('signalingStateChange %s', this._pc.signalingState)
     this.emit('signalingStateChange', this._pc.signalingState)
@@ -840,9 +844,9 @@ class Peer extends DataChannel {
   _makeUniqueChannelName (channelName) {
     channelName = channelName || ''
     if (channelName.indexOf('@') !== -1) {
-      return this.destroy(makeError('channelName cannot include "@" character', 'INVALID_CHANNEL_NAME'))
+      return this.destroy(makeError('channelName cannot include "@" character', 'ERR_INVALID_CHANNEL_NAME'))
     }
-    return channelName + '@' + this._id + (this._channelNameCounter++)
+    return channelName + '@' + this._id + '@' + (this._channelNameCounter++)
   }
 
   _debug () {

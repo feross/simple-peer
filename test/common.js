@@ -2,10 +2,14 @@ var get = require('simple-get')
 var thunky = require('thunky')
 var bowser = require('bowser')
 
+let cachedConfig = null
 exports.getConfig = thunky(function (cb) {
   // Includes TURN -- needed for tests to pass on Sauce Labs
   // https://github.com/feross/simple-peer/issues/41
   // WARNING: This is *NOT* a public endpoint. Do not depend on it in your app.
+  if (cachedConfig) {
+    return cb(null, cachedConfig)
+  }
   get.concat('https://instant.io/__rtcConfig__', function (err, res, data) {
     if (err) return cb(err)
     data = data.toString()
@@ -15,6 +19,7 @@ exports.getConfig = thunky(function (cb) {
       cb(err)
       return
     }
+    cachedConfig = data
     cb(null, data)
   })
 })
