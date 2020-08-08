@@ -28,7 +28,23 @@
   - manually set config options
   - transceivers and renegotiation
 
-This package is used by [WebTorrent](https://webtorrent.io).
+This package is used by [WebTorrent](https://webtorrent.io) and [many others](#who-is-using-simple-peer).
+
+- [install](#install)
+- [examples](#usage)
+  * [A simpler example](#a-simpler-example)
+  * [data channels](#data-channels)
+  * [video/voice](#videovoice)
+  * [dynamic video/voice](#dynamic-videovoice)
+  * [in node](#in-node)
+- [api](#api)
+- [events](#events)
+- [error codes](#error-codes)
+- [connecting more than 2 peers?](#connecting-more-than-2-peers)
+- [memory usage](#memory-usage)
+- [connection does not work on some networks?](#connection-does-not-work-on-some-networks)
+- [Who is using `simple-peer`?](#who-is-using-simple-peer)
+- [license](#license)
 
 ## install
 
@@ -229,7 +245,7 @@ navigator.mediaDevices.getUserMedia({
 
 ### in node
 
-To use this library in node, pass in `opts.wrtc` as a parameter:
+To use this library in node, pass in `opts.wrtc` as a parameter (see [the constructor options](#peer--new-peeropts)):
 
 ```js
 var Peer = require('simple-peer')
@@ -238,47 +254,6 @@ var wrtc = require('wrtc')
 var peer1 = new Peer({ initiator: true, wrtc: wrtc })
 var peer2 = new Peer({ wrtc: wrtc })
 ```
-
-## Who is using `simple-peer`?
-
-- [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
-- [Virus Cafe](https://virus.cafe) - Make a friend in 2 minutes
-- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
-- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
-- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
-- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
-- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
-- [WebCat](https://www.npmjs.com/package/webcat) - P2P pipe across the web using Github private/public key for auth
-- [RTCCat](https://www.npmjs.com/package/rtcat) - WebRTC netcat
-- [PeerNet](https://www.npmjs.com/package/peernet) - Peer-to-peer gossip network using randomized algorithms
-- [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
-- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
-- [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
-- [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
-- [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
-- [Stealthy](https://www.stealthy.im) - Stealthy is a decentralized, end-to-end encrypted, p2p chat application.
-- [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
-- [TalktoMe](https://talktome.space) - Skype alternative for audio/video conferencing based on WebRTC, but without the loss of packets.
-- [CDNBye](https://github.com/cdnbye/hlsjs-p2p-engine) - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol
-- [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
-- [Metastream](https://github.com/samuelmaddock/metastream) - Watch streaming media with friends.
-- [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
-- [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
-- [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
-- [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
-- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
-- [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
-- [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
-- [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
-- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
-- [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
-- [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
-- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
-- [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
-- [CubeChat](https://cubechat.io) - Party in 3D 🎉
-- [Homely School](https://homelyschool.com) - A virtual schooling system
-- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
-- *Your app here! - send a PR!*
 
 ## api
 
@@ -320,7 +295,11 @@ The options do the following:
 - `stream` - if video/voice is desired, pass stream returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - `streams` - an array of MediaStreams returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
-- `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package
+- `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package. Contains an object with the properties:
+  - [`RTCPeerConnection`](https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection)
+  - [`RTCSessionDescription`](https://www.w3.org/TR/webrtc/#dom-rtcsessiondescription)
+  - [`RTCIceCandidate`](https://www.w3.org/TR/webrtc/#dom-rtcicecandidate)
+
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
 
 ### `peer.signal(data)`
@@ -620,6 +599,48 @@ In order to use a TURN server, you must specify the `config` option to the `Peer
 constructor. See the API docs above.
 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
+
+
+## Who is using `simple-peer`?
+
+- [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
+- [Virus Cafe](https://virus.cafe) - Make a friend in 2 minutes
+- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
+- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
+- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
+- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
+- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
+- [WebCat](https://www.npmjs.com/package/webcat) - P2P pipe across the web using Github private/public key for auth
+- [RTCCat](https://www.npmjs.com/package/rtcat) - WebRTC netcat
+- [PeerNet](https://www.npmjs.com/package/peernet) - Peer-to-peer gossip network using randomized algorithms
+- [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
+- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
+- [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
+- [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
+- [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
+- [Stealthy](https://www.stealthy.im) - Stealthy is a decentralized, end-to-end encrypted, p2p chat application.
+- [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
+- [TalktoMe](https://talktome.space) - Skype alternative for audio/video conferencing based on WebRTC, but without the loss of packets.
+- [CDNBye](https://github.com/cdnbye/hlsjs-p2p-engine) - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol
+- [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
+- [Metastream](https://github.com/samuelmaddock/metastream) - Watch streaming media with friends.
+- [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
+- [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
+- [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
+- [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
+- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
+- [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
+- [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
+- [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
+- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
+- [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
+- [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
+- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
+- [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
+- [CubeChat](https://cubechat.io) - Party in 3D 🎉
+- [Homely School](https://homelyschool.com) - A virtual schooling system
+- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
+- *Your app here! - send a PR!*
 
 ## license
 
