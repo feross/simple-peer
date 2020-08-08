@@ -397,9 +397,13 @@ peer.on('data', function (chunk) {
 ```
 
 ## events
-The peer instance implements `Event Emitter`. Have a look at the [nodejs events documentation](https://nodejs.org/api/events.html) for available function calls.
+
+`Peer` objects are instance of `EventEmitter`. Take a look at the [nodejs events documentation](https://nodejs.org/api/events.html) for more information.
+
 Example of removing all registered **close**-event listeners:
-`peer.removeAllListeners('close');` 
+```js
+peer.removeAllListeners('close')
+```
 
 ### `peer.on('signal', data => {})`
 
