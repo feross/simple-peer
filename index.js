@@ -310,7 +310,7 @@ class Peer extends DataChannel {
    */
   replaceTrack (oldTrack, newTrack, stream) {
     this._debug('replaceTrack()')
-    if (this.destroyed) throw erroCode(new Error('cannot replace track after peer is destroyed'), 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot replace track after peer is destroyed'), 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(oldTrack)
     var sender = submap ? submap.get(stream) : null
@@ -598,7 +598,7 @@ class Peer extends DataChannel {
   }
 
   getStats (cb) {
-    if (this.destroyed) throw erroCode(new Error('cannot get stats after peer is destroyed'), 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot get stats after peer is destroyed'), 'ERR_DESTROYED')
 
     // statreports can come with a value array instead of properties
     const flattenValues = report => {
