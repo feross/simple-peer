@@ -52,6 +52,7 @@ class Peer extends stream.Duplex {
     this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
 
     this.destroyed = false
+    this.destroying = false
     this._connected = false
 
     this.remoteAddress = undefined
@@ -399,62 +400,71 @@ class Peer extends stream.Duplex {
   }
 
   _destroy (err, cb) {
-    if (this.destroyed) return
+    if (this.destroyed || this.destroying) return
+    this.destroying = true
 
-    this._debug('destroy (error: %s)', err && (err.message || err))
+    this._debug('destroying (error: %s)', err && (err.message || err))
 
-    this.readable = this.writable = false
+    queueMicrotask(() => { // allow events concurrent with the call to _destroy() to fire (see #692)
+      this.destroyed = true
+      this.destroying = false
 
-    if (!this._readableState.ended) this.push(null)
-    if (!this._writableState.finished) this.end()
+      this._debug('destroy (error: %s)', err && (err.message || err))
 
-    this.destroyed = true
-    this._connected = false
-    this._pcReady = false
-    this._channelReady = false
-    this._remoteTracks = null
-    this._remoteStreams = null
-    this._senderMap = null
+      this.readable = this.writable = false
 
-    clearInterval(this._closingInterval)
-    this._closingInterval = null
+      if (!this._readableState.ended) this.push(null)
+      if (!this._writableState.finished) this.end()
 
-    clearInterval(this._interval)
-    this._interval = null
-    this._chunk = null
-    this._cb = null
+      this._connected = false
+      this._pcReady = false
+      this._channelReady = false
+      this._remoteTracks = null
+      this._remoteStreams = null
+      this._senderMap = null
 
-    if (this._onFinishBound) this.removeListener('finish', this._onFinishBound)
-    this._onFinishBound = null
+      clearInterval(this._closingInterval)
+      this._closingInterval = null
 
-    if (this._channel) {
-      try {
-        this._channel.close()
-      } catch (err) {}
+      clearInterval(this._interval)
+      this._interval = null
+      this._chunk = null
+      this._cb = null
 
-      this._channel.onmessage = null
-      this._channel.onopen = null
-      this._channel.onclose = null
-      this._channel.onerror = null
-    }
-    if (this._pc) {
-      try {
-        this._pc.close()
-      } catch (err) {}
+      if (this._onFinishBound) this.removeListener('finish', this._onFinishBound)
+      this._onFinishBound = null
 
-      this._pc.oniceconnectionstatechange = null
-      this._pc.onicegatheringstatechange = null
-      this._pc.onsignalingstatechange = null
-      this._pc.onicecandidate = null
-      this._pc.ontrack = null
-      this._pc.ondatachannel = null
-    }
-    this._pc = null
-    this._channel = null
+      if (this._channel) {
+        try {
+          this._channel.close()
+        } catch (err) {}
 
-    if (err) this.emit('error', err)
-    this.emit('close')
-    cb()
+        // allow events concurrent with destruction to be handled
+        this._channel.onmessage = null
+        this._channel.onopen = null
+        this._channel.onclose = null
+        this._channel.onerror = null
+      }
+      if (this._pc) {
+        try {
+          this._pc.close()
+        } catch (err) {}
+
+        // allow events concurrent with destruction to be handled
+        this._pc.oniceconnectionstatechange = null
+        this._pc.onicegatheringstatechange = null
+        this._pc.onsignalingstatechange = null
+        this._pc.onicecandidate = null
+        this._pc.ontrack = null
+        this._pc.ondatachannel = null
+      }
+      this._pc = null
+      this._channel = null
+
+      if (err) this.emit('error', err)
+      this.emit('close')
+      cb()
+    })
   }
 
   _setupData (event) {
