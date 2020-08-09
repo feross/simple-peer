@@ -1,17 +1,11 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 var debug = require('debug')('simple-peer')
 var stream = require('readable-stream')
+var errCode = require('err-code')
 
 var MAX_BUFFERED_AMOUNT = 64 * 1024
 var CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 var CHANNEL_CLOSE_DELAY = 3 * 1000
-
-function makeError (err, code) {
-  if (typeof err === 'string') err = new Error(err)
-  if (err.error instanceof Error) err = err.error
-  err.code = code
-  return err
-}
 
 function closeChannel (channel) {
   try {
@@ -74,7 +68,7 @@ class DataChannel extends stream.Duplex {
       this._onChannelClose()
     }
     this._channel.onerror = err => {
-      this.close(makeError(err, 'ERR_DATA_CHANNEL'))
+      this.close(errCode(err, 'ERR_DATA_CHANNEL'))
     }
 
     this._onFinishBound = () => {
@@ -86,13 +80,13 @@ class DataChannel extends stream.Duplex {
   _read () { }
 
   _write (chunk, encoding, cb) {
-    if (this.closed) return cb(makeError('cannot write after channel is closed', 'ERR_DATA_CHANNEL'))
+    if (this.closed) return cb(errCode(new Error('cannot write after channel is closed'), 'ERR_DATA_CHANNEL'))
 
     if (this._channel && this._channel.readyState === 'open') {
       try {
         this.send(chunk)
       } catch (err) {
-        this.close(makeError(err, 'ERR_DATA_CHANNEL'))
+        this.close(errCode(err, 'ERR_DATA_CHANNEL'))
       }
       if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
         this._debug('start backpressure: bufferedAmount %d', this._channel.bufferedAmount)
@@ -170,7 +164,7 @@ class DataChannel extends stream.Duplex {
       try {
         this.send(this._chunk)
       } catch (err) {
-        return this.close(makeError(err, 'ERR_DATA_CHANNEL'))
+        return this.close(errCode(err, 'ERR_DATA_CHANNEL'))
       }
       this._chunk = null
       this._debug('sent chunk from "write before connect"')

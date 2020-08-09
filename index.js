@@ -3,6 +3,7 @@ var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
 var randombytes = require('randombytes')
 var queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
+var errCode = require('err-code')
 var DataChannel = require('./datachannel')
 
 var ICECOMPLETE_TIMEOUT = 5 * 1000
@@ -10,13 +11,6 @@ var ICECOMPLETE_TIMEOUT = 5 * 1000
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
-}
-
-function makeError (err, code) {
-  if (typeof err === 'string') err = new Error(err)
-  if (err.error instanceof Error) err = err.error
-  err.code = code
-  return err
 }
 
 function warn (message) {
@@ -62,9 +56,9 @@ class Peer extends DataChannel {
 
     if (!this._wrtc) {
       if (typeof window === 'undefined') {
-        throw makeError('No WebRTC support: Specify `opts.wrtc` option in this environment', 'ERR_WEBRTC_SUPPORT')
+        throw errCode(new Error('No WebRTC support: Specify `opts.wrtc` option in this environment'), 'ERR_WEBRTC_SUPPORT')
       } else {
-        throw makeError('No WebRTC support: Not a supported browser', 'ERR_WEBRTC_SUPPORT')
+        throw errCode(new Error('No WebRTC support: Not a supported browser'), 'ERR_WEBRTC_SUPPORT')
       }
     }
 
@@ -90,7 +84,7 @@ class Peer extends DataChannel {
     try {
       this._pc = new (this._wrtc.RTCPeerConnection)(this.config)
     } catch (err) {
-      queueMicrotask(() => this.destroy(makeError(err, 'ERR_PC_CONSTRUCTOR')))
+      queueMicrotask(() => this.destroy(errCode(err, 'ERR_PC_CONSTRUCTOR')))
       return
     }
 
@@ -174,7 +168,7 @@ class Peer extends DataChannel {
   }
 
   signal (data) {
-    if (this.destroyed) throw makeError('cannot signal after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot signal after peer is destroyed'), 'ERR_DESTROYED')
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
@@ -212,11 +206,11 @@ class Peer extends DataChannel {
           if (this._pc.remoteDescription.type === 'offer') this._createAnswer()
         })
         .catch(err => {
-          this.destroy(makeError(err, 'ERR_SET_REMOTE_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_REMOTE_DESCRIPTION'))
         })
     }
     if (!data.sdp && !data.candidate && !data.renegotiate && !data.transceiverRequest) {
-      this.destroy(makeError('signal() called with invalid signal data', 'ERR_SIGNALING'))
+      this.destroy(errCode(new Error('signal() called with invalid signal data'), 'ERR_SIGNALING'))
     }
   }
 
@@ -227,7 +221,7 @@ class Peer extends DataChannel {
         if (!iceCandidateObj.address || iceCandidateObj.address.endsWith('.local')) {
           warn('Ignoring unsupported ICE candidate.')
         } else {
-          this.destroy(makeError(err, 'ERR_ADD_ICE_CANDIDATE'))
+          this.destroy(errCode(err, 'ERR_ADD_ICE_CANDIDATE'))
         }
       })
   }
@@ -239,7 +233,7 @@ class Peer extends DataChannel {
   * @param {Object} opts
   */
   createDataChannel (channelName, channelConfig, opts) {
-    if (this.destroyed) throw makeError('cannot create DataChannel after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot create DataChannel after peer is destroyed'), 'ERR_DESTROYED')
     var channel = new DataChannel(opts)
     channelName = this._makeUniqueChannelName(channelName)
     channel._setDataChannel(this._pc.createDataChannel(channelName, channelConfig))
@@ -254,7 +248,7 @@ class Peer extends DataChannel {
    */
   addTransceiver (kind, init) {
     this._debug('addTransceiver()')
-    if (this.destroyed) throw makeError('cannot add transceiver after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot add transceiver after peer is destroyed'), 'ERR_DESTROYED')
 
     if (this.initiator) {
       try {
@@ -262,7 +256,7 @@ class Peer extends DataChannel {
         this._debug('negotiating new transceiver')
         this._needsNegotiation()
       } catch (err) {
-        this.destroy(makeError(err, 'ERR_ADD_TRANSCEIVER'))
+        this.destroy(errCode(err, 'ERR_ADD_TRANSCEIVER'))
       }
     } else {
       this.emit('signal', { // request initiator to renegotiate
@@ -277,7 +271,7 @@ class Peer extends DataChannel {
    */
   addStream (stream) {
     this._debug('addStream()')
-    if (this.destroyed) throw makeError('cannot add stream after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot add stream after peer is destroyed'), 'ERR_DESTROYED')
 
     stream.getTracks().forEach(track => {
       this.addTrack(track, stream)
@@ -291,7 +285,7 @@ class Peer extends DataChannel {
    */
   addTrack (track, stream) {
     this._debug('addTrack()')
-    if (this.destroyed) throw makeError('cannot add track after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot add track after peer is destroyed'), 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
     var sender = submap.get(stream)
@@ -302,9 +296,9 @@ class Peer extends DataChannel {
       this._debug('negotiating new track')
       this._needsNegotiation()
     } else if (sender.removed) {
-      throw makeError('Track has been removed. You should enable/disable tracks that you want to re-add.', 'ERR_SENDER_REMOVED')
+      throw errCode(new Error('Track has been removed. You should enable/disable tracks that you want to re-add.'), 'ERR_SENDER_REMOVED')
     } else {
-      throw makeError('Track has already been added to that stream.', 'ERR_SENDER_ALREADY_ADDED')
+      throw errCode(new Error('Track has already been added to that stream.'), 'ERR_SENDER_ALREADY_ADDED')
     }
   }
 
@@ -316,19 +310,19 @@ class Peer extends DataChannel {
    */
   replaceTrack (oldTrack, newTrack, stream) {
     this._debug('replaceTrack()')
-    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw erroCode(new Error('cannot replace track after peer is destroyed'), 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(oldTrack)
     var sender = submap ? submap.get(stream) : null
     if (!sender) {
-      throw makeError('Cannot replace track that was never added.', 'ERR_TRACK_NOT_ADDED')
+      throw errCode(new Error('Cannot replace track that was never added.'), 'ERR_TRACK_NOT_ADDED')
     }
     if (newTrack) this._senderMap.set(newTrack, submap)
 
     if (sender.replaceTrack != null) {
       sender.replaceTrack(newTrack)
     } else {
-      this.destroy(makeError('replaceTrack is not supported in this browser', 'ERR_UNSUPPORTED_REPLACETRACK'))
+      this.destroy(errCode(new Error('replaceTrack is not supported in this browser'), 'ERR_UNSUPPORTED_REPLACETRACK'))
     }
   }
 
@@ -339,12 +333,12 @@ class Peer extends DataChannel {
    */
   removeTrack (track, stream) {
     this._debug('removeSender()')
-    if (this.destroyed) throw makeError('cannot replace track after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw errCode(new Error('cannot replace track after peer is destroyed'), 'ERR_DESTROYED')
 
     var submap = this._senderMap.get(track)
     var sender = submap ? submap.get(stream) : null
     if (!sender) {
-      throw makeError('Cannot remove track that was never added.', 'ERR_TRACK_NOT_ADDED')
+      throw errCode(new Error('Cannot remove track that was never added.'), 'ERR_TRACK_NOT_ADDED')
     }
     try {
       sender.removed = true
@@ -353,7 +347,7 @@ class Peer extends DataChannel {
       if (err.name === 'NS_ERROR_UNEXPECTED') {
         this._sendersAwaitingStable.push(sender) // HACK: Firefox must wait until (signalingState === stable) https://bugzilla.mozilla.org/show_bug.cgi?id=1133874
       } else {
-        this.destroy(makeError(err, 'ERR_REMOVE_TRACK'))
+        this.destroy(errCode(err, 'ERR_REMOVE_TRACK'))
       }
     }
     this._debug('negotiating track removal')
@@ -502,7 +496,7 @@ class Peer extends DataChannel {
         }
 
         const onError = err => {
-          this.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_LOCAL_DESCRIPTION'))
         }
 
         this._pc.setLocalDescription(offer)
@@ -510,7 +504,7 @@ class Peer extends DataChannel {
           .catch(onError)
       })
       .catch(err => {
-        this.destroy(makeError(err, 'ERR_CREATE_OFFER'))
+        this.destroy(errCode(err, 'ERR_CREATE_OFFER'))
       })
   }
 
@@ -552,7 +546,7 @@ class Peer extends DataChannel {
         }
 
         const onError = err => {
-          this.destroy(makeError(err, 'ERR_SET_LOCAL_DESCRIPTION'))
+          this.destroy(errCode(err, 'ERR_SET_LOCAL_DESCRIPTION'))
         }
 
         this._pc.setLocalDescription(answer)
@@ -560,14 +554,14 @@ class Peer extends DataChannel {
           .catch(onError)
       })
       .catch(err => {
-        this.destroy(makeError(err, 'ERR_CREATE_ANSWER'))
+        this.destroy(errCode(err, 'ERR_CREATE_ANSWER'))
       })
   }
 
   _onConnectionStateChange () {
     if (this.destroyed) return
     if (this._pc.connectionState === 'failed') {
-      this.destroy(makeError('Connection failed.', 'ERR_CONNECTION_FAILURE'))
+      this.destroy(errCode(new Error('Connection failed.'), 'ERR_CONNECTION_FAILURE'))
     }
   }
 
@@ -596,15 +590,15 @@ class Peer extends DataChannel {
       }
     }
     if (iceConnectionState === 'failed') {
-      this.destroy(makeError('Ice connection failed.', 'ERR_ICE_CONNECTION_FAILURE'))
+      this.destroy(errCode(new Error('Ice connection failed.'), 'ERR_ICE_CONNECTION_FAILURE'))
     }
     if (iceConnectionState === 'closed') {
-      this.destroy(makeError('Ice connection closed.', 'ERR_ICE_CONNECTION_CLOSED'))
+      this.destroy(errCode(new Error('Ice connection closed.'), 'ERR_ICE_CONNECTION_CLOSED'))
     }
   }
 
   getStats (cb) {
-    if (this.destroyed) throw makeError('cannot get stats after peer is destroyed', 'ERR_DESTROYED')
+    if (this.destroyed) throw erroCode(new Error('cannot get stats after peer is destroyed'), 'ERR_DESTROYED')
 
     // statreports can come with a value array instead of properties
     const flattenValues = report => {
@@ -844,7 +838,7 @@ class Peer extends DataChannel {
   _makeUniqueChannelName (channelName) {
     channelName = channelName || ''
     if (channelName.indexOf('@') !== -1) {
-      return this.destroy(makeError('channelName cannot include "@" character', 'ERR_INVALID_CHANNEL_NAME'))
+      return this.destroy(errCode(new Error('channelName cannot include "@" character'), 'ERR_INVALID_CHANNEL_NAME'))
     }
     return channelName + '@' + this._id + '@' + (this._channelNameCounter++)
   }
