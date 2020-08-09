@@ -318,8 +318,8 @@ Send text/binary data to the remote peer. `data` can be any of several types: `S
 `Buffer` (see [buffer](https://github.com/feross/buffer)), `ArrayBufferView` (`Uint8Array`,
 etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
-Note: If this method is called before the `peer.on('connect')` event has fired, then data
-will be buffered.
+Note: If you need to send data before `peer.on('connect')` event has fired, then use
+`peer.write(data)` to buffer data.
 
 ### `peer.addStream(stream)`
 
@@ -361,8 +361,8 @@ event on the stream.
 ### `datachannel.send(data)`
 Send text/binary data to the remote peer. Similar to `peer.send(data)`.
 
-Note: If this method is called before the `datachannel.on('open')` event has fired, then data
-will be buffered.
+Note: If you need to send data before `datachannel.on('open')` event has fired, then use
+`datachannel.write(data)` to buffer data.
 
 ### `datachannel.end()`
 Closes and destroys the `DataChannel` after waiting for it to flush.
