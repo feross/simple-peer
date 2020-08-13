@@ -639,7 +639,11 @@ constructor. See the API docs above.
 - [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
 - [CubeChat](https://cubechat.io) - Party in 3D 🎉
 - [Homely School](https://homelyschool.com) - A virtual schooling system
-- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
+- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop)
+- [P2PT](https://github.com/subins2000/p2pt) - Use WebTorrent trackers as signalling servers for making WebRTC connections
+- [Dots](https://github.com/subins2000/vett) - Online multiplayer Dots & Boxes game. [Play Here!](https://vett.space)
+- [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
+- [WebDrop](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative for AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
 - *Your app here! - send a PR!*
 
 ## license
