@@ -640,6 +640,7 @@ constructor. See the API docs above.
 - [CubeChat](https://cubechat.io) - Party in 3D 🎉
 - [Homely School](https://homelyschool.com) - A virtual schooling system
 - [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
+- [Share-Anywhere](https://share-anywhere.com/) - Cross-platform file transfer
 - *Your app here! - send a PR!*
 
 ## license
