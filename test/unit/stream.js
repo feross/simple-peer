@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var str = require('string-to-stream')
 var test = require('tape')
 

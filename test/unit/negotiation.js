@@ -1,5 +1,5 @@
-var common = require('./common')
-var Peer = require('../')
+var common = require('../common')
+var Peer = require('../../')
 var test = require('tape')
 
 var config
@@ -12,19 +12,32 @@ test('get config', function (t) {
 })
 
 test('single negotiation', function (t) {
-  t.plan(10)
+  t.plan(12)
 
   var peer1 = new Peer({ config, initiator: true, stream: common.getMediaStream(), wrtc: common.wrtc })
   var peer2 = new Peer({ config, stream: common.getMediaStream(), wrtc: common.wrtc })
 
-  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
-  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+  peer1.on('signal', function (data) {
+    if (data.renegotiate) t.fail('got unexpected request to renegotiate')
+    if (!peer2.destroyed) peer2.signal(data)
+  })
+  peer2.on('signal', function (data) {
+    if (data.renegotiate) t.fail('got unexpected request to renegotiate')
+    if (!peer1.destroyed) peer1.signal(data)
+  })
 
   peer1.on('connect', function () {
     t.pass('peer1 connected')
   })
   peer2.on('connect', function () {
     t.pass('peer2 connected')
+  })
+
+  peer1.on('negotiate', function () {
+    t.pass('peer1 negotiated')
+  })
+  peer2.on('negotiate', function () {
+    t.pass('peer2 negotiated')
   })
 
   peer1.on('stream', function (stream) {
@@ -61,7 +74,7 @@ test('manual renegotiation', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  peer1.on('connect', function () {
+  peer1.once('negotiate', function () {
     peer1.negotiate()
 
     peer1.on('negotiate', function () {
@@ -168,7 +181,7 @@ test('add stream on non-initiator only', function (t) {
 })
 
 test('negotiated channels', function (t) {
-  t.plan(2)
+  t.plan(4)
 
   var peer1 = new Peer({
     config,
@@ -196,5 +209,15 @@ test('negotiated channels', function (t) {
   })
   peer2.on('connect', function () {
     t.pass('peer2 connect')
+  })
+
+  peer1.write('testData1')
+  peer2.write('testData2')
+
+  peer1.on('data', async (data) => {
+    t.equal(data.toString(), 'testData2', 'got correct message')
+  })
+  peer2.on('data', async (data) => {
+    t.equal(data.toString(), 'testData1', 'got correct message')
   })
 })
