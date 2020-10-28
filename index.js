@@ -897,8 +897,8 @@ class Peer extends stream.Duplex {
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
       } else {
-        this._debug('negotiate')
-        this.emit('negotiate')
+        this._debug('negotiated')
+        this.emit('negotiated')
       }
     }
 

@@ -70,10 +70,10 @@ test('manual renegotiation', function (t) {
   peer1.on('connect', function () {
     peer1.negotiate()
 
-    peer1.on('negotiate', function () {
+    peer1.on('negotiated', function () {
       t.pass('peer1 negotiated')
     })
-    peer2.on('negotiate', function () {
+    peer2.on('negotiated', function () {
       t.pass('peer2 negotiated')
     })
   })
@@ -91,24 +91,24 @@ test('repeated manual renegotiation', function (t) {
   peer1.once('connect', function () {
     peer1.negotiate()
   })
-  peer1.once('negotiate', function () {
+  peer1.once('negotiated', function () {
     t.pass('peer1 negotiated')
     peer1.negotiate()
-    peer1.once('negotiate', function () {
+    peer1.once('negotiated', function () {
       t.pass('peer1 negotiated again')
       peer1.negotiate()
-      peer1.once('negotiate', function () {
+      peer1.once('negotiated', function () {
         t.pass('peer1 negotiated again')
       })
     })
   })
-  peer2.once('negotiate', function () {
+  peer2.once('negotiated', function () {
     t.pass('peer2 negotiated')
     peer2.negotiate()
-    peer2.once('negotiate', function () {
+    peer2.once('negotiated', function () {
       t.pass('peer2 negotiated again')
       peer1.negotiate()
-      peer1.once('negotiate', function () {
+      peer1.once('negotiated', function () {
         t.pass('peer1 negotiated again')
       })
     })
