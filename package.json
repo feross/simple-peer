@@ -22,7 +22,7 @@
     "airtap": "^3.0.0",
     "babel-minify": "^0.5.1",
     "bowser": "^2.11.0",
-    "browserify": "^16.1.0",
+    "browserify": "^17.0.0",
     "coveralls": "^3.1.0",
     "nyc": "^15.1.0",
     "prettier-bytes": "^1.0.4",
