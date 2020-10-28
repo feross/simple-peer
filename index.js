@@ -41,7 +41,7 @@ class Peer extends stream.Duplex {
 
     this.initiator = opts.initiator || false
     this.channelConfig = opts.channelConfig || Peer.channelConfig
-    this.negotiated = this.channelConfig.negotiated
+    this.channelNegotiated = this.channelConfig.negotiated
     this.config = Object.assign({}, Peer.config, opts.config)
     this.offerOptions = opts.offerOptions || {}
     this.answerOptions = opts.answerOptions || {}
@@ -80,12 +80,12 @@ class Peer extends stream.Duplex {
     this._channel = null
     this._pendingCandidates = []
 
-    this._isNegotiating = this.negotiated ? false : !this.initiator // is this peer waiting for negotiation to complete?
+    this._isNegotiating = false // is this peer waiting for negotiation to complete?
+    this._firstNegotiation = true
     this._batchedNegotiation = false // batch synchronous negotiations
     this._queuedNegotiation = false // is there a queued negotiation request?
     this._sendersAwaitingStable = []
     this._senderMap = new Map()
-    this._firstStable = true
     this._closingInterval = null
 
     this._remoteTracks = []
@@ -128,7 +128,7 @@ class Peer extends stream.Duplex {
     // - onfingerprintfailure
     // - onnegotiationneeded
 
-    if (this.initiator || this.negotiated) {
+    if (this.initiator || this.channelNegotiated) {
       this._setupData({
         channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
       })
@@ -147,9 +147,8 @@ class Peer extends stream.Duplex {
       this._onTrack(event)
     }
 
-    if (this.initiator) {
-      this._needsNegotiation()
-    }
+    this._debug('initial negotiation')
+    this._needsNegotiation()
 
     this._onFinishBound = () => {
       this._onFinish()
@@ -361,8 +360,13 @@ class Peer extends stream.Duplex {
     this._batchedNegotiation = true
     queueMicrotask(() => {
       this._batchedNegotiation = false
-      this._debug('starting batched negotiation')
-      this.negotiate()
+      if (this.initiator || !this._firstNegotiation) {
+        this._debug('starting batched negotiation')
+        this.negotiate()
+      } else {
+        this._debug('non-initiator initial negotiation request discarded')
+      }
+      this._firstNegotiation = false
     })
   }
 
@@ -875,7 +879,7 @@ class Peer extends stream.Duplex {
   _onSignalingStateChange () {
     if (this.destroyed) return
 
-    if (this._pc.signalingState === 'stable' && !this._firstStable) {
+    if (this._pc.signalingState === 'stable') {
       this._isNegotiating = false
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
@@ -890,12 +894,11 @@ class Peer extends stream.Duplex {
         this._debug('flushing negotiation queue')
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
+      } else {
+        this._debug('negotiate')
+        this.emit('negotiate')
       }
-
-      this._debug('negotiate')
-      this.emit('negotiate')
     }
-    this._firstStable = false
 
     this._debug('signalingStateChange %s', this._pc.signalingState)
     this.emit('signalingStateChange', this._pc.signalingState)
