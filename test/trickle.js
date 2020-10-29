@@ -1,8 +1,8 @@
-var common = require('./common')
-var Peer = require('../')
-var test = require('tape')
+const common = require('./common')
+const Peer = require('../')
+const test = require('tape')
 
-var config
+let config
 test('get config', function (t) {
   common.getConfig(function (err, _config) {
     if (err) return t.fail(err)
@@ -14,16 +14,16 @@ test('get config', function (t) {
 test('disable trickle', function (t) {
   t.plan(8)
 
-  var peer1 = new Peer({ config, initiator: true, trickle: false, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, trickle: false, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, trickle: false, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, trickle: false, wrtc: common.wrtc })
 
-  var numSignal1 = 0
+  let numSignal1 = 0
   peer1.on('signal', function (data) {
     numSignal1 += 1
     peer2.signal(data)
   })
 
-  var numSignal2 = 0
+  let numSignal2 = 0
   peer2.on('signal', function (data) {
     numSignal2 += 1
     peer1.signal(data)
@@ -60,16 +60,16 @@ test('disable trickle', function (t) {
 test('disable trickle (only initiator)', function (t) {
   t.plan(8)
 
-  var peer1 = new Peer({ config, initiator: true, trickle: false, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, trickle: false, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
-  var numSignal1 = 0
+  let numSignal1 = 0
   peer1.on('signal', function (data) {
     numSignal1 += 1
     peer2.signal(data)
   })
 
-  var numSignal2 = 0
+  let numSignal2 = 0
   peer2.on('signal', function (data) {
     numSignal2 += 1
     peer1.signal(data)
@@ -106,16 +106,16 @@ test('disable trickle (only initiator)', function (t) {
 test('disable trickle (only receiver)', function (t) {
   t.plan(8)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, trickle: false, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, trickle: false, wrtc: common.wrtc })
 
-  var numSignal1 = 0
+  let numSignal1 = 0
   peer1.on('signal', function (data) {
     numSignal1 += 1
     peer2.signal(data)
   })
 
-  var numSignal2 = 0
+  let numSignal2 = 0
   peer2.on('signal', function (data) {
     numSignal2 += 1
     peer1.signal(data)
@@ -180,8 +180,8 @@ test('null end candidate does not throw', function (t) {
 })
 
 test('empty-string end candidate does not throw', function (t) {
-  var peer1 = new Peer({ trickle: true, config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ trickle: true, config, wrtc: common.wrtc })
+  const peer1 = new Peer({ trickle: true, config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ trickle: true, config, wrtc: common.wrtc })
 
   // translate all falsey candidates to null
   let endCandidateSent = false
@@ -210,8 +210,8 @@ test('empty-string end candidate does not throw', function (t) {
 })
 
 test('mDNS candidate does not throw', function (t) {
-  var peer1 = new Peer({ trickle: true, config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ trickle: true, config, wrtc: common.wrtc })
+  const peer1 = new Peer({ trickle: true, config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ trickle: true, config, wrtc: common.wrtc })
 
   peer1.on('error', () => t.fail('peer1 threw error'))
   peer2.on('error', () => t.fail('peer2 threw error'))
@@ -232,10 +232,10 @@ test('mDNS candidate does not throw', function (t) {
 test('ice candidates received before description', function (t) {
   t.plan(3)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
-  var signalQueue1 = []
+  const signalQueue1 = []
   peer1.on('signal', function (data) {
     signalQueue1.push(data)
     if (data.candidate) {
@@ -243,7 +243,7 @@ test('ice candidates received before description', function (t) {
     }
   })
 
-  var signalQueue2 = []
+  const signalQueue2 = []
   peer2.on('signal', function (data) {
     signalQueue2.push(data)
     if (data.candidate) {

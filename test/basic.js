@@ -1,8 +1,8 @@
-var common = require('./common')
-var Peer = require('../')
-var test = require('tape')
+const common = require('./common')
+const Peer = require('../')
+const test = require('tape')
 
-var config
+let config
 test('get config', function (t) {
   common.getConfig(function (err, _config) {
     if (err) return t.fail(err)
@@ -20,7 +20,7 @@ test('create peer without options', function (t) {
   t.plan(1)
 
   if (process.browser) {
-    var peer
+    let peer
     t.doesNotThrow(function () {
       peer = new Peer()
     })
@@ -33,7 +33,7 @@ test('create peer without options', function (t) {
 test('can detect error when RTCPeerConstructor throws', function (t) {
   t.plan(1)
 
-  var peer = new Peer({ wrtc: { RTCPeerConnection: null } })
+  const peer = new Peer({ wrtc: { RTCPeerConnection: null } })
   peer.once('error', function () {
     t.pass('got error event')
     peer.destroy()
@@ -43,7 +43,7 @@ test('can detect error when RTCPeerConstructor throws', function (t) {
 test('signal event gets emitted', function (t) {
   t.plan(2)
 
-  var peer = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer = new Peer({ config, initiator: true, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.pass('got signal event')
     peer.on('close', function () { t.pass('peer destroyed') })
@@ -52,7 +52,7 @@ test('signal event gets emitted', function (t) {
 })
 
 test('signal event does not get emitted by non-initiator', function (t) {
-  var peer = new Peer({ config, initiator: false, wrtc: common.wrtc })
+  const peer = new Peer({ config, initiator: false, wrtc: common.wrtc })
   peer.once('signal', function () {
     t.fail('got signal event')
     peer.on('close', function () { t.pass('peer destroyed') })
@@ -66,7 +66,7 @@ test('signal event does not get emitted by non-initiator', function (t) {
 })
 
 test('signal event does not get emitted by non-initiator with stream', function (t) {
-  var peer = new Peer({
+  const peer = new Peer({
     config,
     stream: common.getMediaStream(),
     initiator: false,
@@ -87,16 +87,16 @@ test('signal event does not get emitted by non-initiator with stream', function 
 test('data send/receive text', function (t) {
   t.plan(10)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
-  var numSignal1 = 0
+  let numSignal1 = 0
   peer1.on('signal', function (data) {
     numSignal1 += 1
     peer2.signal(data)
   })
 
-  var numSignal2 = 0
+  let numSignal2 = 0
   peer2.on('signal', function (data) {
     numSignal2 += 1
     peer1.signal(data)
@@ -135,8 +135,8 @@ test('data send/receive text', function (t) {
 test('sdpTransform function is called', function (t) {
   t.plan(3)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, sdpTransform, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, sdpTransform, wrtc: common.wrtc })
 
   function sdpTransform (sdp) {
     t.equal(typeof sdp, 'string', 'got a string as SDP')
@@ -161,15 +161,15 @@ test('sdpTransform function is called', function (t) {
 test('old constraint formats are used', function (t) {
   t.plan(3)
 
-  var constraints = {
+  const constraints = {
     mandatory: {
       OfferToReceiveAudio: true,
       OfferToReceiveVideo: true
     }
   }
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
-  var peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
+  const peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -191,13 +191,13 @@ test('old constraint formats are used', function (t) {
 test('new constraint formats are used', function (t) {
   t.plan(3)
 
-  var constraints = {
+  const constraints = {
     offerToReceiveAudio: true,
     offerToReceiveVideo: true
   }
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
-  var peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc, constraints })
+  const peer2 = new Peer({ config, wrtc: common.wrtc, constraints })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)
@@ -230,8 +230,8 @@ test('ensure remote address and port are available right after connection', func
 
   t.plan(7)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) {
     peer2.signal(data)

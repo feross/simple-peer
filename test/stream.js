@@ -1,9 +1,9 @@
-var common = require('./common')
-var Peer = require('../')
-var str = require('string-to-stream')
-var test = require('tape')
+const common = require('./common')
+const Peer = require('../')
+const str = require('string-to-stream')
+const test = require('tape')
 
-var config
+let config
 test('get config', function (t) {
   common.getConfig(function (err, _config) {
     if (err) return t.fail(err)
@@ -16,8 +16,8 @@ test('duplex stream: send data before "connect" event', function (t) {
   t.plan(9)
   t.timeoutAfter(20000)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
@@ -52,8 +52,8 @@ test('duplex stream: send data one-way', function (t) {
   t.plan(9)
   t.timeoutAfter(20000)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
   peer1.on('signal', function (data) { peer2.signal(data) })
   peer2.on('signal', function (data) { peer1.signal(data) })
   peer1.on('connect', tryTest)
