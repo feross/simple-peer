@@ -812,7 +812,10 @@ class Peer extends stream.Duplex {
 
           this._debug(
             'connect local: %s:%s remote: %s:%s',
-            this.localAddress, this.localPort, this.remoteAddress, this.remotePort
+            this.localAddress,
+            this.localPort,
+            this.remoteAddress,
+            this.remotePort
           )
         }
 
