@@ -1,13 +1,4 @@
 ---
-name: Feature request
-about: Request a new feature to be added
-title: ''
-labels: ''
-assignees: ''
-
----
-
----
 name: "⭐️ Feature request"
 about: Request a new feature to be added
 title: ''
@@ -16,7 +7,7 @@ assignees: ''
 
 ---
 
-<!-- DO NOT POST LINKS OR REFERENCES TO COPYRIGHTED CONTENT IN YOUR ISSUE. -->
+<!-- THIS IS NOT A SUPPORT FORUM. USE THIS FORM TO DISCUSS FEATURE DEVELOPMENT. -->
 
 **What version of this package are you using?**
 

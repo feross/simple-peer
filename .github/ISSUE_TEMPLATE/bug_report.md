@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: "🐞 Bug report"
 about: Report an issue with this software
 title: ''
 labels: ''
@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-<!-- THIS IS NOT A SUPPORT FORUM. PLEASE ONLY USE THIS FORM TO FILE BUGS. -->
+<!-- THIS IS NOT A SUPPORT FORUM. USE THIS FORM TO FILE BUGS. -->
 
 **What version of this package are you using?**
 
