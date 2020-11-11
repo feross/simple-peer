@@ -258,3 +258,17 @@ test('ensure remote address and port are available right after connection', func
     })
   })
 })
+
+test('ensure iceStateChange fires when connection failed', (t) => {
+  t.plan(1)
+  const peer = new Peer({ config, initiator: true, wrtc: common.wrtc })
+
+  peer.on('iceStateChange', (connectionState, gatheringState) => {
+    t.pass('got iceStateChange')
+    t.end()
+  })
+
+  // simulate concurrent iceConnectionStateChange and destroy()
+  peer.destroy()
+  peer._pc.oniceconnectionstatechange()
+})
