@@ -11,6 +11,7 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
+    "buffer": "^6.0.2",
     "debug": "^4.2.0",
     "err-code": "^2.0.3",
     "get-browser-rtc": "^1.0.2",

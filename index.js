@@ -5,6 +5,7 @@ const randombytes = require('randombytes')
 const stream = require('readable-stream')
 const queueMicrotask = require('queue-microtask') // TODO: remove when Node 10 is not supported
 const errCode = require('err-code')
+const { Buffer } = require('buffer')
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024
 const ICECOMPLETE_TIMEOUT = 5 * 1000
