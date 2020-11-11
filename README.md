@@ -640,7 +640,15 @@ constructor. See the API docs above.
 - [CubeChat](https://cubechat.io) - Party in 3D 🎉
 - [Homely School](https://homelyschool.com) - A virtual schooling system
 - [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
+- [Share-Anywhere](https://share-anywhere.com/) - Cross-platform file transfer
+- [QuaranTime.io](https://quarantime.io/) - The Activity board-game in video!
+- [Trango](https://web.trango.io) - Cross-platform calling and file sharing solution.
+- [P2PT](https://github.com/subins2000/p2pt) - Use WebTorrent trackers as signalling servers for making WebRTC connections
+- [Dots](https://github.com/subins2000/vett) - Online multiplayer Dots & Boxes game. [Play Here!](https://vett.space)
+- [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
+- [WebDrop.Space](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative to AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
 - [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-peer to create audio conferences!
+
 - *Your app here! - send a PR!*
 
 ## license

@@ -1,25 +1,25 @@
 // run in a browser, with:
 //   beefy perf/send.js
 
-var Peer = require('simple-peer')
-var stream = require('readable-stream')
+const Peer = require('simple-peer')
+const stream = require('readable-stream')
 
-var buf = Buffer.alloc(10000)
+const buf = Buffer.alloc(10000)
 
-var endless = new stream.Readable({
+const endless = new stream.Readable({
   read: function () {
     this.push(buf)
   }
 })
 
-var peer
+let peer
 
-var socket = new window.WebSocket('ws://localhost:8080')
+const socket = new window.WebSocket('ws://localhost:8080')
 
 socket.addEventListener('message', onMessage)
 
 function onMessage (event) {
-  var message = event.data
+  const message = event.data
   if (message === 'ready') {
     if (peer) return
     peer = new Peer({ initiator: true })
