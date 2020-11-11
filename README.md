@@ -639,7 +639,9 @@ constructor. See the API docs above.
 - [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
 - [CubeChat](https://cubechat.io) - Party in 3D 🎉
 - [Homely School](https://homelyschool.com) - A virtual schooling system
-- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop)
+- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop) 
+- [Share-Anywhere](https://share-anywhere.com/) - Cross-platform file transfer
+- [QuaranTime.io](https://quarantime.io/) - The Activity board-game in video!
 - [Trango](https://web.trango.io) - Cross-platform calling and file sharing solution.
 - *Your app here! - send a PR!*
 

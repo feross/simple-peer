@@ -1,8 +1,8 @@
-var common = require('./common')
-var Peer = require('../')
-var test = require('tape')
+const common = require('./common')
+const Peer = require('../')
+const test = require('tape')
 
-var config
+let config
 test('get config', function (t) {
   common.getConfig(function (err, _config) {
     if (err) return t.fail(err)
@@ -19,13 +19,13 @@ test('multistream', function (t) {
   }
   t.plan(20)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
@@ -34,7 +34,7 @@ test('multistream', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
   peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
@@ -62,13 +62,13 @@ test('multistream', function (t) {
 test('multistream (track event)', function (t) {
   t.plan(20)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: (new Array(5)).fill(null).map(function () { return common.getMediaStream() })
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: (new Array(5)).fill(null).map(function () { return common.getMediaStream() })
@@ -77,7 +77,7 @@ test('multistream (track event)', function (t) {
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
   peer1.on('track', function (track) {
     t.pass('peer1 got track')
@@ -105,13 +105,13 @@ test('multistream (track event)', function (t) {
 test('multistream on non-initiator only', function (t) {
   t.plan(30)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: []
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: (new Array(10)).fill(null).map(function () { return common.getMediaStream() })
@@ -126,7 +126,7 @@ test('multistream on non-initiator only', function (t) {
     if (!peer1.destroyed) peer1.signal(data)
   })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
   peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
@@ -152,14 +152,14 @@ test('delayed stream on non-initiator', function (t) {
   t.timeoutAfter(15000)
   t.plan(1)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     trickle: true,
     initiator: true,
     wrtc: common.wrtc,
     streams: [common.getMediaStream()]
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     trickle: true,
     wrtc: common.wrtc,
@@ -190,13 +190,13 @@ test('incremental multistream', function (t) {
   }
   t.plan(12)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: []
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: []
@@ -214,9 +214,9 @@ test('incremental multistream', function (t) {
     peer2.addStream(common.getMediaStream())
   })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
-  var count1 = 0
+  let count1 = 0
   peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
     if (receivedIds[stream.id]) {
@@ -230,7 +230,7 @@ test('incremental multistream', function (t) {
     }
   })
 
-  var count2 = 0
+  let count2 = 0
   peer2.on('stream', function (stream) {
     t.pass('peer2 got stream')
     if (receivedIds[stream.id]) {
@@ -253,13 +253,13 @@ test('incremental multistream', function (t) {
 test('incremental multistream (track event)', function (t) {
   t.plan(22)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: []
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: []
@@ -277,9 +277,9 @@ test('incremental multistream (track event)', function (t) {
     peer2.addStream(common.getMediaStream())
   })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
-  var count1 = 0
+  let count1 = 0
   peer1.on('track', function (track) {
     t.pass('peer1 got track')
     if (receivedIds[track.id]) {
@@ -293,7 +293,7 @@ test('incremental multistream (track event)', function (t) {
     }
   })
 
-  var count2 = 0
+  let count2 = 0
   peer2.on('track', function (track) {
     t.pass('peer2 got track')
     if (receivedIds[track.id]) {
@@ -321,13 +321,13 @@ test('incremental multistream on non-initiator only', function (t) {
   }
   t.plan(7)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: []
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: []
@@ -344,9 +344,9 @@ test('incremental multistream on non-initiator only', function (t) {
     peer2.addStream(common.getMediaStream())
   })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
-  var count = 0
+  let count = 0
   peer1.on('stream', function (stream) {
     t.pass('peer1 got stream')
     if (receivedIds[stream.id]) {
@@ -369,13 +369,13 @@ test('incremental multistream on non-initiator only', function (t) {
 test('incremental multistream on non-initiator only (track event)', function (t) {
   t.plan(12)
 
-  var peer1 = new Peer({
+  const peer1 = new Peer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: []
   })
-  var peer2 = new Peer({
+  const peer2 = new Peer({
     config,
     wrtc: common.wrtc,
     streams: []
@@ -392,9 +392,9 @@ test('incremental multistream on non-initiator only (track event)', function (t)
     peer2.addStream(common.getMediaStream())
   })
 
-  var receivedIds = {}
+  const receivedIds = {}
 
-  var count = 0
+  let count = 0
   peer1.on('track', function (track) {
     t.pass('peer1 got track')
     if (receivedIds[track.id]) {
@@ -422,11 +422,11 @@ test('addStream after removeStream', function (t) {
   }
   t.plan(2)
 
-  var stream1 = common.getMediaStream()
-  var stream2 = common.getMediaStream()
+  const stream1 = common.getMediaStream()
+  const stream2 = common.getMediaStream()
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc, streams: [stream1] })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc, streams: [stream1] })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
@@ -451,14 +451,14 @@ test('addStream after removeStream', function (t) {
 test('removeTrack immediately', function (t) {
   t.plan(2)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var stream1 = common.getMediaStream()
-  var stream2 = common.getMediaStream()
+  const stream1 = common.getMediaStream()
+  const stream2 = common.getMediaStream()
 
   peer1.addTrack(stream1.getTracks()[0], stream1)
   peer2.addTrack(stream2.getTracks()[0], stream2)
@@ -489,14 +489,14 @@ test('removeTrack immediately', function (t) {
 test('replaceTrack', function (t) {
   t.plan(4)
 
-  var peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
-  var peer2 = new Peer({ config, wrtc: common.wrtc })
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
 
   peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
   peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
 
-  var stream1 = common.getMediaStream()
-  var stream2 = common.getMediaStream()
+  const stream1 = common.getMediaStream()
+  const stream2 = common.getMediaStream()
 
   peer1.addTrack(stream1.getTracks()[0], stream1)
   peer2.addTrack(stream2.getTracks()[0], stream2)
