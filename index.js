@@ -256,6 +256,7 @@ class Peer extends stream.Duplex {
       }
     } else {
       this.emit('signal', { // request initiator to renegotiate
+        type: 'transceiverRequest',
         transceiverRequest: { kind, init }
       })
     }
@@ -390,6 +391,7 @@ class Peer extends stream.Duplex {
       } else {
         this._debug('requesting negotiation from initiator')
         this.emit('signal', { // request initiator to renegotiate
+          type: 'renegotiate',
           renegotiate: true
         })
       }
@@ -909,8 +911,8 @@ class Peer extends stream.Duplex {
         this._queuedNegotiation = false
         this._needsNegotiation() // negotiate again
       } else {
-        this._debug('negotiate')
-        this.emit('negotiate')
+        this._debug('negotiated')
+        this.emit('negotiated')
       }
     }
 
@@ -922,6 +924,7 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return
     if (event.candidate && this.trickle) {
       this.emit('signal', {
+        type: 'candidate',
         candidate: {
           candidate: event.candidate.candidate,
           sdpMLineIndex: event.candidate.sdpMLineIndex,
@@ -984,6 +987,7 @@ class Peer extends stream.Duplex {
 
       this._remoteStreams.push(eventStream)
       queueMicrotask(() => {
+        this._debug('on stream')
         this.emit('stream', eventStream) // ensure all tracks have been added
       })
     })
