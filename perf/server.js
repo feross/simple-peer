@@ -1,12 +1,12 @@
 // run in a terminal, to do signaling for peers
 
-var ws = require('ws')
+const ws = require('ws')
 
-var server = new ws.Server({
+const server = new ws.Server({
   port: 8080
 })
 
-var sockets = []
+const sockets = []
 
 server.on('connection', function (socket) {
   sockets.push(socket)
