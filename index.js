@@ -51,6 +51,7 @@ class Peer extends stream.Duplex {
     this.trickle = opts.trickle !== undefined ? opts.trickle : true
     this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
     this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
+    this.iceRestartEnabled = 'iceRestartEnabled' in opts ? opts.iceRestartEnabled : true
 
     this.destroyed = false
     this.destroying = false
@@ -380,7 +381,7 @@ class Peer extends stream.Duplex {
     })
   }
 
-  negotiate() {
+  negotiate (restart = false) {
     if (this.initiator) {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
@@ -388,9 +389,10 @@ class Peer extends stream.Duplex {
       } else {
         this._debug('start negotiation')
         setTimeout(() => { // HACK: Chrome crashes if we immediately call createOffer
-          this._createOffer()
+          this._createOffer(restart)
         }, 0)
       }
+      this._isRestarting = restart
     } else {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
@@ -404,6 +406,16 @@ class Peer extends stream.Duplex {
       }
     }
     this._isNegotiating = true
+  }
+
+  restart () {
+    if (this.initiator) {
+      if (this._isRestarting) {
+        this._debug('already restarting, ignoring')
+      } else {
+        this._pc.restartIce();
+      }
+    }
   }
 
   // TODO: Delete this method once readable-stream is updated to contain a default
@@ -674,8 +686,10 @@ class Peer extends stream.Duplex {
 
   _onConnectionStateChange() {
     if (this.destroyed) return
-    if (this._pc.connectionState === 'failed') {
+    if (this._pc.connectionState === 'failed' && !this.iceRestartEnabled) {
       this.destroy(errCode(new Error('Connection failed.'), 'ERR_CONNECTION_FAILURE'))
+    } else if (this._pc.connectionState === 'failed' && this.iceRestartEnabled) {
+      this._pc.restartIce()
     }
   }
 
@@ -692,10 +706,19 @@ class Peer extends stream.Duplex {
     this.emit('iceStateChange', iceConnectionState, iceGatheringState)
 
     if (iceConnectionState === 'connected' || iceGatheringState === 'completed') {
+      this._isRestarting = false
       this._pcReady = true
       this._maybeReady()
     }
-    if (iceConnectionState === 'failed') {
+
+    if (iceConnectionState === 'failed' && this.iceRestartEnabled) {
+      if (this.initiator && !this._isRestarting) {
+        this._isNegotiating = false
+        this._isRestarting = true
+
+        this._needsNegotiation(true)
+      }
+    } else if (iceConnectionState === 'failed' && !this.iceRestartEnabled) {
       this.destroy(errCode(new Error('Ice connection failed.'), 'ERR_ICE_CONNECTION_FAILURE'))
     }
     if (iceConnectionState === 'closed') {
@@ -752,9 +775,9 @@ class Peer extends stream.Duplex {
     }
   }
 
-  _maybeReady() {
+  _maybeReady () {
     this._debug('maybeReady pc %s channel %s', this._pcReady, this._channelReady)
-    if (this._connected || this._connecting || !this._pcReady || !this._channelReady) return
+    if (((this._connected || this._connecting) && !this._isRestarting) || !this._pcReady || !this._channelReady) return
 
     this._connecting = true
 
