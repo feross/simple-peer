@@ -691,7 +691,7 @@ class Peer extends stream.Duplex {
     )
     this.emit('iceStateChange', iceConnectionState, iceGatheringState)
 
-    if (iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+    if (iceConnectionState === 'connected' || iceGatheringState === 'completed') {
       this._pcReady = true
       this._maybeReady()
     }
