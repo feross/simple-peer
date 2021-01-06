@@ -410,7 +410,7 @@ Fired when the peer connection and data channel are ready to use.
 
 Received a message from the remote peer (via the data channel).
 
-`data` will be either a `String` or a `Buffer/Uint8Array` (see [buffer](https://github.com/feross/buffer)).
+If `objectMode` is set to `true, then `data` will be a `String`. Otherwise, `data` will be a `Buffer` (in Node.js) or a `Uint8Array` in the browser. (See [buffer](https://github.com/feross/buffer) for more info.)
 
 ### `peer.on('stream', stream => {})`
 
