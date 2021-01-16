@@ -800,7 +800,7 @@ class Peer extends stream.Duplex {
           )
         )
       }
-    }, 500)
+    }, 100)
   }
 
   getStats (cb) {
