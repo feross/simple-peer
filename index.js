@@ -124,6 +124,12 @@ class Peer extends stream.Duplex {
       this._onIceCandidate(event)
     }
 
+    if (typeof this._pc.peerIdentity === 'object') {
+      this._pc.peerIdentity.catch(err => {
+        this.destroy(errCode(err, 'ERR_PC_PEER_IDENTITY'))
+      })
+    }
+
     // Other spec events, unused by this implementation:
     // - onconnectionstatechange
     // - onicecandidateerror
