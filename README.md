@@ -647,6 +647,9 @@ constructor. See the API docs above.
 - [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
 - [WebDrop.Space](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative to AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
 - [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-peer to create audio conferences!
+- [Deskreen](https://deskreen.com) - A desktop app that helps you to turn any device into a secondary screen for your computer. It uses simple-peer for sharing entire computer screen to any device with a web browser.
+
+
 
 - *Your app here! - send a PR!*
 
