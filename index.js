@@ -100,7 +100,7 @@ class Peer extends stream.Duplex {
     try {
       this._pc = new (this._wrtc.RTCPeerConnection)(this.config)
     } catch (err) {
-      queueMicrotask(() => this.destroy(errCode(err, 'ERR_PC_CONSTRUCTOR')))
+      this.destroy(errCode(err, 'ERR_PC_CONSTRUCTOR'))
       return
     }
 
@@ -180,7 +180,8 @@ class Peer extends stream.Duplex {
   }
 
   signal (data) {
-    if (this.destroyed) throw errCode(new Error('cannot signal after peer is destroyed'), 'ERR_SIGNALING')
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot signal after peer is destroyed'), 'ERR_DESTROYED')
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
@@ -243,6 +244,8 @@ class Peer extends stream.Duplex {
    * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
    */
   send (chunk) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot send after peer is destroyed'), 'ERR_DESTROYED')
     this._channel.send(chunk)
   }
 
@@ -252,6 +255,8 @@ class Peer extends stream.Duplex {
    * @param {Object} init
    */
   addTransceiver (kind, init) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot addTransceiver after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('addTransceiver()')
 
     if (this.initiator) {
@@ -274,6 +279,8 @@ class Peer extends stream.Duplex {
    * @param {MediaStream} stream
    */
   addStream (stream) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot addStream after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('addStream()')
 
     stream.getTracks().forEach(track => {
@@ -287,6 +294,8 @@ class Peer extends stream.Duplex {
    * @param {MediaStream} stream
    */
   addTrack (track, stream) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot addTrack after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('addTrack()')
 
     const submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
@@ -310,6 +319,8 @@ class Peer extends stream.Duplex {
    * @param {MediaStream} stream
    */
   replaceTrack (oldTrack, newTrack, stream) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot replaceTrack after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('replaceTrack()')
 
     const submap = this._senderMap.get(oldTrack)
@@ -332,6 +343,8 @@ class Peer extends stream.Duplex {
    * @param {MediaStream} stream
    */
   removeTrack (track, stream) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot removeTrack after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('removeSender()')
 
     const submap = this._senderMap.get(track)
@@ -357,6 +370,8 @@ class Peer extends stream.Duplex {
    * @param {MediaStream} stream
    */
   removeStream (stream) {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot removeStream after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('removeSenders()')
 
     stream.getTracks().forEach(track => {
@@ -381,6 +396,9 @@ class Peer extends stream.Duplex {
   }
 
   negotiate () {
+    if (this.destroying) return
+    if (this.destroyed) throw errCode(new Error('cannot negotiate after peer is destroyed'), 'ERR_DESTROYED')
+
     if (this.initiator) {
       if (this._isNegotiating) {
         this._queuedNegotiation = true
