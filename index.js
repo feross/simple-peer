@@ -124,6 +124,7 @@ class Peer extends stream.Duplex {
       this._onIceCandidate(event)
     }
 
+    // HACK: Fix for odd Firefox behavior, see: https://github.com/feross/simple-peer/pull/783
     if (typeof this._pc.peerIdentity === 'object') {
       this._pc.peerIdentity.catch(err => {
         this.destroy(errCode(err, 'ERR_PC_PEER_IDENTITY'))
