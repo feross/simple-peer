@@ -647,6 +647,7 @@ constructor. See the API docs above.
 - [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
 - [WebDrop.Space](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative to AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
 - [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-peer to create audio conferences!
+- [Exoo](https://exoo.io) - Share you files easily for free. You can share all files between any devices. It's anonymous and without any registration !
 
 - *Your app here! - send a PR!*
 
