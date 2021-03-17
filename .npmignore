@@ -1,6 +1,6 @@
 .airtap.yml
 .nyc_output
-.travis.yml
 img/
 perf/
 test/
+
