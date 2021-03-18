@@ -20,6 +20,7 @@ function filterTrickle (sdp) {
 let forcedGCTimeout = null
 function forcePeerGC () {
   URL.revokeObjectURL(URL.createObjectURL(new Blob([new ArrayBuffer(5e+7)])))
+  forcedGCTimeout = null
 }
 
 function warn (message) {
