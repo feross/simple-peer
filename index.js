@@ -18,7 +18,7 @@ function filterTrickle (sdp) {
 
 // HACK: Force GC to clean up released peers
 let forcedGCTimeout = null
-function forcePeerGC() {
+function forcePeerGC () {
   URL.revokeObjectURL(URL.createObjectURL(new Blob([new ArrayBuffer(5e+7)])))
 }
 
@@ -435,7 +435,7 @@ class Peer extends stream.Duplex {
 
       if (!this._readableState.ended) this.push(null)
       if (!this._writableState.finished) this.end()
-      if (typeof window === "object" && typeof window.chrome === "object") {
+      if (typeof window === 'object' && typeof window.chrome === 'object') {
         if (forcedGCTimeout) {
           clearTimeout(forcedGCTimeout)
         } else {
