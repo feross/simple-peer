@@ -19,13 +19,9 @@ function filterTrickle (sdp) {
 // HACK: Force GC to clean up released peers
 let forcedGCTimeout = null
 function forcePeerGC() {
-  let img = document.createElement('img')
-  img.src = window.URL.createObjectURL(new Blob([new ArrayBuffer(5e+7)]))
-  img.onerror = function () {
-    window.URL.revokeObjectURL(this.src)
-    img = null
-  }
+  URL.revokeObjectURL(URL.createObjectURL(new Blob([new ArrayBuffer(5e+7)])))
 }
+
 function warn (message) {
   console.warn(message)
 }
@@ -439,7 +435,7 @@ class Peer extends stream.Duplex {
 
       if (!this._readableState.ended) this.push(null)
       if (!this._writableState.finished) this.end()
-      if (typeof window === "object") { // assuming this is a browser only issue
+      if (typeof window === "object" && typeof window.chrome === "object") {
         if (forcedGCTimeout) {
           clearTimeout(forcedGCTimeout)
         } else {
