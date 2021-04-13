@@ -11,11 +11,11 @@
     "url": "https://github.com/feross/simple-peer/issues"
   },
   "dependencies": {
-    "buffer": "^6.0.2",
-    "debug": "^4.2.0",
+    "buffer": "^6.0.3",
+    "debug": "^4.3.1",
     "err-code": "^2.0.3",
-    "get-browser-rtc": "^1.0.2",
-    "queue-microtask": "^1.2.0",
+    "get-browser-rtc": "^1.1.0",
+    "queue-microtask": "^1.2.3",
     "randombytes": "^2.1.0",
     "readable-stream": "^3.6.0"
   },
@@ -31,10 +31,10 @@
     "speedometer": "^1.1.0",
     "standard": "*",
     "string-to-stream": "^3.0.1",
-    "tape": "^5.0.1",
+    "tape": "^5.2.2",
     "thunky": "^1.1.0",
-    "wrtc": "^0.4.6",
-    "ws": "^7.3.1"
+    "wrtc": "^0.4.7",
+    "ws": "^7.4.4"
   },
   "keywords": [
     "data",
