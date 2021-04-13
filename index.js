@@ -528,7 +528,10 @@ class Peer extends stream.Duplex {
     this._channel.onclose = () => {
       this._onChannelClose()
     }
-    this._channel.onerror = err => {
+    this._channel.onerror = event => {
+      const err = event.error instanceof Error
+        ? event.error
+        : new Error(`Datachannel error: ${event.message} ${event.filename}:${event.lineno}:${event.colno}`)
       this.destroy(errCode(err, 'ERR_DATA_CHANNEL'))
     }
 
