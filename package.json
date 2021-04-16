@@ -1,5 +1,5 @@
 {
-  "name": "simple-peer",
+  "name": "webrtc-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
   "version": "9.11.0",
   "author": {
