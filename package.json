@@ -30,7 +30,6 @@
     "prettier-bytes": "^1.0.4",
     "simple-get": "^4.0.0",
     "speedometer": "^1.1.0",
-    "standard": "*",
     "string-to-stream": "^3.0.1",
     "tape": "^5.2.2",
     "thunky": "^1.1.0",
@@ -61,8 +60,8 @@
   "scripts": {
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
-    "// test": "standard && npm run test-node && npm run test-browser",
-    "test": "standard && npm run test-node",
+    "// test": "npm run test-node && npm run test-browser",
+    "test": "npm run test-node",
     "test-browser": "airtap --coverage -- test/*.js",
     "test-browser-local": "airtap --coverage --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
