@@ -1,4 +1,5 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+require('webrtc-adapter')
 const debug = require('debug')('simple-peer')
 const getBrowserRTC = require('get-browser-rtc')
 const randombytes = require('randombytes')
@@ -584,7 +585,9 @@ class Peer extends stream.Duplex {
       this._chunk = null
       this._cb = null
 
-      if (this._onFinishBound) { this.removeListener('finish', this._onFinishBound) }
+      if (this._onFinishBound) {
+        this.removeListener('finish', this._onFinishBound)
+      }
       this._onFinishBound = null
 
       if (this._channel) {
@@ -751,7 +754,9 @@ class Peer extends stream.Duplex {
       .createOffer(this.offerOptions)
       .then((offer) => {
         if (this.destroyed) return
-        if (!this.trickle && !this.allowHalfTrickle) { offer.sdp = filterTrickle(offer.sdp) }
+        if (!this.trickle && !this.allowHalfTrickle) {
+          offer.sdp = filterTrickle(offer.sdp)
+        }
         offer.sdp = this.sdpTransform(offer.sdp)
 
         const sendOffer = () => {
@@ -804,7 +809,9 @@ class Peer extends stream.Duplex {
       .createAnswer(this.answerOptions)
       .then((answer) => {
         if (this.destroyed) return
-        if (!this.trickle && !this.allowHalfTrickle) { answer.sdp = filterTrickle(answer.sdp) }
+        if (!this.trickle && !this.allowHalfTrickle) {
+          answer.sdp = filterTrickle(answer.sdp)
+        }
         answer.sdp = this.sdpTransform(answer.sdp)
 
         const sendAnswer = () => {
@@ -940,7 +947,9 @@ class Peer extends stream.Duplex {
       this._connecting ||
       !this._pcReady ||
       !this._channelReady
-    ) { return }
+    ) {
+      return
+    }
 
     this._connecting = true
 
@@ -1209,7 +1218,9 @@ class Peer extends stream.Duplex {
         this._remoteStreams.some((remoteStream) => {
           return remoteStream.id === eventStream.id
         })
-      ) { return } // Only fire one 'stream' event, even though there may be multiple tracks per stream
+      ) {
+        return
+      } // Only fire one 'stream' event, even though there may be multiple tracks per stream
 
       this._remoteStreams.push(eventStream)
       queueMicrotask(() => {
