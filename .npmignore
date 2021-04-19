@@ -3,4 +3,5 @@
 img/
 perf/
 test/
-
+simplepeer.min.js
+.env

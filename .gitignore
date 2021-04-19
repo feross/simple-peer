@@ -2,3 +2,4 @@
 node_modules
 package-lock.json
 simplepeer.min.js
+.env

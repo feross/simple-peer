@@ -26,6 +26,7 @@
     "bowser": "^2.11.0",
     "browserify": "^17.0.0",
     "coveralls": "^3.1.0",
+    "dotenv-cli": "^4.0.0",
     "nyc": "^15.1.0",
     "prettier-bytes": "^1.0.4",
     "simple-get": "^4.0.0",
@@ -62,8 +63,8 @@
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "// test": "npm run test-node && npm run test-browser",
     "test": "npm run test-node",
-    "test-browser": "airtap --coverage -- test/*.js",
-    "test-browser-local": "airtap --coverage --local -- test/*.js",
+    "test-browser": "dotenv airtap --coverage -- test/*.js",
+    "test-browser-local": "dotenv airtap --coverage --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
