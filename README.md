@@ -56,7 +56,6 @@
     - [`peer.on('track', (track, stream) => {})`](#peerontrack-track-stream--)
     - [`peer.on('close', () => {})`](#peeronclose---)
     - [`peer.on('error', (err) => {})`](#peeronerror-err--)
-  - [Error Codes](#error-codes)
   - [Connecting more than 2 peers?](#connecting-more-than-2-peers)
       - [Peer 1](#peer-1)
       - [Peer 2](#peer-2)
@@ -395,23 +394,6 @@ Called when the peer connection has closed.
 Fired when a fatal error occurs. Usually, this means bad signaling data was received from the remote peer.
 
 `err` is an `Error` object.
-
-## Error Codes
-
-Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure.
-
-Possible error codes:
-- `ERR_WEBRTC_SUPPORT`
-- `ERR_CREATE_OFFER`
-- `ERR_CREATE_ANSWER`
-- `ERR_SET_LOCAL_DESCRIPTION`
-- `ERR_SET_REMOTE_DESCRIPTION`
-- `ERR_ADD_ICE_CANDIDATE`
-- `ERR_ICE_CONNECTION_FAILURE`
-- `ERR_SIGNALING`
-- `ERR_DATA_CHANNEL`
-- `ERR_CONNECTION_FAILURE`
-
 
 ## Connecting more than 2 peers?
 
