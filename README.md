@@ -597,9 +597,6 @@ server.
 In order to use a TURN server, you must specify the `config` option to the `Peer`
 constructor. See the API docs above.
 
-[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
-
-
 ## Who is using `simple-peer`?
 
 - [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
