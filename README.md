@@ -1,4 +1,6 @@
-# webrtc-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![virtual-device-testing][sauce-image]][sauce-url]
+[![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![virtual-device-testing][sauce-image]][sauce-url]
+
+# webrtc-peer
 
 [ci-image]: https://img.shields.io/github/workflow/status/feross/simple-peer/ci/master
 [ci-url]: https://github.com/feross/simple-peer/actions
@@ -23,7 +25,7 @@
   - transceivers and renegotiation
 
 ## Table of Contents
-- [webrtc-peer ![ci](#webrtc-peer-cici-url-coverallscoveralls-imagecoveralls-url-virtual-device-testingsauce-imagesauce-url)
+- [webrtc-peer](#webrtc-peer)
       - [Simple WebRTC video, voice, and data channels](#simple-webrtc-video-voice-and-data-channels)
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
