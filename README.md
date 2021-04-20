@@ -1,4 +1,4 @@
-# webrtc-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![virtual-device-testing][sauce-image]][sauce-url]
+# webrtc-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![virtual-device-testing][sauce-image]][sauce-url]
 
 [ci-image]: https://img.shields.io/github/workflow/status/feross/simple-peer/ci/master
 [ci-url]: https://github.com/feross/simple-peer/actions
@@ -6,8 +6,6 @@
 [coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
 [npm-image]: https://img.shields.io/npm/v/simple-peer.svg
 [npm-url]: https://npmjs.org/package/simple-peer
-[downloads-image]: https://img.shields.io/npm/dm/simple-peer.svg
-[downloads-url]: https://npmjs.org/package/simple-peer
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
