@@ -9,7 +9,7 @@
 
 #### Simple WebRTC video, voice, and data channels
 
-## features
+## Features
 
 - concise, **node.js style** API for [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
 - **works in node and the browser!**
@@ -22,25 +22,51 @@
   - manually set config options
   - transceivers and renegotiation
 
-This package is used by [WebTorrent](https://webtorrent.io) and [many others](#who-is-using-simple-peer).
+## Table of Contents
+- [webrtc-peer ![ci](#webrtc-peer-cici-url-coverallscoveralls-imagecoveralls-url-virtual-device-testingsauce-imagesauce-url)
+      - [Simple WebRTC video, voice, and data channels](#simple-webrtc-video-voice-and-data-channels)
+  - [Features](#features)
+  - [Table of Contents](#table-of-contents)
+  - [Install](#install)
+  - [Testing](#testing)
+  - [Usage](#usage)
+    - [Data Channels](#data-channels)
+    - [Video / Voice](#video--voice)
+    - [Dynamic Video / Voice](#dynamic-video--voice)
+    - [In Node](#in-node)
+  - [API](#api)
+    - [`peer = new Peer([opts])`](#peer--new-peeropts)
+    - [`peer.signal(data)`](#peersignaldata)
+    - [`peer.send(data)`](#peersenddata)
+    - [`peer.addStream(stream)`](#peeraddstreamstream)
+    - [`peer.removeStream(stream)`](#peerremovestreamstream)
+    - [`peer.addTrack(track, stream)`](#peeraddtracktrack-stream)
+    - [`peer.removeTrack(track, stream)`](#peerremovetracktrack-stream)
+    - [`peer.replaceTrack(oldTrack, newTrack, stream)`](#peerreplacetrackoldtrack-newtrack-stream)
+    - [`peer.addTransceiver(kind, init)`](#peeraddtransceiverkind-init)
+    - [`peer.destroy([err])`](#peerdestroyerr)
+    - [`Peer.WEBRTC_SUPPORT`](#peerwebrtc_support)
+    - [Duplex Stream](#duplex-stream)
+    - [`peer.on('signal', data => {})`](#peeronsignal-data--)
+    - [`peer.on('connect', () => {})`](#peeronconnect---)
+    - [`peer.on('data', data => {})`](#peerondata-data--)
+    - [`peer.on('stream', stream => {})`](#peeronstream-stream--)
+    - [`peer.on('track', (track, stream) => {})`](#peerontrack-track-stream--)
+    - [`peer.on('close', () => {})`](#peeronclose---)
+    - [`peer.on('error', (err) => {})`](#peeronerror-err--)
+  - [Error Codes](#error-codes)
+  - [Connecting more than 2 peers?](#connecting-more-than-2-peers)
+      - [Peer 1](#peer-1)
+      - [Peer 2](#peer-2)
+      - [Peer 3](#peer-3)
+  - [Troubleshooting](#troubleshooting)
+    - [Memory Usage](#memory-usage)
+    - [Connection does not work on some networks?](#connection-does-not-work-on-some-networks)
+  - [License](#license)
 
-- [install](#install)
-- [examples](#usage)
-  * [A simpler example](#a-simpler-example)
-  * [data channels](#data-channels)
-  * [video/voice](#videovoice)
-  * [dynamic video/voice](#dynamic-videovoice)
-  * [in node](#in-node)
-- [api](#api)
-- [events](#events)
-- [error codes](#error-codes)
-- [connecting more than 2 peers?](#connecting-more-than-2-peers)
-- [memory usage](#memory-usage)
-- [connection does not work on some networks?](#connection-does-not-work-on-some-networks)
-- [Who is using `simple-peer`?](#who-is-using-simple-peer)
-- [license](#license)
+## Install
 
-## install
+TODO: Update
 
 ```
 npm install simple-peer
@@ -52,82 +78,15 @@ directly in a `<script>` tag. This exports a `SimplePeer` constructor on
 `window`. Wherever you see `Peer` in the examples below, substitute that with
 `SimplePeer`.
 
-## testing
+## Testing
 
 [![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
 
-TODO: Include testing info
+TODO: Include testing details
 
-## usage
+## Usage
 
-Let's create an html page that lets you manually connect two peers:
-
-```html
-<html>
-  <body>
-    <style>
-      #outgoing {
-        width: 600px;
-        word-wrap: break-word;
-        white-space: normal;
-      }
-    </style>
-    <form>
-      <textarea id="incoming"></textarea>
-      <button type="submit">submit</button>
-    </form>
-    <pre id="outgoing"></pre>
-    <script src="simplepeer.min.js"></script>
-    <script>
-      const p = new SimplePeer({
-        initiator: location.hash === '#1',
-        trickle: false
-      })
-
-      p.on('error', err => console.log('error', err))
-
-      p.on('signal', data => {
-        console.log('SIGNAL', JSON.stringify(data))
-        document.querySelector('#outgoing').textContent = JSON.stringify(data)
-      })
-
-      document.querySelector('form').addEventListener('submit', ev => {
-        ev.preventDefault()
-        p.signal(JSON.parse(document.querySelector('#incoming').value))
-      })
-
-      p.on('connect', () => {
-        console.log('CONNECT')
-        p.send('whatever' + Math.random())
-      })
-
-      p.on('data', data => {
-        console.log('data: ' + data)
-      })
-    </script>
-  </body>
-</html>
-```
-
-Visit `index.html#1` from one browser (the initiator) and `index.html` from another
-browser (the receiver).
-
-An "offer" will be generated by the initiator. Paste this into the receiver's form and
-hit submit. The receiver generates an "answer". Paste this into the initiator's form and
-hit submit.
-
-Now you have a direct P2P connection between two browsers!
-
-### A simpler example
-
-This example create two peers **in the same web page**.
-
-In a real-world application, *you would never do this*. The sender and receiver `Peer`
-instances would exist in separate browsers. A "signaling server" (usually implemented with
-websockets) would be used to exchange signaling data between the two browsers until a
-peer-to-peer connection is established.
-
-### data channels
+### Data Channels
 
 ```js
 var Peer = require('simple-peer')
@@ -156,7 +115,7 @@ peer2.on('data', data => {
 })
 ```
 
-### video/voice
+### Video / Voice
 
 Video/voice is also super simple! In this example, peer1 sends video to peer2.
 
@@ -200,7 +159,7 @@ For two-way video, simply pass a `stream` option into both `Peer` constructors. 
 
 Please notice that `getUserMedia` only works in [pages loaded via **https**](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#Encryption_based_security).
 
-### dynamic video/voice
+### Dynamic Video / Voice
 
 It is also possible to establish a data-only connection at first, and later add
 a video/voice stream, if desired.
@@ -243,7 +202,9 @@ navigator.mediaDevices.getUserMedia({
 }).then(addMedia).catch(() => {})
 ```
 
-### in node
+### In Node
+
+TODO: Remove?
 
 To use this library in node, pass in `opts.wrtc` as a parameter (see [the constructor options](#peer--new-peeropts)):
 
@@ -255,7 +216,7 @@ var peer1 = new Peer({ initiator: true, wrtc: wrtc })
 var peer2 = new Peer({ wrtc: wrtc })
 ```
 
-## api
+## API
 
 ### `peer = new Peer([opts])`
 
@@ -365,7 +326,7 @@ if (Peer.WEBRTC_SUPPORT) {
 }
 ```
 
-### duplex stream
+### Duplex Stream
 
 `Peer` objects are instances of `stream.Duplex`. They behave very similarly to a
 `net.Socket` from the node core `net` module. The duplex stream reads/writes to the data
@@ -378,15 +339,6 @@ peer.write(new Buffer('hey'))
 peer.on('data', function (chunk) {
   console.log('got a chunk', chunk)
 })
-```
-
-## events
-
-`Peer` objects are instance of `EventEmitter`. Take a look at the [nodejs events documentation](https://nodejs.org/api/events.html) for more information.
-
-Example of removing all registered **close**-event listeners:
-```js
-peer.removeAllListeners('close')
 ```
 
 ### `peer.on('signal', data => {})`
@@ -442,7 +394,7 @@ Fired when a fatal error occurs. Usually, this means bad signaling data was rece
 
 `err` is an `Error` object.
 
-## error codes
+## Error Codes
 
 Errors returned by the `error` event have an `err.code` property that will indicate the origin of the failure.
 
@@ -459,7 +411,7 @@ Possible error codes:
 - `ERR_CONNECTION_FAILURE`
 
 
-## connecting more than 2 peers?
+## Connecting more than 2 peers?
 
 The simplest way to do that is to create a full-mesh topology. That means that every peer
 opens a connection to every other peer. To illustrate:
@@ -574,7 +526,9 @@ peer2.on('data', data => {
 })
 ```
 
-## memory usage
+## Troubleshooting
+
+### Memory Usage
 
 If you call `peer.send(buf)`, `simple-peer` is not keeping a reference to `buf`
 and sending the buffer at some later point in time. We immediately call
@@ -587,7 +541,7 @@ the same contract. It will potentially buffer the data and call
 safe to mutate the buffer.
 
 
-## connection does not work on some networks?
+### Connection does not work on some networks?
 
 If a direct connection fails, in particular, because of NAT traversal and/or firewalls,
 WebRTC ICE uses an intermediary (relay) TURN server. In other words, ICE will first use
@@ -597,59 +551,6 @@ server.
 In order to use a TURN server, you must specify the `config` option to the `Peer`
 constructor. See the API docs above.
 
-## Who is using `simple-peer`?
-
-- [WebTorrent](http://webtorrent.io) - Streaming torrent client in the browser
-- [Virus Cafe](https://virus.cafe) - Make a friend in 2 minutes
-- [Instant.io](https://instant.io) - Secure, anonymous, streaming file transfer
-- [Zencastr](https://zencastr.com) - Easily record your remote podcast interviews in studio quality.
-- [Friends](https://github.com/moose-team/friends) - Peer-to-peer chat powered by the web
-- [Socket.io-p2p](https://github.com/socketio/socket.io-p2p) - Official Socket.io P2P communication library
-- [ScreenCat](https://maxogden.github.io/screencat/) - Screen sharing + remote collaboration app
-- [WebCat](https://www.npmjs.com/package/webcat) - P2P pipe across the web using Github private/public key for auth
-- [RTCCat](https://www.npmjs.com/package/rtcat) - WebRTC netcat
-- [PeerNet](https://www.npmjs.com/package/peernet) - Peer-to-peer gossip network using randomized algorithms
-- [PusherTC](http://pushertc.herokuapp.com) - Video chat with using Pusher. See [guide](http://blog.carbonfive.com/2014/10/16/webrtc-made-simple/).
-- [lxjs-chat](https://github.com/feross/lxjs-chat) - Omegle-like video chat site
-- [Whiteboard](https://github.com/feross/whiteboard) - P2P Whiteboard powered by WebRTC and WebTorrent
-- [Peer Calls](https://peercalls.com) - WebRTC group video calling. Create a room. Share the link.
-- [Netsix](https://mmorainville.github.io/netsix-gh-pages/) - Send videos to your friends using WebRTC so that they can watch them right away.
-- [Stealthy](https://www.stealthy.im) - Stealthy is a decentralized, end-to-end encrypted, p2p chat application.
-- [oorja.io](https://github.com/akshayKMR/oorja) - Effortless video-voice chat with realtime collaborative features. Extensible using react components 🙌
-- [TalktoMe](https://talktome.universal-apps.xyz) - Skype alternative for audio/video conferencing based on WebRTC, but without the loss of packets.
-- [CDNBye](https://github.com/cdnbye/hlsjs-p2p-engine) - CDNBye implements WebRTC datachannel to scale live/vod video streaming by peer-to-peer network using bittorrent-like protocol
-- [Detox](https://github.com/Detox) - Overlay network for distributed anonymous P2P communications entirely in the browser
-- [Metastream](https://github.com/samuelmaddock/metastream) - Watch streaming media with friends.
-- [firepeer](https://github.com/natzcam/firepeer) - secure signalling and authentication using firebase realtime database
-- [Genet](https://github.com/elavoie/webrtc-tree-overlay) - Fat-tree overlay to scale the number of concurrent WebRTC connections to a single source ([paper](https://arxiv.org/abs/1904.11402)).
-- [WebRTC Connection Testing](https://github.com/elavoie/webrtc-connection-testing) - Quickly test direct connectivity between all pairs of participants ([demo](https://webrtc-connection-testing.herokuapp.com/)).
-- [Firstdate.co](https://firstdate.co) - Online video dating for actually meeting people and not just messaging them
-- [TensorChat](https://github.com/EhsaanIqbal/tensorchat) - It's simple - Create. Share. Chat.
-- [On/Office](https://onoffice.app) - View your desktop in a WebVR-powered environment
-- [Cyph](https://www.cyph.com) - Cryptographically secure messaging and social networking service, providing an extreme level of privacy combined with best-in-class ease of use
-- [Ciphora](https://github.com/HR/ciphora) - A peer-to-peer end-to-end encrypted messaging chat app.
-- [Whisthub](https://www.whisthub.com) - Online card game Color Whist with the possibility to start a video chat while playing.
-- [Brie.fi/ng](https://brie.fi/ng) - Secure anonymous video chat
-- [Peer.School](https://github.com/holtwick/peer2school) - Simple virtual classroom starting from the 1st class including video chat and real time whiteboard
-- [FileFire](https://filefire.ca) - Transfer large files and folders at high speed without size limits.
-- [safeShare](https://github.com/vj-abishek/airdrop) - Transfer files easily with text and voice communication.
-- [CubeChat](https://cubechat.io) - Party in 3D 🎉
-- [Homely School](https://homelyschool.com) - A virtual schooling system
-- [AnyDrop](https://anydrop.io) - Cross-platform AirDrop alternative [with an Android app available at Google Play](https://play.google.com/store/apps/details?id=com.benjijanssens.anydrop)
-- [Share-Anywhere](https://share-anywhere.com/) - Cross-platform file transfer
-- [QuaranTime.io](https://quarantime.io/) - The Activity board-game in video!
-- [Trango](https://web.trango.io) - Cross-platform calling and file sharing solution.
-- [P2PT](https://github.com/subins2000/p2pt) - Use WebTorrent trackers as signalling servers for making WebRTC connections
-- [Dots](https://github.com/subins2000/vett) - Online multiplayer Dots & Boxes game. [Play Here!](https://vett.space)
-- [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
-- [WebDrop.Space](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative to AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
-- [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-peer to create audio conferences!
-- [Deskreen](https://deskreen.com) - A desktop app that helps you to turn any device into a secondary screen for your computer. It uses simple-peer for sharing entire computer screen to any device with a web browser.
-
-
-
-- *Your app here! - send a PR!*
-
-## license
+## License
 
 MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org).
