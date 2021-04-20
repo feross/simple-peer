@@ -1,4 +1,4 @@
-# webrtc-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
+# webrtc-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![virtual-device-testing][sauce-image]][sauce-url]
 
 [ci-image]: https://img.shields.io/github/workflow/status/feross/simple-peer/ci/master
 [ci-url]: https://github.com/feross/simple-peer/actions
@@ -8,8 +8,6 @@
 [npm-url]: https://npmjs.org/package/simple-peer
 [downloads-image]: https://img.shields.io/npm/dm/simple-peer.svg
 [downloads-url]: https://npmjs.org/package/simple-peer
-[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-[standard-url]: https://standardjs.com
 [sauce-image]: https://saucelabs.com/buildstatus/simple-peer
 [sauce-url]: https://saucelabs.com/u/simple-peer
 
@@ -57,6 +55,12 @@ you do not use a bundler, you can use the `simplepeer.min.js` standalone script
 directly in a `<script>` tag. This exports a `SimplePeer` constructor on
 `window`. Wherever you see `Peer` in the examples below, substitute that with
 `SimplePeer`.
+
+## testing
+
+[![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
+
+TODO: Include testing info
 
 ## usage
 
