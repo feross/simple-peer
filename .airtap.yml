@@ -1,5 +1,7 @@
 sauce_connect: true
 loopback: airtap.local
+providers:
+  - airtap-sauce
 browsers:
   - name: firefox
     version: latest
