@@ -318,6 +318,8 @@ class Peer extends stream.Duplex {
   }
 
   /**
+   * TODO: Implement support for multiple channels
+   *
    * Send text/binary data to the remote peer.
    * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
    * TODO: Add return type
@@ -401,7 +403,7 @@ class Peer extends stream.Duplex {
    * @return {RTCRtpSender | void} If no stream is passed, void is returned.
    */
   addTrack(track, stream) {
-    if (typeof stream === "undefined") {
+    if (!stream) {
       throw errCode(
         new Error("Stream is a required parameter"),
         ERR_MISSING_PARAMETER
@@ -451,7 +453,7 @@ class Peer extends stream.Duplex {
    * @param {MediaStreamTrack} oldTrack
    * @param {MediaStreamTrack} newTrack
    * @param {MediaStream} stream
-   * @return {Promise}
+   * @return {Promise<void>}
    */
   async replaceTrack(oldTrack, newTrack, stream) {
     if (this.destroying) return;
@@ -487,11 +489,21 @@ class Peer extends stream.Duplex {
 
   /**
    * Remove a MediaStreamTrack from the connection.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/removeTrack
+   *
    * @param {MediaStreamTrack} track
    * @param {MediaStream} stream
-   * TODO: Document return
+   * @return {void}
    */
   removeTrack(track, stream) {
+    if (!stream) {
+      throw errCode(
+        new Error("Stream is a required parameter"),
+        ERR_MISSING_PARAMETER
+      );
+    }
+
     if (this.destroying) return;
     if (this.destroyed) {
       throw errCode(

@@ -13,7 +13,7 @@ test("get config", function (t) {
 });
 
 test("adds sender and replace promise", function (t) {
-  t.plan(3);
+  t.plan(5);
 
   const peer1 = new Peer({
     config,
@@ -65,6 +65,22 @@ test("adds sender and replace promise", function (t) {
       Object.prototype.toString.call(replacePromise),
       "[object Promise]",
       "replacePromise is of Promise type"
+    );
+
+    // Test without required parameter
+    t.throws(
+      () => {
+        peer1.removeTrack(track2);
+      },
+      {
+        message: "Stream is a required parameter",
+      }
+    );
+
+    t.equal(
+      peer1.removeTrack(track, stream),
+      undefined,
+      "removeTrack returns nothing"
     );
   });
 });
