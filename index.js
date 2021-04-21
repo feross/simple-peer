@@ -403,6 +403,9 @@ class Peer extends stream.Duplex {
    * @return {RTCRtpSender | void} If no stream is passed, void is returned.
    */
   addTrack(track, stream) {
+    // NOTE (jh): I added this check because if a track is able to be added
+    // without a stream, it is not consistent across all tests, nor is it
+    // identifiable via the same media id on the other peer.
     if (!stream) {
       throw errCode(
         new Error("Stream is a required parameter"),
