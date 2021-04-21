@@ -1,7 +1,5 @@
 [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![virtual-device-testing][sauce-image]][sauce-url]
 
-# webrtc-peer
-
 [ci-image]: https://img.shields.io/github/workflow/status/feross/simple-peer/ci/master
 [ci-url]: https://github.com/feross/simple-peer/actions
 [coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
@@ -9,7 +7,13 @@
 [sauce-image]: https://saucelabs.com/buildstatus/zenosmosis
 [sauce-url]: https://saucelabs.com/u/zenosmosis
 
-#### Simple WebRTC video, voice, and data channels
+# webrtc-peer
+
+*Simple WebRTC video, voice, and data channels.*
+
+A fork of [simple-peer](https://github.com/feross/simple-peer), webrtc-peer tries to stay a little closer to mainline WebRTC spec by using the same return types as the WebRTC spec and also utilizes webrtc-adapter to help iron out some connection reliability issues.
+
+It is also utilized in the reference application, [Speaker App](https://speaker.app).
 
 ## Features
 
@@ -26,7 +30,6 @@
 
 ## Table of Contents
 - [webrtc-peer](#webrtc-peer)
-      - [Simple WebRTC video, voice, and data channels](#simple-webrtc-video-voice-and-data-channels)
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Install](#install)
@@ -82,6 +85,25 @@ directly in a `<script>` tag. This exports a `SimplePeer` constructor on
 ## Testing
 
 [![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
+
+Note, at this time, due to an apparent bug with airtap-sauce version 4.0.3 in that it runs Android 6.0 instead of the actual latest version, so we're using airtap 3.0.0 to get around it, which also requires the usage of Sauce Connect Proxy when on a private network.  Airtap-sauce is required for 4+ due to refactoring of airtap.
+
+- [Download](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy) the correct version of Sauce Connect Proxy for your operating system
+- Extract the contents
+- Start the proxy and wait for it to notify that it is okay to start testing
+
+```bash
+$ cd {SAUCE_CONNECT_PROXY_DIR}/bin
+$ ./sc -u {SAUCE_USERNAME} -k {SAUCE_ACCESS_KEY}
+```
+
+- Run remote tests
+
+While the proxy is running in another terminal session, in another terminal session located at this project's root
+
+```bash
+$ npm run test-browser # Or npm run test
+```
 
 TODO: Include testing details
 
