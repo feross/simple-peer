@@ -4,9 +4,11 @@ const debug = require("debug")("simple-peer");
 const getBrowserRTC = require("get-browser-rtc");
 const randombytes = require("randombytes");
 const stream = require("readable-stream");
-const queueMicrotask = require("queue-microtask"); // TODO: remove when Node 10 is not supported
 const errCode = require("err-code");
 const { Buffer } = require("buffer");
+
+// TODO: Remove?
+const queueMicrotask = require("queue-microtask"); // TODO: remove when Node 10 is not supported
 
 const MAX_BUFFERED_AMOUNT = 64 * 1024;
 const ICECOMPLETE_TIMEOUT = 5 * 1000;
@@ -30,15 +32,21 @@ const ERR_PC_CONSTRUCTOR = "ERR_PC_CONSTRUCTOR";
 const ERR_PC_PEER_IDENTITY = "ERR_PC_PEER_IDENTITY";
 const ERR_SIGNALING = "ERR_SIGNALING";
 const ERR_DESTROYED = "ERR_DESTROYED";
+const ERR_MISSING_PARAMETER = "ERR_MISSING_PARAMETER";
 
 // HACK: Filter trickle lines when trickle is disabled #354
+//
+// TODO: Move?
 function filterTrickle(sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, "");
 }
 
+// TODO: Keep?
 function warn(message) {
   console.warn(message);
 }
+
+// TODO: Don't extend stream.Duplex because we might want multiple data channels
 
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
@@ -56,16 +64,22 @@ class Peer extends stream.Duplex {
 
     super(opts);
 
+    // NOTE (jh): This appears to be only for logging purposes
     this._id = randombytes(4).toString("hex").slice(0, 7);
+
     this._debug("new peer %o", opts);
 
+    // TODO: Implement support for multiple channels
     this.channelName = opts.initiator
       ? opts.channelName || randombytes(20).toString("hex")
       : null;
 
     this.initiator = opts.initiator || false;
+
+    // TODO: Implement support for multiple channels
     this.channelConfig = opts.channelConfig || Peer.channelConfig;
     this.channelNegotiated = this.channelConfig.negotiated;
+
     this.config = Object.assign({}, Peer.config, opts.config);
     this.offerOptions = opts.offerOptions || {};
     this.answerOptions = opts.answerOptions || {};
@@ -107,12 +121,14 @@ class Peer extends stream.Duplex {
     }
 
     this._pcReady = false;
+
+    // TODO: Implement support for multiple channels
     this._channelReady = false;
+    this._channel = null;
+
     this._iceComplete = false; // ice candidate trickle done (got null candidate)
     this._iceCompleteTimer = null; // send an offer/answer anyway after some timeout
-    this._channel = null;
     this._pendingCandidates = [];
-
     this._isNegotiating = false; // is this peer waiting for negotiation to complete?
     this._firstNegotiation = true;
     this._batchedNegotiation = false; // batch synchronous negotiations
@@ -209,6 +225,7 @@ class Peer extends stream.Duplex {
     return this._connected && this._channel.readyState === "open";
   }
 
+  // TODO: Document
   address() {
     return {
       port: this.localPort,
@@ -217,6 +234,7 @@ class Peer extends stream.Duplex {
     };
   }
 
+  // TODO: Document
   signal(data) {
     if (this.destroying) return;
     if (this.destroyed) {
@@ -284,6 +302,7 @@ class Peer extends stream.Duplex {
     }
   }
 
+  // TODO: Document
   _addIceCandidate(candidate) {
     const iceCandidateObj = new this._wrtc.RTCIceCandidate(candidate);
     this._pc.addIceCandidate(iceCandidateObj).catch((err) => {
@@ -301,6 +320,7 @@ class Peer extends stream.Duplex {
   /**
    * Send text/binary data to the remote peer.
    * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
+   * TODO: Add return type
    */
   send(chunk) {
     if (this.destroying) return;
@@ -317,6 +337,7 @@ class Peer extends stream.Duplex {
    * Add a Transceiver to the connection.
    * @param {String} kind
    * @param {Object} init
+   * TODO: Add return type
    */
   addTransceiver(kind, init) {
     if (this.destroying) return;
@@ -346,7 +367,11 @@ class Peer extends stream.Duplex {
 
   /**
    * Add a MediaStream to the connection.
+   *
+   * NOTE: This is a wrapper around
+   *
    * @param {MediaStream} stream
+   * TODO: Provide return
    */
   addStream(stream) {
     if (this.destroying) return;
@@ -361,14 +386,28 @@ class Peer extends stream.Duplex {
     stream.getTracks().forEach((track) => {
       this.addTrack(track, stream);
     });
+
+    // TODO: Provide return
   }
 
   /**
    * Add a MediaStreamTrack to the connection.
+   *
+   * IMPORTANT: The passed stream's id will be duplicated on the remote peer,
+   * while the track id will not be.
+   *
    * @param {MediaStreamTrack} track
    * @param {MediaStream} stream
+   * @return {RTCRtpSender | void} If no stream is passed, void is returned.
    */
   addTrack(track, stream) {
+    if (typeof stream === "undefined") {
+      throw errCode(
+        new Error("Stream is a required parameter"),
+        ERR_MISSING_PARAMETER
+      );
+    }
+
     if (this.destroying) return;
     if (this.destroyed) {
       throw errCode(
@@ -380,8 +419,10 @@ class Peer extends stream.Duplex {
 
     const submap = this._senderMap.get(track) || new Map(); // nested Maps map [track, stream] to sender
     let sender = submap.get(stream);
+
     if (!sender) {
       sender = this._pc.addTrack(track, stream);
+
       submap.set(stream, sender);
       this._senderMap.set(track, submap);
       this._needsNegotiation();
@@ -398,15 +439,21 @@ class Peer extends stream.Duplex {
         ERR_SENDER_ALREADY_ADDED
       );
     }
+
+    return sender;
   }
 
   /**
    * Replace a MediaStreamTrack by another in the connection.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpSender/replaceTrack
+   *
    * @param {MediaStreamTrack} oldTrack
    * @param {MediaStreamTrack} newTrack
    * @param {MediaStream} stream
+   * @return {Promise}
    */
-  replaceTrack(oldTrack, newTrack, stream) {
+  async replaceTrack(oldTrack, newTrack, stream) {
     if (this.destroying) return;
     if (this.destroyed) {
       throw errCode(
@@ -427,7 +474,7 @@ class Peer extends stream.Duplex {
     if (newTrack) this._senderMap.set(newTrack, submap);
 
     if (sender.replaceTrack != null) {
-      sender.replaceTrack(newTrack);
+      await sender.replaceTrack(newTrack);
     } else {
       this.destroy(
         errCode(
@@ -442,6 +489,7 @@ class Peer extends stream.Duplex {
    * Remove a MediaStreamTrack from the connection.
    * @param {MediaStreamTrack} track
    * @param {MediaStream} stream
+   * TODO: Document return
    */
   removeTrack(track, stream) {
     if (this.destroying) return;
@@ -476,7 +524,9 @@ class Peer extends stream.Duplex {
 
   /**
    * Remove a MediaStream from the connection.
+   *
    * @param {MediaStream} stream
+   * TODO: Document return
    */
   removeStream(stream) {
     if (this.destroying) return;
@@ -493,6 +543,7 @@ class Peer extends stream.Duplex {
     });
   }
 
+  // TODO: Document
   _needsNegotiation() {
     this._debug("_needsNegotiation");
     if (this._batchedNegotiation) return; // batch synchronous renegotiations
@@ -509,6 +560,7 @@ class Peer extends stream.Duplex {
     });
   }
 
+  // TODO: Document
   negotiate() {
     if (this.destroying) return;
     if (this.destroyed) {
@@ -548,6 +600,8 @@ class Peer extends stream.Duplex {
   // TODO: Delete this method once readable-stream is updated to contain a default
   // implementation of destroy() that automatically calls _destroy()
   // See: https://github.com/nodejs/readable-stream/issues/283
+  //
+  // TODO: Combine destroy methods?
   destroy(err) {
     this._destroy(err, () => {});
   }
@@ -681,8 +735,10 @@ class Peer extends stream.Duplex {
     }, CHANNEL_CLOSING_TIMEOUT);
   }
 
+  // TODO: Remove after removing stream.Duplex
   _read() {}
 
+  // TODO: Remove after removing stream.Duplex
   _write(chunk, encoding, cb) {
     if (this.destroyed) {
       return cb(
@@ -701,7 +757,7 @@ class Peer extends stream.Duplex {
       }
       if (this._channel.bufferedAmount > MAX_BUFFERED_AMOUNT) {
         this._debug(
-          "start backpressure: bufferedAmount %d",
+          "start back-pressure: bufferedAmount %d",
           this._channel.bufferedAmount
         );
         this._cb = cb;
@@ -717,6 +773,8 @@ class Peer extends stream.Duplex {
 
   // When stream finishes writing, close socket. Half open connections are not
   // supported.
+  //
+  // TODO: Remove after removing stream.Duplex
   _onFinish() {
     if (this.destroyed) return;
 
@@ -1175,6 +1233,8 @@ class Peer extends stream.Duplex {
     if (this.destroyed) return;
     let data = event.data;
     if (data instanceof ArrayBuffer) data = Buffer.from(data);
+
+    // TODO: Re-handle after removing stream.Duplex
     this.push(data);
   }
 
@@ -1244,6 +1304,8 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC();
  * instances. Otherwise, just set opts.config or opts.channelConfig
  * when constructing a Peer.
  */
+//
+// TODO: Remove hardcoding
 Peer.config = {
   iceServers: [
     {
