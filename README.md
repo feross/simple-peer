@@ -84,6 +84,8 @@ directly in a `<script>` tag. This exports a `SimplePeer` constructor on
 
 ## Testing
 
+We're using [SauceLabs](https://saucelabs.com) to do testing across the latest major browsers and platforms.
+
 [![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
 
 Note, at this time, due to an apparent bug with airtap-sauce version 4.0.3 in that it runs Android 6.0 instead of the actual latest version, so we're using airtap 3.0.0 to get around it, which also requires the usage of Sauce Connect Proxy when on a private network.  Airtap-sauce is required for 4+ due to refactoring of airtap.
@@ -104,8 +106,6 @@ While the proxy is running in another terminal session, in another terminal sess
 ```bash
 $ npm run test-browser # Or npm run test
 ```
-
-TODO: Include testing details
 
 ## Usage
 
