@@ -11,7 +11,7 @@
 
 *Simple WebRTC video, voice, and data channels.*
 
-A fork of [simple-peer](https://github.com/feross/simple-peer), webrtc-peer tries to stay a little closer to mainline WebRTC spec by using the same return types as the WebRTC spec and also utilizes webrtc-adapter to help iron out some connection reliability issues.
+A fork of [simple-peer](https://github.com/feross/simple-peer), webrtc-peer tries to stay a little closer to mainline WebRTC spec by using the same return types as the WebRTC spec and also utilizes [webrtc-adapter](https://github.com/webrtcHacks/adapter) to help iron out some connection reliability issues.
 
 It is also utilized in the reference application, [Speaker App](https://speaker.app).
 
