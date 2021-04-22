@@ -1,6 +1,6 @@
 const common = require("./common");
 const getMediaStream = require("./common").getMediaStream;
-const Peer = require("../");
+const WebRTCPeer = require("../");
 const test = require("tape");
 
 let config;
@@ -16,13 +16,13 @@ test("get config", function (t) {
 test("tests various request / response types in the API calls", function (t) {
   t.plan(12);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
   });
 
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
   });

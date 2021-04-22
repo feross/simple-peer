@@ -1,5 +1,5 @@
 const common = require("./common");
-const Peer = require("../");
+const WebRTCPeer = require("../");
 const test = require("tape");
 
 let config;
@@ -19,7 +19,7 @@ test("multistream", function (t) {
   }
   t.plan(20);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
@@ -27,7 +27,7 @@ test("multistream", function (t) {
       return common.getMediaStream();
     }),
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: new Array(10).fill(null).map(function () {
@@ -70,7 +70,7 @@ test("multistream", function (t) {
 test("multistream (track event)", function (t) {
   t.plan(20);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
@@ -78,7 +78,7 @@ test("multistream (track event)", function (t) {
       return common.getMediaStream();
     }),
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: new Array(5).fill(null).map(function () {
@@ -121,13 +121,13 @@ test("multistream (track event)", function (t) {
 test("multistream on non-initiator only", function (t) {
   t.plan(30);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: [],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: new Array(10).fill(null).map(function () {
@@ -170,14 +170,14 @@ test("delayed stream on non-initiator", function (t) {
   t.timeoutAfter(15000);
   t.plan(1);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     trickle: true,
     initiator: true,
     wrtc: common.wrtc,
     streams: [common.getMediaStream()],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     trickle: true,
     wrtc: common.wrtc,
@@ -212,13 +212,13 @@ test("incremental multistream", function (t) {
   }
   t.plan(12);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: [],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: [],
@@ -279,13 +279,13 @@ test("incremental multistream", function (t) {
 test("incremental multistream (track event)", function (t) {
   t.plan(22);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: [],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: [],
@@ -351,13 +351,13 @@ test("incremental multistream on non-initiator only", function (t) {
   }
   t.plan(7);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: [],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: [],
@@ -403,13 +403,13 @@ test("incremental multistream on non-initiator only", function (t) {
 test("incremental multistream on non-initiator only (track event)", function (t) {
   t.plan(12);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     streams: [],
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     streams: [],
@@ -463,8 +463,12 @@ test("addStream after removeStream", function (t) {
   const stream1 = common.getMediaStream();
   const stream2 = common.getMediaStream();
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc, streams: [stream1] });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({
+    config,
+    wrtc: common.wrtc,
+    streams: [stream1],
+  });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);
@@ -493,8 +497,8 @@ test("addStream after removeStream", function (t) {
 test("removeTrack immediately", function (t) {
   t.plan(2);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);
@@ -535,8 +539,8 @@ test("removeTrack immediately", function (t) {
 test("replaceTrack", function (t) {
   t.plan(4);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);

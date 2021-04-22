@@ -1,5 +1,5 @@
 const common = require("./common");
-const Peer = require("../");
+const WebRTCPeer = require("../");
 const test = require("tape");
 
 let config;
@@ -14,8 +14,8 @@ test("get config", function (t) {
 test("data send/receive Buffer", function (t) {
   t.plan(6);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
   peer1.on("signal", function (data) {
     peer2.signal(data);
   });
@@ -54,8 +54,8 @@ test("data send/receive Buffer", function (t) {
 test("data send/receive Uint8Array", function (t) {
   t.plan(6);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
   peer1.on("signal", function (data) {
     peer2.signal(data);
   });
@@ -96,8 +96,8 @@ test("data send/receive Uint8Array", function (t) {
 test("data send/receive ArrayBuffer", function (t) {
   t.plan(6);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
   peer1.on("signal", function (data) {
     peer2.signal(data);
   });

@@ -1,5 +1,5 @@
 const common = require("./common");
-const Peer = require("../");
+const WebRTCPeer = require("../");
 const test = require("tape");
 
 let config;
@@ -14,13 +14,13 @@ test("get config", function (t) {
 test("single negotiation", function (t) {
   t.plan(10);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     stream: common.getMediaStream(),
     wrtc: common.wrtc,
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     stream: common.getMediaStream(),
     wrtc: common.wrtc,
@@ -70,8 +70,8 @@ test("single negotiation", function (t) {
 test("manual renegotiation", function (t) {
   t.plan(2);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);
@@ -95,8 +95,8 @@ test("manual renegotiation", function (t) {
 test("repeated manual renegotiation", function (t) {
   t.plan(6);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);
@@ -140,8 +140,8 @@ test("renegotiation after addStream", function (t) {
   }
   t.plan(4);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     if (!peer2.destroyed) peer2.signal(data);
@@ -169,12 +169,12 @@ test("renegotiation after addStream", function (t) {
 test("add stream on non-initiator only", function (t) {
   t.plan(3);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     stream: common.getMediaStream(),
@@ -201,7 +201,7 @@ test("add stream on non-initiator only", function (t) {
 test("negotiated channels", function (t) {
   t.plan(2);
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
@@ -210,7 +210,7 @@ test("negotiated channels", function (t) {
       negotiated: true,
     },
   });
-  const peer2 = new Peer({
+  const peer2 = new WebRTCPeer({
     config,
     wrtc: common.wrtc,
     channelConfig: {

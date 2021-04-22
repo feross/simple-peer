@@ -1,5 +1,5 @@
 const common = require("./common");
-const Peer = require("../");
+const WebRTCPeer = require("../");
 const test = require("tape");
 
 let config;
@@ -13,7 +13,7 @@ test("get config", function (t) {
 
 test("detect WebRTC support", function (t) {
   t.equal(
-    Peer.WEBRTC_SUPPORT,
+    WebRTCPeer.WEBRTC_SUPPORT,
     typeof window !== "undefined",
     "builtin webrtc support"
   );
@@ -26,7 +26,7 @@ test("create peer without options", function (t) {
   if (process.browser) {
     let peer;
     t.doesNotThrow(function () {
-      peer = new Peer();
+      peer = new WebRTCPeer();
     });
     peer.destroy();
   } else {
@@ -34,10 +34,10 @@ test("create peer without options", function (t) {
   }
 });
 
-test("can detect error when RTCPeerConstructor throws", function (t) {
+test("can detect error when RTCWebRTCPeerConstructor throws", function (t) {
   t.plan(1);
 
-  const peer = new Peer({ wrtc: { RTCPeerConnection: null } });
+  const peer = new WebRTCPeer({ wrtc: { RTCWebRTCPeerConnection: null } });
   peer.once("error", function () {
     t.pass("got error event");
     peer.destroy();
@@ -47,7 +47,7 @@ test("can detect error when RTCPeerConstructor throws", function (t) {
 test("signal event gets emitted", function (t) {
   t.plan(2);
 
-  const peer = new Peer({ config, initiator: true, wrtc: common.wrtc });
+  const peer = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
   peer.once("signal", function () {
     t.pass("got signal event");
     peer.on("close", function () {
@@ -58,7 +58,7 @@ test("signal event gets emitted", function (t) {
 });
 
 test("signal event does not get emitted by non-initiator", function (t) {
-  const peer = new Peer({ config, initiator: false, wrtc: common.wrtc });
+  const peer = new WebRTCPeer({ config, initiator: false, wrtc: common.wrtc });
   peer.once("signal", function () {
     t.fail("got signal event");
     peer.on("close", function () {
@@ -74,7 +74,7 @@ test("signal event does not get emitted by non-initiator", function (t) {
 });
 
 test("signal event does not get emitted by non-initiator with stream", function (t) {
-  const peer = new Peer({
+  const peer = new WebRTCPeer({
     config,
     stream: common.getMediaStream(),
     initiator: false,
@@ -97,8 +97,8 @@ test("signal event does not get emitted by non-initiator with stream", function 
 test("data send/receive text", function (t) {
   t.plan(10);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   let numSignal1 = 0;
   peer1.on("signal", function (data) {
@@ -149,8 +149,8 @@ test("data send/receive text", function (t) {
 test("sdpTransform function is called", function (t) {
   t.plan(3);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, sdpTransform, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, sdpTransform, wrtc: common.wrtc });
 
   function sdpTransform(sdp) {
     t.equal(typeof sdp, "string", "got a string as SDP");
@@ -186,13 +186,13 @@ test("old constraint formats are used", function (t) {
     },
   };
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     constraints,
   });
-  const peer2 = new Peer({ config, wrtc: common.wrtc, constraints });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc, constraints });
 
   peer1.on("signal", function (data) {
     peer2.signal(data);
@@ -223,13 +223,13 @@ test("new constraint formats are used", function (t) {
     offerToReceiveVideo: true,
   };
 
-  const peer1 = new Peer({
+  const peer1 = new WebRTCPeer({
     config,
     initiator: true,
     wrtc: common.wrtc,
     constraints,
   });
-  const peer2 = new Peer({ config, wrtc: common.wrtc, constraints });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc, constraints });
 
   peer1.on("signal", function (data) {
     peer2.signal(data);
@@ -268,8 +268,8 @@ test("ensure remote address and port are available right after connection", func
 
   t.plan(7);
 
-  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc });
-  const peer2 = new Peer({ config, wrtc: common.wrtc });
+  const peer1 = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
+  const peer2 = new WebRTCPeer({ config, wrtc: common.wrtc });
 
   peer1.on("signal", function (data) {
     peer2.signal(data);
@@ -303,7 +303,7 @@ test("ensure remote address and port are available right after connection", func
 
 test("ensure iceStateChange fires when connection failed", t => {
   t.plan(1);
-  const peer = new Peer({ config, initiator: true, wrtc: common.wrtc });
+  const peer = new WebRTCPeer({ config, initiator: true, wrtc: common.wrtc });
 
   peer.on("iceStateChange", (connectionState, gatheringState) => {
     t.pass("got iceStateChange");
