@@ -30,6 +30,7 @@
     "coveralls": "^3.1.0",
     "dotenv-cli": "^4.0.0",
     "nyc": "^15.1.0",
+    "prettier": "^2.2.1",
     "prettier-bytes": "^1.0.4",
     "simple-get": "^4.0.0",
     "speedometer": "^1.1.0",
@@ -63,13 +64,13 @@
   "scripts": {
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
-    "test": "npm run test-browser",
-    "// test1": "npm run test-node && npm run test-browser",
-    "// test2": "npm run test-node",
+    "test": "npm run lint && npm run test-browser",
+    "// test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "dotenv airtap --coverage --concurrency 1 -- test/*.js",
     "test-browser-local": "dotenv airtap --coverage --preset --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "lint": "prettier --write '(**/)*.js'"
   },
   "funding": [
     {

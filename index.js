@@ -83,7 +83,7 @@ class Peer extends stream.Duplex {
     this.config = Object.assign({}, Peer.config, opts.config);
     this.offerOptions = opts.offerOptions || {};
     this.answerOptions = opts.answerOptions || {};
-    this.sdpTransform = opts.sdpTransform || ((sdp) => sdp);
+    this.sdpTransform = opts.sdpTransform || (sdp => sdp);
     this.streams = opts.streams || (opts.stream ? [opts.stream] : []); // support old "stream" option
     this.trickle = opts.trickle !== undefined ? opts.trickle : true;
     this.allowHalfTrickle =
@@ -167,13 +167,13 @@ class Peer extends stream.Duplex {
     this._pc.onsignalingstatechange = () => {
       this._onSignalingStateChange();
     };
-    this._pc.onicecandidate = (event) => {
+    this._pc.onicecandidate = event => {
       this._onIceCandidate(event);
     };
 
     // HACK: Fix for odd Firefox behavior, see: https://github.com/feross/simple-peer/pull/783
     if (typeof this._pc.peerIdentity === "object") {
-      this._pc.peerIdentity.catch((err) => {
+      this._pc.peerIdentity.catch(err => {
         this.destroy(errCode(err, ERR_PC_PEER_IDENTITY));
       });
     }
@@ -192,17 +192,17 @@ class Peer extends stream.Duplex {
         ),
       });
     } else {
-      this._pc.ondatachannel = (event) => {
+      this._pc.ondatachannel = event => {
         this._setupData(event);
       };
     }
 
     if (this.streams) {
-      this.streams.forEach((stream) => {
+      this.streams.forEach(stream => {
         this.addStream(stream);
       });
     }
-    this._pc.ontrack = (event) => {
+    this._pc.ontrack = event => {
       this._onTrack(event);
     };
 
@@ -276,14 +276,14 @@ class Peer extends stream.Duplex {
         .then(() => {
           if (this.destroyed) return;
 
-          this._pendingCandidates.forEach((candidate) => {
+          this._pendingCandidates.forEach(candidate => {
             this._addIceCandidate(candidate);
           });
           this._pendingCandidates = [];
 
           if (this._pc.remoteDescription.type === "offer") this._createAnswer();
         })
-        .catch((err) => {
+        .catch(err => {
           this.destroy(errCode(err, ERR_SET_REMOTE_DESCRIPTION));
         });
     }
@@ -305,7 +305,7 @@ class Peer extends stream.Duplex {
   // TODO: Document
   _addIceCandidate(candidate) {
     const iceCandidateObj = new this._wrtc.RTCIceCandidate(candidate);
-    this._pc.addIceCandidate(iceCandidateObj).catch((err) => {
+    this._pc.addIceCandidate(iceCandidateObj).catch(err => {
       if (
         !iceCandidateObj.address ||
         iceCandidateObj.address.endsWith(".local")
@@ -385,7 +385,7 @@ class Peer extends stream.Duplex {
     }
     this._debug("addStream()");
 
-    stream.getTracks().forEach((track) => {
+    stream.getTracks().forEach(track => {
       this.addTrack(track, stream);
     });
 
@@ -553,7 +553,7 @@ class Peer extends stream.Duplex {
     }
     this._debug("removeSenders()");
 
-    stream.getTracks().forEach((track) => {
+    stream.getTracks().forEach(track => {
       this.removeTrack(track, stream);
     });
   }
@@ -714,7 +714,7 @@ class Peer extends stream.Duplex {
 
     this.channelName = this._channel.label;
 
-    this._channel.onmessage = (event) => {
+    this._channel.onmessage = event => {
       this._onChannelMessage(event);
     };
     this._channel.onbufferedamountlow = () => {
@@ -726,7 +726,7 @@ class Peer extends stream.Duplex {
     this._channel.onclose = () => {
       this._onChannelClose();
     };
-    this._channel.onerror = (event) => {
+    this._channel.onerror = event => {
       const err =
         event.error instanceof Error
           ? event.error
@@ -825,7 +825,7 @@ class Peer extends stream.Duplex {
 
     this._pc
       .createOffer(this.offerOptions)
-      .then((offer) => {
+      .then(offer => {
         if (this.destroyed) return;
         if (!this.trickle && !this.allowHalfTrickle) {
           offer.sdp = filterTrickle(offer.sdp);
@@ -849,20 +849,20 @@ class Peer extends stream.Duplex {
           else this.once("_iceComplete", sendOffer); // wait for candidates
         };
 
-        const onError = (err) => {
+        const onError = err => {
           this.destroy(errCode(err, ERR_SET_LOCAL_DESCRIPTION));
         };
 
         this._pc.setLocalDescription(offer).then(onSuccess).catch(onError);
       })
-      .catch((err) => {
+      .catch(err => {
         this.destroy(errCode(err, ERR_CREATE_OFFER));
       });
   }
 
   _requestMissingTransceivers() {
     if (this._pc.getTransceivers) {
-      this._pc.getTransceivers().forEach((transceiver) => {
+      this._pc.getTransceivers().forEach(transceiver => {
         if (
           !transceiver.mid &&
           transceiver.sender.track &&
@@ -880,7 +880,7 @@ class Peer extends stream.Duplex {
 
     this._pc
       .createAnswer(this.answerOptions)
-      .then((answer) => {
+      .then(answer => {
         if (this.destroyed) return;
         if (!this.trickle && !this.allowHalfTrickle) {
           answer.sdp = filterTrickle(answer.sdp);
@@ -904,13 +904,13 @@ class Peer extends stream.Duplex {
           else this.once("_iceComplete", sendAnswer);
         };
 
-        const onError = (err) => {
+        const onError = err => {
           this.destroy(errCode(err, ERR_SET_LOCAL_DESCRIPTION));
         };
 
         this._pc.setLocalDescription(answer).then(onSuccess).catch(onError);
       })
-      .catch((err) => {
+      .catch(err => {
         this.destroy(errCode(err, "ERR_CREATE_ANSWER"));
       });
   }
@@ -957,9 +957,9 @@ class Peer extends stream.Duplex {
 
   getStats(cb) {
     // statreports can come with a value array instead of properties
-    const flattenValues = (report) => {
+    const flattenValues = report => {
       if (Object.prototype.toString.call(report.values) === "[object Array]") {
-        report.values.forEach((value) => {
+        report.values.forEach(value => {
           Object.assign(report, value);
         });
       }
@@ -969,27 +969,27 @@ class Peer extends stream.Duplex {
     // Promise-based getStats() (standard)
     if (this._pc.getStats.length === 0 || this._isReactNativeWebrtc) {
       this._pc.getStats().then(
-        (res) => {
+        res => {
           const reports = [];
-          res.forEach((report) => {
+          res.forEach(report => {
             reports.push(flattenValues(report));
           });
           cb(null, reports);
         },
-        (err) => cb(err)
+        err => cb(err)
       );
 
       // Single-parameter callback-based getStats() (non-standard)
     } else if (this._pc.getStats.length > 0) {
       this._pc.getStats(
-        (res) => {
+        res => {
           // If we destroy connection in `connect` callback this code might happen to run when actual connection is already closed
           if (this.destroyed) return;
 
           const reports = [];
-          res.result().forEach((result) => {
+          res.result().forEach(result => {
             const report = {};
-            result.names().forEach((name) => {
+            result.names().forEach(name => {
               report[name] = result.stat(name);
             });
             report.id = result.id;
@@ -999,7 +999,7 @@ class Peer extends stream.Duplex {
           });
           cb(null, reports);
         },
-        (err) => cb(err)
+        err => cb(err)
       );
 
       // Unknown browser, skip getStats() since it's anyone's guess which style of
@@ -1041,7 +1041,7 @@ class Peer extends stream.Duplex {
         const candidatePairs = {};
         let foundSelectedCandidatePair = false;
 
-        items.forEach((item) => {
+        items.forEach(item => {
           // TODO: Once all browsers support the hyphenated stats report types, remove
           // the non-hypenated ones
           if (
@@ -1061,7 +1061,7 @@ class Peer extends stream.Duplex {
           }
         });
 
-        const setSelectedCandidatePair = (selectedCandidatePair) => {
+        const setSelectedCandidatePair = selectedCandidatePair => {
           foundSelectedCandidatePair = true;
 
           let local = localCandidates[selectedCandidatePair.localCandidateId];
@@ -1122,7 +1122,7 @@ class Peer extends stream.Duplex {
           );
         };
 
-        items.forEach((item) => {
+        items.forEach(item => {
           // Spec-compliant
           if (item.type === "transport" && item.selectedCandidatePairId) {
             setSelectedCandidatePair(
@@ -1203,7 +1203,7 @@ class Peer extends stream.Duplex {
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
       this._debug("flushing sender queue", this._sendersAwaitingStable);
-      this._sendersAwaitingStable.forEach((sender) => {
+      this._sendersAwaitingStable.forEach(sender => {
         this._pc.removeTrack(sender);
         this._queuedNegotiation = true;
       });
@@ -1280,7 +1280,7 @@ class Peer extends stream.Duplex {
   _onTrack(event) {
     if (this.destroyed) return;
 
-    event.streams.forEach((eventStream) => {
+    event.streams.forEach(eventStream => {
       this._debug("on track");
       this.emit("track", event.track, eventStream);
 
@@ -1290,7 +1290,7 @@ class Peer extends stream.Duplex {
       });
 
       if (
-        this._remoteStreams.some((remoteStream) => {
+        this._remoteStreams.some(remoteStream => {
           return remoteStream.id === eventStream.id;
         })
       ) {

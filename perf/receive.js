@@ -3,34 +3,34 @@
 
 // 7.6MB
 
-const prettierBytes = require('prettier-bytes')
-const speedometer = require('speedometer')
-const Peer = require('simple-peer')
+const prettierBytes = require("prettier-bytes");
+const speedometer = require("speedometer");
+const Peer = require("simple-peer");
 
-const speed = speedometer()
+const speed = speedometer();
 
-let peer
+let peer;
 
-const socket = new window.WebSocket('ws://localhost:8080')
+const socket = new window.WebSocket("ws://localhost:8080");
 
-socket.addEventListener('message', onMessage)
+socket.addEventListener("message", onMessage);
 
-function onMessage (event) {
-  const message = event.data
-  if (message === 'ready') {
-    if (peer) return
-    peer = new Peer()
-    peer.on('signal', function (signal) {
-      socket.send(JSON.stringify(signal))
-    })
-    peer.on('data', function (message) {
-      speed(message.length)
-    })
+function onMessage(event) {
+  const message = event.data;
+  if (message === "ready") {
+    if (peer) return;
+    peer = new Peer();
+    peer.on("signal", function (signal) {
+      socket.send(JSON.stringify(signal));
+    });
+    peer.on("data", function (message) {
+      speed(message.length);
+    });
   } else {
-    peer.signal(JSON.parse(message))
+    peer.signal(JSON.parse(message));
   }
 }
 
 setInterval(function () {
-  console.log(prettierBytes(speed()))
-}, 1000)
+  console.log(prettierBytes(speed()));
+}, 1000);

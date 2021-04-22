@@ -38,7 +38,7 @@ test("tests various request / response types in the API calls", function (t) {
   });
 
   // Run the same tests on both peers
-  [peer1, peer2].forEach((peer) => {
+  [peer1, peer2].forEach(peer => {
     peer.on("connect", () => {
       const stream = getMediaStream();
       const track1 = stream.getTracks()[0];
@@ -70,7 +70,7 @@ test("tests various request / response types in the API calls", function (t) {
           // Not expected
           t.fail("replaceTrack should not succeed without a stream");
         })
-        .catch((err) => {
+        .catch(err => {
           // Expected
           t.ok(err, "replaceTrack throws without stream paramter");
         });
