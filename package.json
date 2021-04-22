@@ -63,8 +63,9 @@
   "scripts": {
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
-    "// test": "npm run test-node && npm run test-browser",
-    "test": "npm run test-node",
+    "test": "npm run test-browser",
+    "// test1": "npm run test-node && npm run test-browser",
+    "// test2": "npm run test-node",
     "test-browser": "dotenv airtap --coverage --concurrency 1 -- test/*.js",
     "test-browser-local": "dotenv airtap --coverage --preset --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
