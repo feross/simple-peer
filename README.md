@@ -559,4 +559,4 @@ constructor. See the API docs above.
 
 ## License
 
-MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org).
+MIT. Copyright (c) [Jeremy Harris](https://zenosmosis.com) / [Feross Aboukhadijeh](http://feross.org).
