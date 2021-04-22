@@ -20,7 +20,9 @@
     "readable-stream": "^3.6.0"
   },
   "devDependencies": {
-    "airtap": "^3.0.0",
+    "airtap": "^4.0.3",
+    "airtap-manual": "^1.0.0",
+    "airtap-sauce": "^1.1.0",
     "babel-minify": "^0.5.1",
     "bowser": "^2.11.0",
     "browserify": "^17.0.0",
@@ -34,7 +36,7 @@
     "tape": "^5.2.2",
     "thunky": "^1.1.0",
     "wrtc": "^0.4.7",
-    "ws": "^7.4.4"
+    "ws": "^7.4.5"
   },
   "keywords": [
     "data",
@@ -61,9 +63,9 @@
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
     "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
     "// test": "standard && npm run test-node && npm run test-browser",
-    "test": "standard && npm run test-node",
-    "test-browser": "airtap --coverage -- test/*.js",
-    "test-browser-local": "airtap --coverage --local -- test/*.js",
+    "test": "standard && npm run test-browser",
+    "test-browser": "airtap --coverage --concurrency 1 -- test/*.js",
+    "test-browser-local": "airtap --coverage --preset local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
