@@ -1,5 +1,4 @@
 sauce_connect: true
-loopback: airtap.local
 browsers:
   - name: firefox
     version: latest
@@ -7,9 +6,16 @@ browsers:
     version: latest
   - name: safari
     version: latest
-  - name: iphone
+  - name: edge
     version: latest
-  - name: microsoftedge
+  - name: and_chr
     version: latest
-  - name: android
+  - name: ios_saf
     version: latest
+providers:
+  - airtap-sauce
+presets:
+  local:
+    providers: airtap-manual
+    browsers:
+      - name: manual
