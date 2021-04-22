@@ -3,5 +3,5 @@
 img/
 perf/
 test/
-simplepeer.min.js
+webrtc-peer.min.js
 .env

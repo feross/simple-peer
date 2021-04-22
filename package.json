@@ -59,11 +59,11 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/feross/simple-peer.git"
+    "url": "git://github.com/jzombie/webrtc-peer.git"
   },
   "scripts": {
-    "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",
-    "size": "npm run build && cat simplepeer.min.js | gzip | wc -c",
+    "build": "browserify -s WebRTCPeer -r . | minify > webrtc-peer.min.js",
+    "size": "npm run build && cat webrtc-peer.min.js | gzip | wc -c",
     "test": "npm run lint && npm run test-browser",
     "// test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "dotenv airtap --coverage --concurrency 1 -- test/*.js",

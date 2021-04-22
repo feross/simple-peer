@@ -77,10 +77,10 @@ npm install simple-peer
 ```
 
 This package works in the browser with [browserify](https://browserify.org). If
-you do not use a bundler, you can use the `simplepeer.min.js` standalone script
-directly in a `<script>` tag. This exports a `SimplePeer` constructor on
+you do not use a bundler, you can use the `webrtc-peer.min.js` standalone script
+directly in a `<script>` tag. This exports a `WebRTCPeer` constructor on
 `window`. Wherever you see `Peer` in the examples below, substitute that with
-`SimplePeer`.
+`WebRTCPeer`.
 
 ## Testing
 
