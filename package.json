@@ -27,7 +27,6 @@
     "babel-minify": "^0.5.1",
     "bowser": "^2.11.0",
     "browserify": "^17.0.0",
-    "coveralls": "^3.1.0",
     "dotenv-cli": "^4.0.0",
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
@@ -67,7 +66,8 @@
     "test-browser": "dotenv airtap --coverage --concurrency 1 -- test/*.js",
     "test-browser-local": "dotenv airtap --coverage --preset --local -- test/*.js",
     "test-node": "WRTC=wrtc tape test/*.js",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "// coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc npm run test-node",
     "lint": "prettier --write '(**/)*.js'"
   },
   "funding": [
