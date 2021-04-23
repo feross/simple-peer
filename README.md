@@ -37,7 +37,6 @@ It is also utilized in the reference application, [Speaker App](https://speaker.
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Install](#install)
-  - [Testing](#testing)
   - [Usage](#usage)
     - [Data Channels](#data-channels)
     - [Video / Voice](#video--voice)
@@ -67,6 +66,9 @@ It is also utilized in the reference application, [Speaker App](https://speaker.
       - [Peer 1](#peer-1)
       - [Peer 2](#peer-2)
       - [Peer 3](#peer-3)
+  - [Testing](#testing)
+    - [Local Testing](#local-testing)
+    - [Remote Testing (multiple browsers)](#remote-testing-multiple-browsers)
   - [Troubleshooting](#troubleshooting)
     - [Memory Usage](#memory-usage)
     - [Connection does not work on some networks?](#connection-does-not-work-on-some-networks)
@@ -85,31 +87,6 @@ you do not use a bundler, you can use the `webrtc-peer.min.js` standalone script
 directly in a `<script>` tag. This exports a `WebRTCPeer` constructor on
 `window`. Wherever you see `Peer` in the examples below, substitute that with
 `WebRTCPeer`.
-
-## Testing
-
-We're using [SauceLabs](https://saucelabs.com) to do testing across the latest major browsers and platforms.
-
-[![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
-
-Note, at this time, due to an apparent bug with airtap-sauce version 4.0.3 in that it runs Android 6.0 instead of the actual latest version, so we're using airtap 3.0.0 to get around it, which also requires the usage of Sauce Connect Proxy when on a private network.  Airtap-sauce is required for 4+ due to refactoring of airtap.
-
-- [Download](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy) the correct version of Sauce Connect Proxy for your operating system
-- Extract the contents
-- Start the proxy and wait for it to notify that it is okay to start testing
-
-```bash
-$ cd {SAUCE_CONNECT_PROXY_DIR}/bin
-$ ./sc -u {SAUCE_USERNAME} -k {SAUCE_ACCESS_KEY}
-```
-
-- Run remote tests
-
-While the proxy is running in another terminal session, in another terminal session located at this project's root
-
-```bash
-$ npm run test-browser # Or npm run test
-```
 
 ## Usage
 
@@ -535,6 +512,29 @@ peer2.on('data', data => {
   console.log('got a message from peer2: ' + data)
 })
 ```
+
+## Testing
+
+We're using [SauceLabs](https://saucelabs.com) to do testing across the latest major browsers and platforms.
+
+[![Testing Powered By SauceLabs](https://opensource.saucelabs.com/images/opensauce/powered-by-saucelabs-badge-red.png?sanitize=true "Testing Powered By SauceLabs")](https://saucelabs.com)
+
+### Local Testing
+
+```bash
+$ npm run test-node
+```
+
+### Remote Testing (multiple browsers)
+
+- Establish an [Open Sauce](https://saucelabs.com/open-sauce) account from Sauce Labs (it's free, and they encourage it for open source testing)
+- Populate .env file from .env.sample
+- Run the following npm command:
+
+```bash
+$ npm run test-browser # Or npm run test to run local and remote
+```
+
 
 ## Troubleshooting
 
