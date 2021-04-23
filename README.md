@@ -17,6 +17,8 @@ A fork of [simple-peer](https://github.com/feross/simple-peer), webrtc-peer trie
 
 It is also utilized in the reference application, [Speaker App](https://speaker.app).
 
+[![Sauce Test Status](https://app.saucelabs.com/browser-matrix/webrtc-peer.svg)](https://app.saucelabs.com/u/webrtc-peer)
+
 ## Features
 
 - concise, **node.js style** API for [WebRTC](https://en.wikipedia.org/wiki/WebRTC)
