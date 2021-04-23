@@ -7,7 +7,7 @@
 [coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
 [sauce-image]: https://saucelabs.com/buildstatus/zenosmosis
-[sauce-url]: https://saucelabs.com/u/zenosmosis
+[sauce-url]: https://app.saucelabs.com/open_sauce/user/zenosmosis/builds
 
 # webrtc-peer
 
