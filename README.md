@@ -1,9 +1,9 @@
 [![MIT License][license-image]][license-url] [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![virtual-device-testing][sauce-image]][sauce-url]
 
-[license-image]: https://img.shields.io/github/license/jzombie/webrtc-peer
-[license-url]: https://raw.githubusercontent.com/jzombie/webrtc-peer/master/LICENSE
-[ci-image]: https://img.shields.io/github/workflow/status/jzombie/webrtc-peer/ci/master
-[ci-url]: https://github.com/jzombie/webrtc-peer/actions
+[license-image]: https://img.shields.io/github/license/zenosmosis/webrtc-peer
+[license-url]: https://raw.githubusercontent.com/zenosmosis/webrtc-peer/master/LICENSE
+[ci-image]: https://img.shields.io/github/workflow/status/zenosmosis/webrtc-peer/ci/master
+[ci-url]: https://github.com/zenosmosis/webrtc-peer/actions
 [coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
 [sauce-image]: https://saucelabs.com/buildstatus/webrtc-peer
