@@ -3,14 +3,7 @@ const WebRTCPeer = require("../");
 const str = require("string-to-stream");
 const test = require("tape");
 
-let config;
-test("get config", function (t) {
-  common.getConfig(function (err, _config) {
-    if (err) return t.fail(err);
-    config = _config;
-    t.end();
-  });
-});
+const { config } = common;
 
 test('duplex stream: send data before "connect" event', function (t) {
   t.plan(9);

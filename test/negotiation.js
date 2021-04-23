@@ -2,14 +2,7 @@ const common = require("./common");
 const WebRTCPeer = require("../");
 const test = require("tape");
 
-let config;
-test("get config", function (t) {
-  common.getConfig(function (err, _config) {
-    if (err) return t.fail(err);
-    config = _config;
-    t.end();
-  });
-});
+const { config } = common;
 
 test("single negotiation", function (t) {
   t.plan(10);

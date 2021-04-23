@@ -32,11 +32,9 @@
     "nyc": "^15.1.0",
     "prettier": "^2.2.1",
     "prettier-bytes": "^1.0.4",
-    "simple-get": "^4.0.0",
     "speedometer": "^1.1.0",
     "string-to-stream": "^3.0.1",
     "tape": "^5.2.2",
-    "thunky": "^1.1.0",
     "wrtc": "^0.4.7",
     "ws": "^7.4.5"
   },

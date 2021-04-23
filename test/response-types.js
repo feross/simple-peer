@@ -1,17 +1,8 @@
 const common = require("./common");
-const getMediaStream = require("./common").getMediaStream;
 const WebRTCPeer = require("../");
 const test = require("tape");
 
-let config;
-
-test("get config", function (t) {
-  common.getConfig(function (err, _config) {
-    if (err) return t.fail(err);
-    config = _config;
-    t.end();
-  });
-});
+const { config, getMediaStream } = common;
 
 test("tests various request / response types in the API calls", function (t) {
   t.plan(12);
