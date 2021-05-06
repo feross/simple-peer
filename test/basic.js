@@ -272,3 +272,34 @@ test('ensure iceStateChange fires when connection failed', (t) => {
   peer.destroy()
   peer._pc.oniceconnectionstatechange()
 })
+
+test('ensure enableDataChannel is being respected', async (t) => {
+  t.plan(4)
+  const peer = new Peer({ config, initiator: true, wrtc: common.wrtc, enableDataChannel: false })
+
+  const onSignalPromise = new Promise((resolve,reject) => {
+    peer.on('signal', data => {
+      resolve(data);
+    });
+  });
+
+  t.throws(function(){peer.send("data")},"Sending data is not allowed with enableDataChannel set to false");
+  t.throws(function(){peer.write("data")},"Writing data is not allowed with enableDataChannel set to false");
+  t.throws(function(){peer.read()},"Reading data is not allowed with enableDataChannel set to false");
+
+  const data = await onSignalPromise;
+  const lines = data.sdp.split("\r\n");
+
+  // Determining whether we have found any media descriptions in SDP offer
+  // Since no data channel, or audio/video channel is being created, we shouldn't find any
+  let mLines = [];
+  lines.forEach(line => {
+    if(line.substring = "m=")
+    {
+      mLines.concat(line)
+    }
+  });
+  t.assert(mLines.length === 0, "No media descriptions have been created");
+
+  t.end();
+})
