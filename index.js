@@ -562,7 +562,7 @@ class Peer extends stream.Duplex {
     if(!this.enableDataChannel)
     {
       // Calling read without data channel is invalid, throw error.
-      return cb(errCode(new Error('Cannot read with data channel not enabled.'), 'ERR_DISABLED_DATA_CHANNEL'))
+      throw errCode(new Error('Cannot read with data channel not enabled.'), 'ERR_DISABLED_DATA_CHANNEL')
     }
   }
 
