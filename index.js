@@ -175,7 +175,7 @@ class Peer extends stream.Duplex {
   // HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
   // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
   get connected () {
-    return (this._connected && this._channel && this._channel.readyState === 'open')
+    return (this._connected && (this.enableDataChannel ? this._channel && this._channel.readyState === 'open' : true));
   }
 
   address () {
