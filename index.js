@@ -439,6 +439,7 @@ class Peer extends stream.Duplex {
       if (typeof window === 'object' && typeof window.chrome === 'object') {
         if (!forcedGCTimeout) {
           forcedGCTimeout = setTimeout(forcePeerGC, 5000)
+          forcedGCTimeout.unref()
         }
       }
       this._connected = false
