@@ -16,6 +16,13 @@ function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
 }
 
+// HACK: Force GC to clean up released peers
+let forcedGCTimeout = null
+function forcePeerGC () {
+  URL.revokeObjectURL(URL.createObjectURL(new Blob([new ArrayBuffer(5e+7)])))
+  forcedGCTimeout = null
+}
+
 function warn (message) {
   console.warn(message)
 }
@@ -447,7 +454,12 @@ class Peer extends stream.Duplex {
 
       if (!this._readableState.ended) this.push(null)
       if (!this._writableState.finished) this.end()
-
+      if (typeof window === 'object' && typeof window.chrome === 'object') {
+        if (!forcedGCTimeout) {
+          forcedGCTimeout = setTimeout(forcePeerGC, 5000)
+          forcedGCTimeout.unref()
+        }
+      }
       this._connected = false
       this._pcReady = false
       this._channelReady = false
