@@ -55,6 +55,7 @@
   ],
   "license": "MIT",
   "main": "index.js",
+  "browser": "simplepeer.min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/simple-peer.git"
