@@ -138,8 +138,16 @@ class Peer extends stream.Duplex {
     // - onnegotiationneeded
 
     if (this.initiator || this.channelNegotiated) {
+      let channel
+      try {
+        channel = this._pc.createDataChannel(this.channelName, this.channelConfig)
+      } catch (err) {
+        this.destroy(errCode(err, 'ERR_PC_CREATE_DATA_CHANNEL'))
+        return
+      }
+
       this._setupData({
-        channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
+        channel
       })
     } else {
       this._pc.ondatachannel = event => {
@@ -928,10 +936,16 @@ class Peer extends stream.Duplex {
 
       // HACK: Firefox doesn't yet support removing tracks when signalingState !== 'stable'
       this._debug('flushing sender queue', this._sendersAwaitingStable)
-      this._sendersAwaitingStable.forEach(sender => {
-        this._pc.removeTrack(sender)
-        this._queuedNegotiation = true
-      })
+
+      try {
+        this._sendersAwaitingStable.forEach(sender => {
+          this._pc.removeTrack(sender)
+          this._queuedNegotiation = true
+        })
+      } catch (err) {
+        this.destroy(errCode(err, 'ERR_REMOVE_TRACK'))
+      }
+
       this._sendersAwaitingStable = []
 
       if (this._queuedNegotiation) {
