@@ -33,7 +33,7 @@
     "speedometer": "^1.1.0",
     "standard": "*",
     "string-to-stream": "^3.0.1",
-    "tape": "^5.2.2",
+    "tape": "^5.3.1",
     "thunky": "^1.1.0",
     "wrtc": "^0.4.7",
     "ws": "^7.5.3"
