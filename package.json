@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "debug": "^4.3.1",
+    "debug": "^4.3.2",
     "err-code": "^3.0.1",
     "get-browser-rtc": "^1.1.0",
     "queue-microtask": "^1.2.3",
@@ -26,7 +26,7 @@
     "babel-minify": "^0.5.1",
     "bowser": "^2.11.0",
     "browserify": "^17.0.0",
-    "coveralls": "^3.1.0",
+    "coveralls": "^3.1.1",
     "nyc": "^15.1.0",
     "prettier-bytes": "^1.0.4",
     "simple-get": "^4.0.0",
@@ -36,7 +36,7 @@
     "tape": "^5.2.2",
     "thunky": "^1.1.0",
     "wrtc": "^0.4.7",
-    "ws": "^7.4.5"
+    "ws": "^7.5.3"
   },
   "keywords": [
     "data",
