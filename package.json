@@ -20,7 +20,7 @@
     "readable-stream": "^3.6.0"
   },
   "devDependencies": {
-    "airtap": "^4.0.3",
+    "airtap": "^4.0.4",
     "airtap-manual": "^1.0.0",
     "airtap-sauce": "^1.1.0",
     "babel-minify": "^0.5.1",
