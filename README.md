@@ -279,7 +279,8 @@ If `opts` is specified, then the default options (shown below) will be overridde
   trickle: true,
   allowHalfTrickle: false,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
-  objectMode: false
+  objectMode: false,
+  preferredCodecs: [],
 }
 ```
 
@@ -301,6 +302,7 @@ The options do the following:
   - [`RTCIceCandidate`](https://www.w3.org/TR/webrtc/#dom-rtcicecandidate)
 
 - `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
+- `preferredCodecs` - set preferred codecs list
 
 ### `peer.signal(data)`
 
