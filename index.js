@@ -610,8 +610,8 @@ class Peer extends stream.Duplex {
     this._pc.createOffer(this.offerOptions)
       .then(offer => {
         if (this.destroyed) return
-        if (!this.trickle && !this.allowHalfTrickle) offer.sdp = filterTrickle(offer.sdp)
-        offer.sdp = this.sdpTransform(offer.sdp)
+        if (!this.trickle && !this.allowHalfTrickle) offer = new (this._wrtc.RTCSessionDescription)({ type: offer.type, sdp: filterTrickle(offer.sdp) });
+        offer = new (this._wrtc.RTCSessionDescription)({ type: offer.type, sdp: this.sdpTransform(offer.sdp) });
 
         const sendOffer = () => {
           if (this.destroyed) return
