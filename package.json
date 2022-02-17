@@ -29,7 +29,7 @@
     "coveralls": "^3.1.1",
     "nyc": "^15.1.0",
     "prettier-bytes": "^1.0.4",
-    "simple-get": "^4.0.0",
+    "simple-get": "^4.0.1",
     "speedometer": "^1.1.0",
     "standard": "*",
     "string-to-stream": "^3.0.1",
