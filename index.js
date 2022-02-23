@@ -41,6 +41,7 @@ class Peer extends stream.Duplex {
       : null
 
     this.initiator = opts.initiator || false
+    this.enableDataChannel = opts.enableDataChannel ?? true
     this.channelConfig = opts.channelConfig || Peer.channelConfig
     this.channelNegotiated = this.channelConfig.negotiated
     this.config = Object.assign({}, Peer.config, opts.config)
@@ -137,13 +138,15 @@ class Peer extends stream.Duplex {
     // - onfingerprintfailure
     // - onnegotiationneeded
 
-    if (this.initiator || this.channelNegotiated) {
-      this._setupData({
-        channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
-      })
-    } else {
-      this._pc.ondatachannel = event => {
-        this._setupData(event)
+    if (this.enableDataChannel) {
+      if (this.initiator || this.channelNegotiated) {
+        this._setupData({
+          channel: this._pc.createDataChannel(this.channelName, this.channelConfig)
+        })
+      } else {
+        this._pc.ondatachannel = event => {
+          this._setupData(event)
+        }
       }
     }
 
@@ -172,7 +175,7 @@ class Peer extends stream.Duplex {
   // HACK: it's possible channel.readyState is "closing" before peer.destroy() fires
   // https://bugs.chromium.org/p/chromium/issues/detail?id=882743
   get connected () {
-    return (this._connected && this._channel.readyState === 'open')
+    return (this._connected && (this.enableDataChannel ? this._channel && this._channel.readyState === 'open' : true));
   }
 
   address () {
@@ -244,6 +247,7 @@ class Peer extends stream.Duplex {
    * @param {ArrayBufferView|ArrayBuffer|Buffer|string|Blob} chunk
    */
   send (chunk) {
+    if (!this.enableDataChannel) throw errCode(new Error('Cannot write if data channel is disabled'), 'ERR_DISABLED_DATA_CHANNEL')
     if (this.destroying) return
     if (this.destroyed) throw errCode(new Error('cannot send after peer is destroyed'), 'ERR_DESTROYED')
     this._channel.send(chunk)
@@ -500,6 +504,12 @@ class Peer extends stream.Duplex {
   }
 
   _setupData (event) {
+    if(!this.enableDataChannel)
+    {
+      // Configured to NOT use a data channel, calling setupData is invalid in this case.
+      return this.destroy(errCode(new Error('Tried to create data channel despite disabled data channel.'), 'ERR_DISABLED_DATA_CHANNEL'))
+    }
+
     if (!event.channel) {
       // In some situations `pc.createDataChannel()` returns `undefined` (in wrtc),
       // which is invalid behavior. Handle it gracefully.
@@ -548,10 +558,22 @@ class Peer extends stream.Duplex {
     }, CHANNEL_CLOSING_TIMEOUT)
   }
 
-  _read () {}
+  _read () {
+    if(!this.enableDataChannel)
+    {
+      // Calling read without data channel is invalid, throw error.
+      throw errCode(new Error('Cannot read with data channel not enabled.'), 'ERR_DISABLED_DATA_CHANNEL')
+    }
+  }
 
   _write (chunk, encoding, cb) {
     if (this.destroyed) return cb(errCode(new Error('cannot write after peer is destroyed'), 'ERR_DATA_CHANNEL'))
+
+    if(!this.enableDataChannel)
+    {
+      // Calling write without data channel is invalid, throw error.
+      return cb(errCode(new Error('Cannot write with data channel not enabled.'), 'ERR_DISABLED_DATA_CHANNEL'))
+    }
 
     if (this._connected) {
       try {

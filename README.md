@@ -278,6 +278,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
 ```
 {
   initiator: false,
+  enableDataChannel: true,
   channelConfig: {},
   channelName: '<random string>',
   config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
@@ -296,6 +297,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
 The options do the following:
 
 - `initiator` - set to `true` if this is the initiating peer
+- `enableDataChannel` - set to `false` if no data channel should be created for this peer
 - `channelConfig` - custom webrtc data channel configuration (used by [`createDataChannel`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel))
 - `channelName` - custom webrtc data channel name
 - `config` - custom webrtc configuration (used by [`RTCPeerConnection`](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) constructor)
@@ -466,6 +468,7 @@ Possible error codes:
 - `ERR_ICE_CONNECTION_FAILURE`
 - `ERR_SIGNALING`
 - `ERR_DATA_CHANNEL`
+- `ERR_DISABLED_DATA_CHANNEL`
 - `ERR_CONNECTION_FAILURE`
 
 
