@@ -11,6 +11,9 @@ const MAX_BUFFERED_AMOUNT = 64 * 1024
 const ICECOMPLETE_TIMEOUT = 5 * 1000
 const CHANNEL_CLOSING_TIMEOUT = 5 * 1000
 
+const supportsSetCodecPreferences = window.RTCRtpTransceiver && 
+  'setCodecPreferences' in window.RTCRtpTransceiver.prototype
+
 // HACK: Filter trickle lines when trickle is disabled #354
 function filterTrickle (sdp) {
   return sdp.replace(/a=ice-options:trickle\s\n/g, '')
@@ -51,6 +54,7 @@ class Peer extends stream.Duplex {
     this.trickle = opts.trickle !== undefined ? opts.trickle : true
     this.allowHalfTrickle = opts.allowHalfTrickle !== undefined ? opts.allowHalfTrickle : false
     this.iceCompleteTimeout = opts.iceCompleteTimeout || ICECOMPLETE_TIMEOUT
+    this.preferredCodecs = opts.preferredCodecs || [];
 
     this.destroyed = false
     this.destroying = false
@@ -286,6 +290,14 @@ class Peer extends stream.Duplex {
     stream.getTracks().forEach(track => {
       this.addTrack(track, stream)
     })
+
+    if (supportsSetCodecPreferences && this.preferredCodecs.length > 0) {
+      const streamVideoTracks = stream.getVideoTracks()
+      const transceivers = this._pc.getTransceivers().filter(t => t.sender && streamVideoTracks.includes(t.sender.track))
+      transceivers.forEach(transceiver => {
+        transceiver.setCodecPreferences(this.preferredCodecs)
+      })
+    }
   }
 
   /**
