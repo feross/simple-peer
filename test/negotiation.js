@@ -204,3 +204,38 @@ test('negotiated channels', function (t) {
     t.pass('peer2 connect')
   })
 })
+
+test('renegotiation after restart', function (t) {
+  t.plan(4)
+
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) {
+    if (!peer2.destroyed) peer2.signal(data)
+  })
+  peer2.on('signal', function (data) {
+    if (!peer1.destroyed) peer1.signal(data)
+  })
+
+  peer1.on('connect', function () {
+    peer1.addStream(common.getMediaStream())
+  })
+  peer2.on('connect', function () {
+    peer2.addStream(common.getMediaStream())
+  })
+
+  peer1.on('stream', function () {
+    t.pass('got peer1 stream')
+  })
+
+  peer2.on('stream', function () {
+    t.pass('got peer2 stream')
+    peer1.restart()
+  })
+
+  let tracks = 1
+  peer2.on('track', function () {
+    t.pass(`got peer2 track ${tracks++}`)
+  })
+})
