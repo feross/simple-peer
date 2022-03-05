@@ -373,7 +373,7 @@ class Peer extends stream.Duplex {
       this._batchedNegotiation = false
       if (this.initiator || !this._firstNegotiation) {
         this._debug('starting batched negotiation')
-        this.negotiate()
+        this.negotiate(this._isRestarting)
       } else {
         this._debug('non-initiator initial negotiation request discarded')
       }
@@ -716,7 +716,7 @@ class Peer extends stream.Duplex {
         this._isNegotiating = false
         this._isRestarting = true
 
-        this._needsNegotiation(true)
+        this._needsNegotiation()
       }
     } else if (iceConnectionState === 'failed' && !this.iceRestartEnabled) {
       this.destroy(errCode(new Error('Ice connection failed.'), 'ERR_ICE_CONNECTION_FAILURE'))
