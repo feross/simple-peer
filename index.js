@@ -429,6 +429,7 @@ class Peer extends stream.Duplex {
   // See: https://github.com/nodejs/readable-stream/issues/283
   destroy (err) {
     this._destroy(err, () => {})
+    return this
   }
 
   _destroy (err, cb) {
