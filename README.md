@@ -1,6 +1,6 @@
 # simple-peer [![ci][ci-image]][ci-url] [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url] [![javascript style guide][sauce-image]][sauce-url]
 
-[ci-image]: https://img.shields.io/github/workflow/status/feross/simple-peer/ci/master
+[ci-image]: https://img.shields.io/github/actions/workflow/status/feross/simple-peer/ci.yml?branch=master
 [ci-url]: https://github.com/feross/simple-peer/actions
 [coveralls-image]: https://coveralls.io/repos/github/feross/simple-peer/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/feross/simple-peer?branch=master
