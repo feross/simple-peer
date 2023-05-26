@@ -20,7 +20,7 @@ exports.getConfig = thunky(function (cb) {
 })
 
 // For testing on node, we must provide a WebRTC implementation
-if (process.env.WRTC === 'wrtc') {
+if (process.env.WRTC?.startsWith('wrtc')) {
   exports.wrtc = require('wrtc')
 }
 

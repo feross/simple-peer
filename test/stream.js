@@ -28,7 +28,7 @@ test('duplex stream: send data before "connect" event', function (t) {
   })
   peer1.on('finish', function () {
     t.pass('got peer1 "finish"')
-    t.ok(peer1._writableState.finished)
+    t.ok(peer1._writableState.ended)
   })
   peer1.on('end', function () {
     t.pass('got peer1 "end"')
@@ -40,7 +40,7 @@ test('duplex stream: send data before "connect" event', function (t) {
   })
   peer2.on('finish', function () {
     t.pass('got peer2 "finish"')
-    t.ok(peer2._writableState.finished)
+    t.ok(peer2._writableState.ended)
   })
   peer2.on('end', function () {
     t.pass('got peer2 "end"')
@@ -67,7 +67,7 @@ test('duplex stream: send data one-way', function (t) {
     })
     peer1.on('finish', function () {
       t.pass('got peer1 "finish"')
-      t.ok(peer1._writableState.finished)
+      t.ok(peer1._writableState.ended)
     })
     peer1.on('end', function () {
       t.pass('got peer1 "end"')
@@ -79,7 +79,7 @@ test('duplex stream: send data one-way', function (t) {
     })
     peer2.on('finish', function () {
       t.pass('got peer2 "finish"')
-      t.ok(peer2._writableState.finished)
+      t.ok(peer2._writableState.ended)
     })
     peer2.on('end', function () {
       t.pass('got peer2 "end"')
