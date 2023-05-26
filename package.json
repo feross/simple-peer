@@ -17,7 +17,7 @@
     "get-browser-rtc": "^1.1.0",
     "queue-microtask": "^1.2.3",
     "randombytes": "^2.1.0",
-    "readable-stream": "^3.6.0"
+    "streamx": "^2.13.2"
   },
   "devDependencies": {
     "airtap": "^4.0.3",
@@ -66,7 +66,7 @@
     "test": "standard && npm run test-browser",
     "test-browser": "airtap --coverage --concurrency 1 -- test/*.js",
     "test-browser-local": "airtap --coverage --preset local -- test/*.js",
-    "test-node": "WRTC=wrtc tape test/*.js",
+    "test-node": "set WRTC=wrtc && tape test/*.js",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "funding": [
