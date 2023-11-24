@@ -716,6 +716,9 @@ class Peer extends stream.Duplex {
       this._pcReady = true
       this._maybeReady()
     }
+    if (iceConnectionState === 'disconnected') {
+      this.destroy()
+    }
     if (iceConnectionState === 'failed') {
       this.destroy(errCode(new Error('Ice connection failed.'), 'ERR_ICE_CONNECTION_FAILURE'))
     }
