@@ -1,5 +1,5 @@
 {
-  "name": "simple-peer",
+  "name": "simple-webrtc",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
   "version": "9.11.1",
   "author": {
@@ -8,7 +8,7 @@
     "url": "https://feross.org"
   },
   "bugs": {
-    "url": "https://github.com/feross/simple-peer/issues"
+    "url": "https://github.com/SariskaIO/simple-webrtc/issues"
   },
   "dependencies": {
     "buffer": "^6.0.3",
@@ -57,7 +57,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/feross/simple-peer.git"
+    "url": "git://github.com/SariskaIO/simple-webrtc.git"
   },
   "scripts": {
     "build": "browserify -s SimplePeer -r . | minify > simplepeer.min.js",

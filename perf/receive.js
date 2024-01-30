@@ -5,7 +5,7 @@
 
 const prettierBytes = require('prettier-bytes')
 const speedometer = require('speedometer')
-const Peer = require('simple-peer')
+const Peer = require('simple-webrtc')
 
 const speed = speedometer()
 
