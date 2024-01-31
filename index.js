@@ -1,5 +1,5 @@
-/*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-const debug = require('debug')('simple-peer')
+/*! simple-webrtc. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+const debug = require('debug')('simple-webrtc')
 const getBrowserRTC = require('get-browser-rtc')
 const randombytes = require('randombytes')
 const stream = require('readable-stream')
@@ -1040,7 +1040,7 @@ Peer.config = {
     {
       urls: [
         'stun:stun.l.google.com:19302',
-        'stun:global.stun.twilio.com:3478'
+        'stun:coturn.sariska.io:443'
       ]
     }
   ],

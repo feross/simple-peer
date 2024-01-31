@@ -280,7 +280,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   initiator: false,
   channelConfig: {},
   channelName: '<random string>',
-  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] },
+  config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:coturn.sariska.io:443' }] },
   offerOptions: {},
   answerOptions: {},
   sdpTransform: function (sdp) { return sdp },
@@ -656,8 +656,8 @@ constructor. See the API docs above.
 - [Dots](https://github.com/subins2000/vett) - Online multiplayer Dots & Boxes game. [Play Here!](https://vett.space)
 - [simple-peer-files](https://github.com/subins2000/simple-peer-files) - A simple library to easily transfer files over WebRTC. Has a feature to resume file transfer after uploader interruption.
 - [WebDrop.Space](https://WebDrop.Space) - Share files and messages across devices. Cross-platform, no installation alternative to AirDrop, Xender. [Source Code](https://github.com/subins2000/WebDrop)
-- [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-peer to create audio conferences!
-- [Deskreen](https://deskreen.com) - A desktop app that helps you to turn any device into a secondary screen for your computer. It uses simple-peer for sharing entire computer screen to any device with a web browser.
+- [Speakrandom](https://speakrandom.com) - Voice-chat social network using simple-webrtc to create audio conferences!
+- [Deskreen](https://deskreen.com) - A desktop app that helps you to turn any device into a secondary screen for your computer. It uses simple-webrtc for sharing entire computer screen to any device with a web browser.
 
 
 
