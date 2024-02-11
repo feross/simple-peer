@@ -525,3 +525,30 @@ test('replaceTrack', function (t) {
     peer2.destroy()
   })
 })
+
+test('track event includes transceiver and is instance of RTCRtpTransceiver', function (t) {
+  t.plan(8); // We expect 4 assertions per track event * 2 track events
+
+  const peer1 = new Peer({ config, initiator: true, wrtc: common.wrtc })
+  const peer2 = new Peer({ config, wrtc: common.wrtc })
+
+  peer1.on('signal', function (data) { if (!peer2.destroyed) peer2.signal(data) })
+  peer2.on('signal', function (data) { if (!peer1.destroyed) peer1.signal(data) })
+
+  peer2.on('connect', function () {
+    // Simulate adding a stream to trigger the 'track' event on peer1
+    peer2.addStream(common.getMediaStream());
+  });
+
+  peer1.on('track', function (track, eventStream, transceiver) {
+    t.pass('peer1 received track event');
+    t.ok(track, `track is present: ${track.id}, kind: ${track.kind}`);
+    t.ok(transceiver instanceof RTCRtpTransceiver, 'transceiver is instance of RTCRtpTransceiver');
+    t.ok(transceiver.mid === '1' || transceiver.mid === '2', `transceiver.mid is either 1 or 2: ${transceiver.mid}`);
+  });
+
+  t.on('end', () => {
+    peer1.destroy();
+    peer2.destroy();
+  });
+});
