@@ -438,9 +438,9 @@ peer.on('stream', stream => {
 })
 ```
 
-### `peer.on('track', (track, stream) => {})`
+### `peer.on('track', (track, stream, transceiver) => {})`
 
-Received a remote audio/video track. Streams may contain multiple tracks.
+Received a remote audio/video track. Streams may contain multiple tracks. Transceiver can be used to extract the media ID (`mid`). 
 
 ### `peer.on('close', () => {})`
 
